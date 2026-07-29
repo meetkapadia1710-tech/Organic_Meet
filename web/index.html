@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meet Kapadia — Software developer &amp; systems builder</title>
+<meta name="description" content="Full-stack web apps, AI tooling and local-first systems, shipped end to end — from the Postgres schema to the last hover state. Selected work and case studies.">
+<meta name="author" content="Meet Kapadia">
+<meta name="theme-color" content="#f5ead8">
+
+<!-- Kept in step with the route by useDocumentMeta. -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="Meet Kapadia — Software developer &amp; systems builder">
+<meta property="og:description" content="Full-stack web apps, AI tooling and local-first systems, shipped end to end — from the Postgres schema to the last hover state.">
+<meta property="og:image" content="/og.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Figtree:wght@400;600;700&display=swap">
+
+<!-- Applied before first paint so a dark-theme visitor never sees a light
+     flash. Mirrors the static site's inline head script. -->
+<script>
+(function () {
+  var r = document.documentElement;
+  r.classList.add('js');
+  try {
+    if (sessionStorage.getItem('mk-visited')) r.classList.add('seen');
+    else sessionStorage.setItem('mk-visited', '1');
+  } catch (e) {}
+  try {
+    var t = localStorage.getItem('mk-theme');
+    if (!t && window.matchMedia('(prefers-color-scheme: dark)').matches) t = 'dark';
+    if (t) r.setAttribute('data-theme', t);
+  } catch (e) {}
+})();
+</script>
+</head>
+<body>
+<div id="root"></div>
+<script type="module" src="/main.tsx"></script>
+</body>
+</html>

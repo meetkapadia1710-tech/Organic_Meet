@@ -1,0 +1,312 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   site.css — the deployable site's own layer, on top of the Organic design
+   system (assets/styles.css). Holds three things the canvas pages carried
+   inline: page-specific motion/hover rules, the no-JS-safe preloader and
+   reveal states, and the responsive grid layer.
+
+   The grid classes (.g-*) replace fixed inline `grid-template-columns`
+   declarations that build.mjs strips out of the source markup — see the
+   GRIDS table in build.mjs. Mobile-first: single column by default, the
+   original desktop composition restored at the breakpoint.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ── base ───────────────────────────────────────────────────────────────── */
+
+html { scroll-behavior: smooth; }
+body { margin: 0; overflow-x: hidden; }
+
+/* Reserve the scrollbar's space permanently. Opening the command palette
+   locks scrolling with overflow:hidden, which removes the scrollbar and
+   widens the viewport by ~15px — shifting the page, the fixed nav, and
+   everything under the custom cursor, which is positioned in viewport
+   coordinates. With the gutter always reserved, locking changes nothing. */
+html { scrollbar-gutter: stable; }
+
+/* The decorative blobs are positioned deliberately past the right edge
+   (right: -120px and friends). `clip` contains them without turning the
+   shell into a scroll container — the body rule above is the fallback for
+   browsers that don't support it. The fixed nav is unaffected: it isn't
+   clipped by an ancestor that isn't its containing block. */
+.site-main { overflow-x: clip; min-height: 100vh; }
+
+/* Headings are set very large and fluid; never let a long word push the page
+   sideways on a narrow screen. */
+h1, h2, h3 { overflow-wrap: break-word; }
+
+@keyframes mq { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-18px); } }
+
+.mq-track { display: flex; width: max-content; animation: mq 34s linear infinite; }
+
+.skip {
+  position: absolute; left: -9999px; top: 0; z-index: 10000;
+  background: var(--color-accent); color: var(--color-bg);
+  padding: 10px 18px; border-radius: 0 0 var(--radius-md) 0;
+  font-weight: 600; text-decoration: none;
+}
+.skip:focus { left: 0; }
+
+/* Navigation moves focus to the page's heading container so a screen reader
+   announces the new page. That container is only focusable because we gave it
+   tabindex="-1" for this one purpose, and a 2px accent ring drawn around an
+   entire page header reads as a rendering fault rather than an affordance —
+   the announcement is what carries the meaning here, not the outline. Real
+   interactive elements keep their ring. */
+[tabindex='-1']:focus,
+[tabindex='-1']:focus-visible { outline: none; }
+
+/* ── preloader ──────────────────────────────────────────────────────────
+   Hidden unless JavaScript is running, so a script failure or a blocked
+   bundle can never leave a visitor staring at a blank cream screen. */
+
+#preloader { display: none; }
+.js.seen #preloader { display: none; }
+.js #preloader {
+  position: fixed; inset: 0; z-index: 9000;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: var(--space-4);
+  background: var(--color-bg);
+  transition: opacity .9s ease, visibility .9s;
+}
+#preloader.is-done { opacity: 0; visibility: hidden; }
+.pre-mark {
+  width: 120px; height: 120px; border-radius: 999px;
+  background: var(--color-accent-200);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-heading); font-size: 15px; color: var(--color-accent-800);
+  animation: float 2.4s ease-in-out infinite;
+}
+#pct { font-family: var(--font-heading); font-size: 64px; line-height: 1; color: var(--color-accent-700); }
+
+/* ── custom cursor ──────────────────────────────────────────────────────
+   Only ever applied when JS is running on a fine pointer; touch devices and
+   reduced-motion users keep the system cursor. */
+
+#cursor { display: none; }
+.has-cursor #cursor {
+  display: block;
+  position: fixed; top: 0; left: 0; width: 22px; height: 22px;
+  border-radius: 999px; background: var(--color-accent); opacity: .55;
+  pointer-events: none; z-index: 9999; transform: translate(-50%, -50%);
+  transition: width .35s cubic-bezier(.2,.8,.2,1), height .35s cubic-bezier(.2,.8,.2,1), opacity .35s;
+}
+.has-cursor #cursor.is-link { width: 60px; height: 60px; opacity: .3; }
+.has-cursor body { cursor: none; }
+
+/* ── scroll reveals ─────────────────────────────────────────────────────
+   Visible by default; only the JS path hides them, and site.js force-shows
+   anything still hidden after 4s in case IntersectionObserver never fires. */
+
+.js [data-reveal] {
+  opacity: 0; transform: translateY(34px);
+  transition: opacity .9s cubic-bezier(.2,.8,.2,1), transform .9s cubic-bezier(.2,.8,.2,1);
+}
+.js [data-reveal]:nth-child(4n+2) { transition-delay: 70ms; }
+.js [data-reveal]:nth-child(4n+3) { transition-delay: 140ms; }
+.js [data-reveal]:nth-child(4n+4) { transition-delay: 210ms; }
+.js [data-reveal].is-in { opacity: 1; transform: none; }
+
+/* ── hover states ───────────────────────────────────────────────────────── */
+
+.nlink { transition: background .3s; }
+.nlink:hover { background: var(--color-accent-200); }
+
+.work:hover { background: var(--color-accent-100); transform: translateX(10px); }
+.work:hover .work-t { color: var(--color-accent-700); }
+.work:hover .work-a { transform: translateX(8px); }
+
+.step:hover { background: var(--color-accent-100); }
+.step:hover .step-n { background: var(--color-accent); color: var(--color-neutral-100); }
+
+.next:hover { background: var(--color-accent-100); }
+.next:hover .next-t { color: var(--color-accent-700); }
+.next:hover .next-a { transform: translateX(10px); }
+
+/* Touch devices resolve :hover on tap and then keep it stuck — the 10px
+   shift on a tapped work row is disorienting, so drop the transform. */
+@media (hover: none) {
+  .work:hover { transform: none; }
+}
+
+/* ── responsive grid layer ──────────────────────────────────────────────── */
+
+/* Work rows: index · title+tags · description · year+link */
+.g-work { grid-template-columns: 1fr; }
+@media (min-width: 720px) {
+  /* The trailing column holds "2026 / Case study →" — below ~150px that
+     arrow wraps onto its own line. */
+  .g-work { grid-template-columns: 64px 1fr 150px; }
+  .g-work > p { grid-column: 2 / -1; }
+}
+.work-a { white-space: nowrap; }
+@media (min-width: 1100px) {
+  .g-work { grid-template-columns: 80px 1fr 340px 130px; }
+  .g-work > p { grid-column: auto; }
+}
+
+/* Approach steps: number · heading · body */
+.g-step { grid-template-columns: auto 1fr; }
+.g-step > p { grid-column: 1 / -1; }
+@media (min-width: 1024px) {
+  .g-step { grid-template-columns: 78px 260px 1fr; }
+  .g-step > p { grid-column: auto; }
+}
+
+/* Case-study opening: prose · fact sidebar */
+.g-split { grid-template-columns: 1fr; }
+@media (min-width: 1024px) { .g-split { grid-template-columns: 1fr 320px; } }
+
+/* Homepage intro: statement · supporting paragraph */
+.g-intro { grid-template-columns: 1fr; }
+@media (min-width: 1024px) { .g-intro { grid-template-columns: 1.2fr 1fr; } }
+
+/* Two-up: paired figures, paired prose columns */
+.g-duo { grid-template-columns: 1fr; }
+@media (min-width: 720px) { .g-duo { grid-template-columns: 1fr 1fr; } }
+
+/* Next-project row: label · title · index */
+.g-next { grid-template-columns: 1fr; }
+.g-next > h2 { grid-column: 1 / -1; }
+@media (min-width: 720px) {
+  .g-next { grid-template-columns: 100px 1fr 140px; }
+  .g-next > h2 { grid-column: auto; }
+}
+
+/* Archive entries are cards in an auto-fit grid — no bespoke breakpoints. */
+.arch .card-body { margin-bottom: 0; }
+
+/* Right-aligned trailing cells read as stray fragments once stacked. */
+@media (max-width: 719px) {
+  .work > div:last-child,
+  .next > span:last-child { text-align: left !important; }
+}
+
+/* ── nav ────────────────────────────────────────────────────────────────
+   The bar is a fixed pill with four items. Below 640px the links move into a
+   sheet behind a menu button rather than being dropped one by one — the old
+   approach hid Approach and then Stats to make room, which left two pages
+   with no route to them on a phone at all. */
+
+.site-nav { transition: background .3s ease, box-shadow .3s ease; }
+.site-nav.is-scrolled {
+  background: color-mix(in srgb, var(--color-surface) 97%, transparent) !important;
+  box-shadow: var(--shadow-md) !important;
+}
+
+.nav-burger { display: none; }
+.nav-sheet { display: none; }
+
+@media (max-width: 860px) {
+  .site-nav { left: var(--space-3) !important; right: var(--space-3) !important; padding-left: var(--space-4) !important; }
+}
+
+@media (max-width: 640px) {
+  .site-nav > a:first-child { font-size: 16px !important; }
+  .nav-links { display: none !important; }
+  .nav-cta { display: none !important; }
+  .nav-burger { display: inline-flex; }
+
+  .nav-sheet {
+    position: fixed;
+    top: calc(var(--space-4) + 62px);
+    left: var(--space-3);
+    right: var(--space-3);
+    z-index: 499;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
+    background: color-mix(in srgb, var(--color-surface) 97%, transparent);
+    backdrop-filter: blur(10px);
+    box-shadow: var(--shadow-lg);
+    transform-origin: top center;
+    animation: nav-sheet-in .22s cubic-bezier(.16, 1, .3, 1);
+  }
+  /* `hidden` has to beat the display:flex above, or the sheet is permanently
+     open the moment the breakpoint applies. */
+  .nav-sheet[hidden] { display: none; }
+
+  /* Comfortably past the 44px minimum touch target — these are the primary
+     navigation on the device where taps are least precise. */
+  .nav-sheet .nlink {
+    padding: 13px 16px !important;
+    font-size: 16px;
+    border-radius: var(--radius-md);
+  }
+  .nav-sheet .btn {
+    padding: 14px 20px;
+    font-size: 15px;
+    justify-content: center;
+  }
+}
+
+/* ── touch targets ──────────────────────────────────────────────────────
+   A pointer is precise to a pixel; a fingertip is not. Anything tappable
+   gets at least 44px of height on a touch-sized screen, which several of
+   these controls miss by 6-9px at their desktop sizes. Applied by width
+   rather than by `pointer: coarse` so it also holds for a narrow desktop
+   window, where the layout is the phone layout regardless of input device. */
+
+@media (max-width: 640px) {
+  .site-main .btn,
+  .site-main a[class*='btn'],
+  .theme-toggle,
+  .site-footer a,
+  .contact-links a,
+  .site-nav > a:first-child,
+  .deck-switch button,
+  .toc-list a,
+  .case-back {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    /* min-height resolves against the content box by default, so a bordered
+       control lands a pixel or two short of the target it was given. */
+    box-sizing: border-box;
+  }
+  .theme-toggle { min-width: 44px; justify-content: center; }
+  .deck-switch button { justify-content: center; }
+}
+
+@keyframes nav-sheet-in {
+  from { opacity: 0; transform: translateY(-8px) scale(.98); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-sheet { animation: none; }
+}
+
+/* ── section rhythm on small screens ────────────────────────────────────
+   The vh-based vertical padding is tuned for a tall desktop viewport; on a
+   phone it turns into dead space between every block. */
+
+@media (max-width: 719px) {
+  .site-main > section { padding-top: 8vh !important; }
+  .site-main > header { padding-top: 16vh !important; }
+  .site-footer { justify-content: flex-start; gap: var(--space-2); }
+}
+
+/* ── reduced motion ─────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .has-cursor body { cursor: auto; }
+  #cursor { display: none !important; }
+  .mq-track { animation: none; }
+  .js [data-reveal] { opacity: 1; transform: none; }
+  *, *::before, *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+}
+
+/* ── print ──────────────────────────────────────────────────────────────── */
+
+@media print {
+  .site-nav, #preloader, #cursor, .skip { display: none !important; }
+  .js [data-reveal] { opacity: 1 !important; transform: none !important; }
+  body { background: #fff; }
+}

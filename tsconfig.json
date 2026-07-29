@@ -1,0 +1,4 @@
+{
+  "//": "One project now: the React app in web/. Editors and `npm run typecheck` both read tsconfig.web.json.",
+  "extends": "./tsconfig.web.json"
+}

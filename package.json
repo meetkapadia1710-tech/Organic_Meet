@@ -1,0 +1,31 @@
+{
+  "name": "meet-kapadia-portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Portfolio site for Meet Kapadia — React 19 + TypeScript, built with Vite",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.web.json --noEmit && vite build",
+    "preview": "vite preview --port 4174",
+    "typecheck": "tsc -p tsconfig.web.json --noEmit",
+    "og": "python tools/make-og.py"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.2.0",
+    "sharp": "^0.35.3",
+    "typescript": "^5.7.2",
+    "vite": "^7.3.6"
+  },
+  "dependencies": {
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router": "^8.3.0"
+  }
+}

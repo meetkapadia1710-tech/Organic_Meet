@@ -1,0 +1,231 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   motion-plus.css — the second motion layer.
+
+   Loaded last, and strictly additive: every selector here targets a hook
+   that did not exist before this file (`.is-split`, `.hl`, `[data-velocity]`,
+   `.has-smooth-scroll`). Nothing above it is overridden, so deleting this
+   file and its import returns the site to exactly its previous behaviour.
+
+   The governing rule: the *resting* state of every element here is its
+   finished state. The starting position is only applied once JS has marked
+   the element as under its control. Content can never be stranded invisible
+   by a script that failed to load.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ── word reveal ────────────────────────────────────────────────────────
+   `.wr` is the mask, `.wi` is the word. inline-block on both so the mask has
+   a height to clip against; the negative margin cancels the descender room
+   overflow:hidden would otherwise crop off letters like g and y. */
+
+.is-split .wr {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}
+
+.is-split .wi {
+  display: inline-block;
+  transform: translateY(105%);
+  opacity: 0;
+  transition:
+    transform 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.6s ease;
+  /* Stagger by word index, capped so a long paragraph does not take four
+     seconds to finish arriving. */
+  transition-delay: calc(min(var(--i, 0) * 22ms, 620ms));
+}
+
+.is-split.is-in .wi {
+  transform: none;
+  opacity: 1;
+}
+
+/* ── highlight sweep ────────────────────────────────────────────────────
+   The stroke is drawn behind the text, off a palette step, so it inverts
+   with the theme and never sits on top of the words. */
+
+.hl {
+  position: relative;
+  display: inline;
+  isolation: isolate;
+}
+
+.hl::before {
+  content: '';
+  position: absolute;
+  left: -0.12em;
+  right: -0.12em;
+  bottom: 0.02em;
+  height: 0.42em;
+  z-index: -1;
+  border-radius: 0.1em;
+  background: var(--color-accent-2-300);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.72s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hl.is-on::before {
+  transform: scaleX(1);
+}
+
+/* A second flavour for the warm accent, so two highlights near each other
+   don't read as the same emphasis repeated. */
+.hl-accent::before {
+  background: var(--color-accent-300);
+}
+
+/* ── scroll-velocity skew ───────────────────────────────────────────────
+   `--skew` is written by useVelocitySkew; the default keeps the element flat
+   if the hook never runs. */
+
+[data-velocity] {
+  transform: skewY(var(--skew, 0deg));
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+/* ── smooth scroll ──────────────────────────────────────────────────────
+   While the inertial loop owns the wheel, the CSS smooth behaviour has to be
+   out of the way — otherwise every frame's scrollTo would itself animate,
+   and the page would crawl toward a target that is already moving. Anchor
+   jumps still work; they simply land instantly, which is what the view
+   transitions want anyway. */
+
+.has-smooth-scroll {
+  scroll-behavior: auto;
+}
+
+/* ── figure reveal ──────────────────────────────────────────────────────
+   Opt-in via `data-figure`. The image scales back to rest from slightly
+   over-size behind a wipe, so a screenshot arrives rather than appearing. */
+
+[data-figure] {
+  clip-path: inset(0 0 0 0);
+}
+
+.js [data-figure][data-reveal] {
+  clip-path: inset(0 0 100% 0);
+  transition: clip-path 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.js [data-figure][data-reveal].is-in {
+  clip-path: inset(0 0 0 0);
+}
+
+.js [data-figure][data-reveal] img {
+  transform: scale(1.08);
+  transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.js [data-figure][data-reveal].is-in img {
+  transform: none;
+}
+
+/* ── link underline sweep ───────────────────────────────────────────────
+   Opt-in via `.ul-sweep`. The rule replaces nothing: these links had no
+   underline treatment at all before. */
+
+.ul-sweep {
+  position: relative;
+  text-decoration: none;
+}
+
+.ul-sweep::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1.5px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right center;
+  transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ul-sweep:hover::after,
+.ul-sweep:focus-visible::after {
+  transform: scaleX(1);
+  transform-origin: left center;
+}
+
+/* ── section kicker rule ────────────────────────────────────────────────
+   Opt-in via `.kicker-rule` on an existing h6. A hairline grows out from the
+   label as the section arrives, using the scroll timeline where it exists so
+   it costs no main-thread work. */
+
+.kicker-rule {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.kicker-rule::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-divider);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 1.1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.kicker-rule.is-in::after,
+.is-in .kicker-rule::after {
+  transform: scaleX(1);
+}
+
+@supports (animation-timeline: view()) {
+  .kicker-rule::after {
+    transition: none;
+    transform: scaleX(0);
+    animation: kicker-grow linear both;
+    animation-timeline: view();
+    animation-range: entry 10% entry 70%;
+  }
+}
+
+@keyframes kicker-grow {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ── reduced motion ─────────────────────────────────────────────────────
+   Everything above resolves to its finished state, immediately. */
+
+@media (prefers-reduced-motion: reduce) {
+  .is-split .wi {
+    transform: none;
+    opacity: 1;
+    transition: none;
+  }
+  .hl::before {
+    transform: scaleX(1);
+    transition: none;
+  }
+  [data-velocity] {
+    transform: none;
+    transition: none;
+  }
+  .js [data-figure][data-reveal],
+  .js [data-figure][data-reveal].is-in {
+    clip-path: none;
+    transition: none;
+  }
+  .js [data-figure][data-reveal] img {
+    transform: none;
+    transition: none;
+  }
+  .kicker-rule::after {
+    transform: scaleX(1);
+    transition: none;
+    animation: none;
+  }
+  .ul-sweep::after {
+    transition: none;
+  }
+}

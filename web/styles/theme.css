@@ -1,0 +1,107 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   theme.css — the dark variant of the Organic design system.
+
+   The trick is that almost nothing here is a new decision. Every role in the
+   light theme carries a 100-900 ramp built on one perceptual lightness scale,
+   and the pages use those steps semantically: light steps (100-300) for
+   tinted fills, 500 as the base, dark steps (700-900) for text sitting on
+   those fills.
+
+   Reverse each ramp and every one of those usages stays correct. A tint that
+   was near-white becomes near-black; body copy set in neutral-800 goes from
+   dark-on-cream to light-on-dark; a heading in accent-700 goes from deep
+   rust to warm peach. The pages don't know the theme changed — which is what
+   a token system is supposed to buy you.
+
+   Only four things needed real judgement: the ground, the surface, a slightly
+   brighter accent so it survives a dark background, and shadows, which stop
+   being tinted ink and become ambient darkness plus a hairline edge.
+   ───────────────────────────────────────────────────────────────────────── */
+
+:root[data-theme='dark'] {
+  --color-bg: #17120f;
+  --color-surface: #241c17;
+  --color-text: #f4ece0;
+  --color-accent: #d9834a;
+  --color-accent-2: #93a373;
+  --color-divider: color-mix(in srgb, #f4ece0 18%, transparent);
+
+  /* Each ramp is the light theme's, reversed. */
+  --color-neutral-100: #2e2b25;
+  --color-neutral-200: #474238;
+  --color-neutral-300: #645c50;
+  --color-neutral-400: #82796a;
+  --color-neutral-500: #a19786;
+  --color-neutral-600: #c0b6a5;
+  --color-neutral-700: #dcd3c4;
+  --color-neutral-800: #eee7db;
+  --color-neutral-900: #f9f4ed;
+
+  --color-accent-100: #402310;
+  --color-accent-200: #643312;
+  --color-accent-300: #8c491a;
+  --color-accent-400: #b2622d;
+  --color-accent-500: #d67f48;
+  --color-accent-600: #f6a06b;
+  --color-accent-700: #ffc6a5;
+  --color-accent-800: #ffe1d0;
+  --color-accent-900: #fff2eb;
+
+  --color-accent-2-100: #272e1b;
+  --color-accent-2-200: #3d472b;
+  --color-accent-2-300: #56633f;
+  --color-accent-2-400: #728157;
+  --color-accent-2-500: #8fa073;
+  --color-accent-2-600: #aebf92;
+  --color-accent-2-700: #ccdbb2;
+  --color-accent-2-800: #e1eecc;
+  --color-accent-2-900: #f0fae1;
+
+  /* Ink-tinted shadows vanish on a dark ground; elevation becomes ambient
+     darkness plus a faint top edge. */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, .55), inset 0 1px 0 rgba(255, 255, 255, .04);
+  --shadow-md: 0 4px 14px rgba(0, 0, 0, .6), inset 0 1px 0 rgba(255, 255, 255, .05);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, .65), inset 0 1px 0 rgba(255, 255, 255, .06);
+
+  color-scheme: dark;
+}
+
+/* Two places assume a light ground explicitly and have to be told. */
+:root[data-theme='dark'] .btn-primary { color: #17120f; }
+:root[data-theme='dark'] .washed { filter: saturate(.7) contrast(.9) brightness(.85); }
+
+/* ── the toggle ─────────────────────────────────────────────────────────── */
+
+.theme-toggle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 38px; height: 38px; flex: none;
+  border: 1px solid var(--color-divider); border-radius: 999px;
+  background: transparent; color: var(--color-text);
+  cursor: pointer; padding: 0;
+  transition: background-color .3s ease, border-color .3s ease, transform .3s cubic-bezier(.34, 1.56, .64, 1);
+}
+.theme-toggle:hover { background: var(--color-accent-200); transform: scale(1.06); }
+.theme-toggle:active { transform: scale(.94); }
+.theme-toggle svg { width: 17px; height: 17px; display: block; }
+.theme-toggle .icon-moon { display: none; }
+:root[data-theme='dark'] .theme-toggle .icon-sun { display: none; }
+:root[data-theme='dark'] .theme-toggle .icon-moon { display: block; }
+
+/* ── the switch itself ──────────────────────────────────────────────────
+   A circular wipe from the toggle. The new theme is revealed over the old
+   one, so the clip-path animates on ::view-transition-new and the old frame
+   simply holds still underneath — animating both would cross-fade and muddy
+   the wipe. The class scopes this so it can't affect page navigations, which
+   use the same pseudo-elements for a different effect. */
+
+:root.theme-switching::view-transition-old(root),
+:root.theme-switching::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+:root.theme-switching::view-transition-old(root) { z-index: 0; }
+:root.theme-switching::view-transition-new(root) { z-index: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle:hover, .theme-toggle:active { transform: none; }
+}

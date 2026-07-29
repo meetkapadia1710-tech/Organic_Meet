@@ -1,0 +1,315 @@
+/* ─────────────────────────────────────────────────────────────────────────
+   motion.css — the motion layer.
+
+   Everything here is an enhancement on top of a site that already works
+   without it: delete this file and motion.js and the pages still render,
+   navigate and read correctly. Nothing animates layout-affecting properties
+   — every effect runs on transform, opacity, filter or a custom property,
+   so none of it triggers reflow.
+
+   Three tiers, in order of graceful degradation:
+     1. transitions and keyframes            — everywhere
+     2. scroll-driven animations             — @supports (animation-timeline)
+     3. cross-document view transitions      — @supports at-rule / progressive
+
+   The whole file yields to prefers-reduced-motion at the bottom.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* ── easing and duration tokens ─────────────────────────────────────────── */
+
+:root {
+  /* Expo-out: the "settles into place" curve most of the site uses. */
+  --ease-out-expo: cubic-bezier(.16, 1, .3, 1);
+  /* A little overshoot, for things that should feel physical. */
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+  /* Symmetric, for colour and opacity crossfades. */
+  --ease-smooth: cubic-bezier(.4, 0, .2, 1);
+
+  --dur-1: .18s;
+  --dur-2: .32s;
+  --dur-3: .6s;
+  --dur-4: .9s;
+
+  /* Written by motion.js: pointer/gyro offset, scroll velocity. */
+  --pointer-x: 0;
+  --pointer-y: 0;
+  --scroll-velocity: 0;
+}
+
+/* A real spring, where the engine can express one. */
+@supports (transition-timing-function: linear(0, 1)) {
+  :root {
+    --ease-spring: linear(
+      0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%, 0.849 31.5%,
+      0.937 38.1%, 0.968 41.8%, 0.991 45.7%, 1.006 50.1%, 1.015 55%, 1.017 63.9%,
+      1.001
+    );
+  }
+}
+
+/* ── page transitions ───────────────────────────────────────────────────
+   Cross-document view transitions: the index and a case study become one
+   continuous surface, and the project title morphs from the work row into
+   the case-study headline. build.mjs pairs them by writing the same
+   view-transition-name on both ends. */
+
+@view-transition { navigation: auto; }
+
+::view-transition-old(root) {
+  animation: vt-out var(--dur-2) var(--ease-smooth) both;
+}
+::view-transition-new(root) {
+  animation: vt-in var(--dur-3) var(--ease-out-expo) both;
+}
+@keyframes vt-out { to { opacity: 0; transform: translateY(-8px); } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(14px); } }
+
+/* The morphing title and the persistent chrome opt out of the page-level
+   crossfade and animate on their own. */
+::view-transition-group(*) { animation-duration: var(--dur-3); }
+::view-transition-old(case-title),
+::view-transition-new(case-title) { animation: none; mix-blend-mode: normal; height: 100%; }
+::view-transition-group(site-nav) { animation-timing-function: var(--ease-out-expo); }
+::view-transition-old(site-nav),
+::view-transition-new(site-nav) { animation: none; }
+
+/* Browsers without cross-document transitions get a plain fade on exit,
+   applied by motion.js. No navigation is intercepted — this is only paint. */
+.is-leaving .site-main { opacity: 0; transform: translateY(-6px); transition: opacity var(--dur-1) var(--ease-smooth), transform var(--dur-1) var(--ease-smooth); }
+
+/* ── entrance: split-text headlines ─────────────────────────────────────
+   motion.js wraps each word in a mask; the inner span rides up into it.
+   The padding/margin pair keeps descenders from being clipped by the mask. */
+
+.split { display: inline-block; overflow: hidden; vertical-align: bottom; padding-bottom: .12em; margin-bottom: -.12em; }
+.split > span {
+  display: inline-block;
+  transform: translateY(105%) rotate(2deg);
+  transition: transform var(--dur-4) var(--ease-out-expo);
+  transition-delay: calc(var(--i, 0) * 42ms);
+}
+.is-lit .split > span { transform: none; }
+
+/* ── entrance: scroll reveals ───────────────────────────────────────────
+   Upgrades the plain fade in site.css to a lift with a touch of scale. The
+   is-in class and the 4s safety net still come from site.js. */
+
+.js [data-reveal] {
+  transform: translateY(38px) scale(.985);
+  transition: opacity var(--dur-4) var(--ease-out-expo), transform var(--dur-4) var(--ease-out-expo);
+}
+.js [data-reveal].is-in { transform: none; }
+
+/* ── scroll progress ────────────────────────────────────────────────────── */
+
+#progress {
+  position: fixed; top: 0; left: 0; right: 0; height: 3px;
+  z-index: 9500; pointer-events: none;
+  transform-origin: 0 50%;
+  transform: scaleX(var(--progress, 0));
+  background: linear-gradient(90deg, var(--color-accent-2), var(--color-accent));
+}
+
+/* Where the browser can drive it off the scroll position directly, it does —
+   no listener, no main-thread work at all. */
+@supports (animation-timeline: scroll()) {
+  #progress {
+    transform: scaleX(0);
+    animation: progress-grow linear both;
+    animation-timeline: scroll(root block);
+  }
+  @keyframes progress-grow { to { transform: scaleX(1); } }
+}
+
+/* ── scroll-linked scenery ──────────────────────────────────────────────
+   Blobs drift, the hero settles back as it leaves, case-study figures lift
+   into place. All driven by the scroll timeline, so they stay pinned to the
+   scrollbar rather than chasing it a frame behind. */
+
+@supports (animation-timeline: view()) {
+  [data-parallax] {
+    animation: blob-drift linear both;
+    animation-timeline: scroll(root block);
+  }
+  @keyframes blob-drift { to { transform: translate3d(0, -140px, 0) scale(1.08); } }
+
+  .site-main > header > div:not([data-parallax]) {
+    animation: hero-settle linear both;
+    animation-timeline: view(block);
+    animation-range: exit -10% exit 90%;
+  }
+  @keyframes hero-settle { to { opacity: .25; transform: translateY(-40px) scale(.97); } }
+
+  .washed {
+    animation: figure-rise linear both;
+    animation-timeline: view(block);
+    animation-range: entry 0% entry 85%;
+  }
+  @keyframes figure-rise {
+    from { transform: translateY(46px) scale(.965); filter: saturate(.6) contrast(.85) brightness(1.1) opacity(.5); }
+  }
+}
+
+/* ── the cursor ─────────────────────────────────────────────────────────
+   A dot that tracks the pointer exactly, a ring that springs after it, and
+   a label that appears over anything carrying data-cursor. motion.js owns
+   the positions; everything else is CSS. */
+
+.has-cursor #cursor { transition: none; }
+
+#cursor-ring {
+  position: fixed; top: 0; left: 0; width: 46px; height: 46px;
+  border: 1.5px solid var(--color-accent); border-radius: 999px;
+  opacity: .5; pointer-events: none; z-index: 9998;
+  transform: translate3d(-100px, -100px, 0) translate(-50%, -50%);
+  transition: width var(--dur-2) var(--ease-spring), height var(--dur-2) var(--ease-spring),
+              opacity var(--dur-2) var(--ease-smooth), border-color var(--dur-2) var(--ease-smooth),
+              background-color var(--dur-2) var(--ease-smooth);
+  display: none;
+}
+.has-cursor #cursor-ring { display: block; }
+.has-cursor #cursor-ring.is-link { width: 74px; height: 74px; opacity: .28; background: var(--color-accent-200); }
+.has-cursor #cursor-ring.is-labelled { width: 104px; height: 104px; opacity: 1; background: var(--color-accent); border-color: var(--color-accent); }
+
+#cursor-label {
+  position: fixed; top: 0; left: 0; z-index: 9999;
+  pointer-events: none; display: none;
+  font-family: var(--font-heading); font-size: 13px; letter-spacing: .01em;
+  color: var(--color-bg); white-space: nowrap;
+  transform: translate3d(-100px, -100px, 0) translate(-50%, -50%) scale(.6);
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease-smooth), scale var(--dur-2) var(--ease-spring);
+}
+.has-cursor #cursor-label { display: block; }
+.has-cursor #cursor-label.is-on { opacity: 1; scale: 1; }
+
+/* The dot hides inside the label puck so the two don't fight. */
+.has-cursor #cursor.is-hidden { opacity: 0; }
+
+/* ── magnetic and tilt ──────────────────────────────────────────────────
+   motion.js writes --mx/--my (magnetic pull) and --rx/--ry (tilt) as plain
+   numbers; the transform lives here so it can be tuned without touching JS. */
+
+[data-magnetic] {
+  transform: translate3d(calc(var(--mx, 0) * 1px), calc(var(--my, 0) * 1px), 0);
+  transition: transform var(--dur-3) var(--ease-spring), background-color var(--dur-2) var(--ease-smooth);
+}
+[data-magnetic]:active { transform: translate3d(calc(var(--mx, 0) * 1px), calc(var(--my, 0) * 1px), 0) scale(.96); transition-duration: var(--dur-1); }
+
+/* Tilt and the card lift both want the transform property, so the tilted
+   version carries the lift inside it rather than letting the two collide. */
+[data-tilt] {
+  transform: perspective(900px) rotateX(calc(var(--rx, 0) * 1deg)) rotateY(calc(var(--ry, 0) * 1deg));
+  transition: transform var(--dur-3) var(--ease-out-expo), box-shadow var(--dur-3) var(--ease-out-expo);
+}
+[data-tilt]:hover {
+  transform: perspective(900px) rotateX(calc(var(--rx, 0) * 1deg)) rotateY(calc(var(--ry, 0) * 1deg)) translateY(-6px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ── micro-interactions ─────────────────────────────────────────────────── */
+
+.btn {
+  transition: background-color var(--dur-2) var(--ease-smooth), color var(--dur-2) var(--ease-smooth),
+              border-color var(--dur-2) var(--ease-smooth), transform var(--dur-2) var(--ease-spring);
+}
+.btn:not([data-magnetic]):hover { transform: translateY(-2px); }
+.btn:not([data-magnetic]):active { transform: translateY(0) scale(.97); transition-duration: var(--dur-1); }
+
+.tag { transition: transform var(--dur-2) var(--ease-spring), background-color var(--dur-2) var(--ease-smooth); }
+.tag:hover { transform: translateY(-2px) rotate(-1.5deg); }
+
+/* Work rows: the whole row eases across, the title colour follows, and a
+   soft accent wash sweeps in behind the content. */
+.work {
+  position: relative; isolation: isolate;
+  transition: transform var(--dur-3) var(--ease-out-expo), background-color var(--dur-3) var(--ease-smooth);
+}
+.work::before {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  border-radius: inherit; opacity: 0;
+  background: linear-gradient(100deg, var(--color-accent-100), var(--color-accent-200) 60%, transparent);
+  transition: opacity var(--dur-3) var(--ease-smooth);
+}
+.work:hover::before { opacity: 1; }
+.work-t { transition: color var(--dur-2) var(--ease-smooth), transform var(--dur-3) var(--ease-out-expo); }
+.work:hover .work-t { transform: translateX(6px); }
+.work-a { transition: transform var(--dur-3) var(--ease-spring); }
+
+.step { transition: background-color var(--dur-3) var(--ease-smooth), transform var(--dur-3) var(--ease-out-expo); }
+.step:hover { transform: translateX(6px); }
+.step-n { transition: background-color var(--dur-2) var(--ease-smooth), color var(--dur-2) var(--ease-smooth), transform var(--dur-3) var(--ease-spring); }
+.step:hover .step-n { transform: scale(1.12) rotate(-6deg); }
+
+.next { transition: background-color var(--dur-3) var(--ease-smooth), transform var(--dur-3) var(--ease-out-expo); }
+.next:hover { transform: translateX(8px); }
+
+.card { transition: transform var(--dur-3) var(--ease-out-expo), box-shadow var(--dur-3) var(--ease-out-expo); }
+.card:not([data-tilt]):hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+
+/* Nav links get a wash that grows from the centre instead of a flat fill. */
+.nlink { position: relative; isolation: isolate; }
+.nlink::before {
+  content: ''; position: absolute; inset: 0; z-index: -1;
+  border-radius: 999px; background: var(--color-accent-200);
+  transform: scale(.4); opacity: 0;
+  transition: transform var(--dur-3) var(--ease-spring), opacity var(--dur-2) var(--ease-smooth);
+}
+.nlink:hover::before { transform: scale(1); opacity: 1; }
+.nlink:hover { background: transparent !important; }
+
+/* The nav retracts on the way down and comes back the moment you scroll up. */
+.site-nav { transition: background-color var(--dur-2) var(--ease-smooth), box-shadow var(--dur-2) var(--ease-smooth), transform var(--dur-3) var(--ease-out-expo); }
+.site-nav.is-tucked { transform: translateY(calc(-100% - var(--space-4))); }
+
+/* Footer links draw their underline on hover. */
+.site-footer a { background-image: linear-gradient(currentColor, currentColor); background-size: 0% 1px; background-repeat: no-repeat; background-position: 0 100%; transition: background-size var(--dur-3) var(--ease-out-expo); }
+.site-footer a:hover { background-size: 100% 1px; }
+
+/* The marquee leans into the scroll: motion.js writes --scroll-velocity and
+   the track borrows it as extra translation on top of its own loop. */
+.mq-track { animation-duration: 34s; translate: calc(var(--scroll-velocity) * -1px) 0; transition: translate .45s var(--ease-out-expo); }
+
+/* Placeholder figures shimmer gently so they read as "image pending" rather
+   than as a broken asset. The :not(:has(img)) is the off switch — the moment
+   a real screenshot is dropped into a figure, its shimmer stops. */
+.washed { position: relative; overflow: hidden; }
+.washed:not(:has(img))::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(105deg, transparent 35%, color-mix(in srgb, var(--color-neutral-100) 55%, transparent) 50%, transparent 65%);
+  transform: translateX(-100%);
+  animation: shimmer 4.5s var(--ease-smooth) infinite;
+  pointer-events: none;
+}
+@keyframes shimmer { 60%, 100% { transform: translateX(100%); } }
+
+/* ── preloader ──────────────────────────────────────────────────────────── */
+
+.pre-mark { animation: float 2.4s var(--ease-smooth) infinite, mark-in var(--dur-4) var(--ease-spring) both; }
+@keyframes mark-in { from { transform: scale(.6); opacity: 0; } }
+#pct { animation: mark-in var(--dur-3) var(--ease-out-expo) 80ms both; font-variant-numeric: tabular-nums; }
+#preloader.is-done .pre-mark { transform: scale(.82); transition: transform var(--dur-4) var(--ease-out-expo); }
+
+/* ── reduced motion ─────────────────────────────────────────────────────
+   Everything above collapses to a plain, instant page. This block is the
+   contract: no drift, no morph, no shimmer, no springs. */
+
+@media (prefers-reduced-motion: reduce) {
+  @view-transition { navigation: none; }
+
+  /* The reduced-motion sheet clamps every animation-duration, which would
+     otherwise collapse the scroll-timeline progress bar to "always full".
+     Hand it back to the JS path, which writes --progress directly. */
+  #progress { animation: none !important; transform: scaleX(var(--progress, 0)); }
+
+  .split > span { transform: none !important; }
+  .js [data-reveal] { opacity: 1 !important; transform: none !important; }
+  [data-parallax], .washed, .site-main > header > div { animation: none !important; }
+  .washed::after, .washed:not(:has(img))::after { animation: none; display: none; }
+  .mq-track { animation: none; translate: none; }
+  #cursor-ring, #cursor-label { display: none !important; }
+  [data-magnetic], [data-tilt] { transform: none !important; }
+  .work:hover, .step:hover, .next:hover, .card:hover, .btn:hover { transform: none !important; }
+  .site-nav.is-tucked { transform: none; }
+  .pre-mark, #pct { animation: none; }
+}
