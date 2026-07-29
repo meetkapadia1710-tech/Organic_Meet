@@ -1,20 +1,20 @@
 /* ─────────────────────────────────────────────────────────────────────────
    images.mjs — convert the screenshots in web/public to WebP.
 
-   The originals are ~1900px wide PNGs and several are over 2 MB. They are
-   screenshots of interfaces: large flat areas, hard edges, a handful of
-   colours — exactly the case where PNG is heavy and WebP is not. Case studies
-   on this site claim deliberate image weight budgets, so shipping a 2 MB hero
-   would be the page contradicting itself.
+   The originals are ~1900px wide PNGs or JPEGs and several are over 2 MB.
+   They are screenshots of interfaces: large flat areas, hard edges, a
+   handful of colours — exactly the case where PNG/JPEG is heavy and WebP is
+   not. Case studies on this site claim deliberate image weight budgets, so
+   shipping a 2 MB hero would be the page contradicting itself.
 
-   Originals are kept. This writes a .webp beside each .png and leaves the
-   source alone, because there is no git repository here and a conversion
+   Originals are kept. This writes a .webp beside each source file and leaves
+   the source alone, because there is no git repository here and a conversion
    script that deletes its own inputs is unrecoverable if the settings turn
    out to be wrong.
 
      node scripts/images.mjs
 
-   Re-running is safe: a .webp newer than its .png is skipped.
+   Re-running is safe: a .webp newer than its source is skipped.
    ───────────────────────────────────────────────────────────────────────── */
 
 import fs from 'node:fs';
@@ -46,8 +46,10 @@ let before = 0;
 let after = 0;
 let converted = 0;
 
+const SOURCE_EXT = /\.(png|jpe?g)$/i;
+
 for (const file of walk(ROOT)) {
-  if (!file.toLowerCase().endsWith('.png')) continue;
+  if (!SOURCE_EXT.test(file)) continue;
   if (path.basename(file) === 'og.png') continue; // social card must stay PNG
 
   const srcStat = fs.statSync(file);
@@ -60,8 +62,8 @@ for (const file of walk(ROOT)) {
     // the narrower ones get a -<width> suffix that Figure builds srcset from.
     const out =
       width === BASE_WIDTH
-        ? file.replace(/\.png$/i, '.webp')
-        : file.replace(/\.png$/i, `-${width}.webp`);
+        ? file.replace(SOURCE_EXT, '.webp')
+        : file.replace(SOURCE_EXT, `-${width}.webp`);
 
     if (!fs.existsSync(out) || fs.statSync(out).mtimeMs < srcStat.mtimeMs) {
       await sharp(file)

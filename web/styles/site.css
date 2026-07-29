@@ -158,6 +158,89 @@ h1, h2, h3 { overflow-wrap: break-word; }
   .route-fallback-dot { animation: none; opacity: 0.7; }
 }
 
+/* ── hero 3D layer ──────────────────────────────────────────────────────
+   The WebGL canvas sits behind the hero's own content, inside the header's
+   existing positioning context. Three rules matter and all three are load
+   bearing:
+
+   `pointer-events: none` — the canvas covers the headline and every link in
+   the hero. Without this it eats every click in the top viewport, and the
+   scene reads the pointer from `window` precisely so it does not need them
+   (see CameraRig.tsx).
+
+   `z-index: 0` against content at `z-index: 1` — decoration behind text,
+   never over it.
+
+   Starting at `opacity: 0` — the canvas is transparent until WebGL has a
+   context, and fading up from nothing is what stops the scene appearing as
+   a hard pop mid-read. */
+
+.hero3d {
+  position: absolute;
+  inset: -6vh -10vw auto -10vw;
+  height: 92vh;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.6s cubic-bezier(0.16, 1, 0.3, 1);
+  /* Contain the paint work. Deliberately *not* `strict`/`size`: R3F measures
+     this box with a ResizeObserver to size its drawing buffer, and size
+     containment on the thing being measured is asking for a renderer that
+     never initialises. */
+  contain: layout paint;
+}
+
+.hero3d.is-ready { opacity: 1; }
+
+/* The static blob steps aside only once the scene is confirmed live — see
+   the comment on `.hero-blob` in pages/Home.tsx for why this is a sibling
+   selector rather than a conditional render. */
+.hero-blob {
+  opacity: 0.55;
+  transition: opacity 1.2s ease;
+}
+
+.hero3d.is-ready ~ .hero-blob { opacity: 0; }
+
+/* The scene is atmosphere behind body copy, so it is held well back from
+   full strength — the text has to stay the most legible thing on screen. */
+.hero3d[data-tier='high'].is-ready { opacity: 0.85; }
+.hero3d[data-tier='low'].is-ready { opacity: 0.7; }
+
+/* The loading seed: one soft accent bloom, breathing, in the space the
+   cluster is about to occupy. No spinner — the page is already usable, and
+   a progress indicator would imply it isn't. */
+.hero3d-seed {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    38% 46% at 68% 46%,
+    color-mix(in srgb, var(--color-accent-300) 55%, transparent) 0%,
+    transparent 70%
+  );
+  animation: hero3d-breathe 3.4s ease-in-out infinite;
+}
+
+@keyframes hero3d-breathe {
+  0%, 100% { opacity: 0.5; transform: scale(0.96); }
+  50% { opacity: 0.9; transform: scale(1.02); }
+}
+
+/* The hero content has to win the stacking contest against the canvas. */
+.hero-content { position: relative; z-index: 1; }
+
+@media (max-width: 719px) {
+  /* Tighter to the text block on a phone, where there is no empty right
+     margin for the cluster to live in. */
+  .hero3d { inset: -4vh -14vw auto -14vw; height: 78vh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Belt and braces: the scene is already gated off in JS before the chunk
+     loads, so this only catches the seed. */
+  .hero3d, .hero3d-seed { display: none; }
+}
+
 /* ── custom cursor ──────────────────────────────────────────────────────
    Only ever applied when JS is running on a fine pointer; touch devices and
    reduced-motion users keep the system cursor. */

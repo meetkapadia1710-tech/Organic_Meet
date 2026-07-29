@@ -4,8 +4,11 @@ import { Layout } from './components/Layout';
 import { Home } from './pages/Home';
 
 /* Clean URLs, no extensions anywhere: /, /projects, /approach, /engram.
-   The case-study route is last so it only catches what the fixed routes
-   didn't, and it renders NotFound itself for a slug with no content.
+   The fixed routes (including /contact) come before the case-study route, so
+   they match first — :slug is a catch-all for anything else, and it renders
+   NotFound itself for a slug with no content behind it. If /contact ever fell
+   through to :slug instead, CasePage would fail to find a project called
+   "contact" and silently render the 404 page.
 
    Home ships in the main bundle — it's what every first visit needs, so
    there is nothing to gain and a network round-trip to lose by lazy-loading
@@ -23,6 +26,7 @@ const loaders = {
   projects: () => import('./pages/Projects'),
   approach: () => import('./pages/Approach'),
   stats: () => import('./pages/Stats'),
+  contact: () => import('./pages/Contact'),
   case: () => import('./pages/CasePage'),
   notFound: () => import('./pages/NotFound'),
 };
@@ -31,10 +35,17 @@ const loaders = {
    the rest of this codebase uses throughout, and it isn't worth breaking for
    React.lazy's sake. lazy() needs a `{ default }` shape, so each loader above
    is re-mapped to one here rather than changing how the pages export
-   themselves. */
+   themselves.
+
+   pages/Contact.tsx and components/Contact.tsx both export something named
+   `Contact` — the page and the small closing block every other page renders
+   at its foot. They're different modules with no import collision, but don't
+   let the shared name suggest they're the same thing: the block is untouched
+   and still does its own job everywhere else. */
 const Projects = lazy(() => loaders.projects().then((m) => ({ default: m.Projects })));
 const Approach = lazy(() => loaders.approach().then((m) => ({ default: m.Approach })));
 const Stats = lazy(() => loaders.stats().then((m) => ({ default: m.Stats })));
+const ContactPage = lazy(() => loaders.contact().then((m) => ({ default: m.Contact })));
 const CasePage = lazy(() => loaders.case().then((m) => ({ default: m.CasePage })));
 const NotFound = lazy(() => loaders.notFound().then((m) => ({ default: m.NotFound })));
 
@@ -53,9 +64,11 @@ export function prefetchRoute(to: string): void {
         ? loaders.approach
         : path === '/stats'
           ? loaders.stats
-          : path && path !== '/'
-            ? loaders.case
-            : null;
+          : path === '/contact'
+            ? loaders.contact
+            : path && path !== '/'
+              ? loaders.case
+              : null;
 
   loader?.().catch(() => {});
 }
@@ -69,6 +82,7 @@ export const router = createBrowserRouter([
       { path: 'projects', element: <Projects /> },
       { path: 'approach', element: <Approach /> },
       { path: 'stats', element: <Stats /> },
+      { path: 'contact', element: <ContactPage /> },
       { path: ':slug', element: <CasePage /> },
       { path: '*', element: <NotFound /> },
     ],

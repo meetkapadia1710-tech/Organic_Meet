@@ -42,6 +42,11 @@ export function WorkRow({ project, label }: { project: Project; label: string })
           style={{ viewTransitionName: `case-${project.slug}`, margin: '0 0 var(--space-2)', fontSize: 42 }}
         >
           {project.name}
+          {project.status && (
+            <span className="tag tag-accent" style={{ borderRadius: 999, marginLeft: 'var(--space-3)', verticalAlign: 'middle' }}>
+              {project.status}
+            </span>
+          )}
         </h2>
         <div style={{ display: 'flex', gap: 'var(--space-1)', flexWrap: 'wrap' }}>
           <Tags tags={project.tags} />

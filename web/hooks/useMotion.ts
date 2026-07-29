@@ -74,11 +74,22 @@ export function useCursor(): void {
     const onMove = (e: MouseEvent) => {
       tx = e.clientX;
       ty = e.clientY;
+      const el = e.target as Element | null;
+      if (el?.tagName === 'IFRAME') {
+        root.classList.remove('has-cursor');
+      } else {
+        root.classList.add('has-cursor');
+      }
       loop.schedule();
     };
 
     const onOver = (e: MouseEvent) => {
       const el = e.target as Element | null;
+      if (el?.tagName === 'IFRAME') {
+        root.classList.remove('has-cursor');
+      } else {
+        root.classList.add('has-cursor');
+      }
       const target = el?.closest?.('[data-cursor], a, button') ?? null;
       const text = target?.getAttribute('data-cursor') ?? null;
       ring?.classList.toggle('is-link', !!target && !text);
@@ -88,6 +99,12 @@ export function useCursor(): void {
         label.classList.toggle('is-on', !!text);
       }
       dot.classList.toggle('is-hidden', !!text);
+    };
+
+    const onOut = (e: MouseEvent) => {
+      if (!e.relatedTarget) {
+        root.classList.remove('has-cursor');
+      }
     };
 
     loop.add(() => {
@@ -101,10 +118,12 @@ export function useCursor(): void {
 
     window.addEventListener('mousemove', onMove, { passive: true });
     window.addEventListener('mouseover', onOver, { passive: true });
+    window.addEventListener('mouseout', onOut, { passive: true });
 
     return () => {
       window.removeEventListener('mousemove', onMove);
       window.removeEventListener('mouseover', onOver);
+      window.removeEventListener('mouseout', onOut);
       root.classList.remove('has-cursor');
     };
   }, []);

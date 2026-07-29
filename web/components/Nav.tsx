@@ -81,12 +81,13 @@ export function Nav() {
       ) : (
         <NavLink className="nlink" to="/" viewTransition style={LINK_STYLE}>Index</NavLink>
       )}
-      {/* These three are lazy-loaded routes (see router.tsx); warming the
+      {/* These four are lazy-loaded routes (see router.tsx); warming the
           chunk on hover/focus is what makes the click land instantly instead
           of pausing on a Suspense fallback. */}
       <NavLink className="nlink nlink-projects" to="/projects" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/projects')} onFocus={() => prefetchRoute('/projects')}>Projects</NavLink>
       <NavLink className="nlink" to="/approach" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/approach')} onFocus={() => prefetchRoute('/approach')}>Approach</NavLink>
       <NavLink className="nlink" to="/stats" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/stats')} onFocus={() => prefetchRoute('/stats')}>Stats</NavLink>
+      <NavLink className="nlink" to="/contact" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/contact')} onFocus={() => prefetchRoute('/contact')}>Contact</NavLink>
     </>
   );
 

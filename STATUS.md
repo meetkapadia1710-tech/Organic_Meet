@@ -5,15 +5,23 @@ something.** It is the handoff document — anyone (or any agent) picking this u
 should be able to read it and know what exists, what is deliberately unfinished,
 and what will bite them.
 
-_Last updated: 2026-07-30_
+_Last updated: 2026-07-31_
 
 ---
 
 ## What this is
 
 Meet Kapadia's portfolio. React 19 + TypeScript, Vite, React Router (SPA).
-19 projects, all 19 with full case studies. `tier: 'archive'` and `PlainRow`
-still exist and still work — nothing currently uses them.
+18 shown projects (19 in the data — Hindsight is `pending: true`), all with
+full case studies. `tier: 'archive'` and `PlainRow` still exist and still
+work — nothing currently uses them.
+
+**Deployed on Vercel — see `vercel.json` at the repo root.** Required because
+`vite.config.ts` outputs to `site-react/`, not the `dist/` Vercel expects by
+default; that mismatch is what took the last deploy down (build succeeded,
+"No Output Directory named dist" at the deploy step). The same file adds the
+SPA rewrite (`/* → /index.html`) that outstanding item #3 used to flag as
+missing — one file fixed both.
 
 ```bash
 npm install
@@ -37,7 +45,8 @@ superseded work went to `_archive/` instead of being removed.
 | `web/content/stack.ts` | **The technology list**, by category. Feeds the homepage Stack rows. |
 | `web/content/stats.ts` | Handles for the Stats page. |
 | `web/content/types.ts` | `Project`, `ProjectLinks`. |
-| `web/pages/` | Home, Projects, Approach, Stats, CasePage, NotFound. All but Home are lazy-loaded — see `router.tsx`. |
+| `web/pages/` | Home, Projects, Approach, Stats, Contact, CasePage, NotFound. All but Home are lazy-loaded — see `router.tsx`. |
+| `web/components/Hero3D/` | The WebGL hero scene. `index.tsx` is the gate and is the **only** file here in the main bundle; everything else is behind a lazy import. |
 | `web/components/` | Layout, Nav, Deck, CommandPalette, Figure, SplitText, demos. |
 | `web/hooks/` | Motion, keyboard, document meta, transition navigation. |
 | `web/state/` | Shared stores: theme, work view, shortcuts sheet. |
@@ -173,6 +182,54 @@ superseded work went to `_archive/` instead of being removed.
     stack marquee: none of them sit under a parent that re-renders on
     anything faster than a route change, so memoizing them would be
     inert — added complexity with nothing to actually prevent.
+- **`/contact` — a dedicated page**, not just the shared closing block.
+  `pages/Contact.tsx`, lazy-loaded like every other route, nav entry added,
+  indexed in the command palette. The existing `<Contact />` block
+  (`components/Contact.tsx`) is untouched and still ends every other page —
+  same name, different thing; see the comment in `router.tsx`. Content is
+  three reach-me cards (email/GitHub/LinkedIn, each explaining what it's
+  *for*, not just a link) plus the same "worth reaching out about" list
+  Approach already states, so the two pages don't contradict each other. The
+  page's own "Ways to reach me" section carries `id="contact"`, so the
+  nav's persistent "Get in touch" pill still resolves to something sensible
+  when clicked from this page too.
+
+  It closes on a "Before you write" band. That exists for two reasons, and
+  the first is a bug fix: **this is the only page that does not end with the
+  shared `<Contact />` block, and that block is where every other page gets
+  its `10vh` of bottom padding from.** Without it the final list ran flush
+  into the footer with no gap — which is what made the page read as
+  unfinished. The band restores the bottom padding *and* gives the page a
+  terminal beat instead of stopping mid-list. Its content is deliberately
+  not a fourth restatement of the email address: the cards above say which
+  channel to use, the band says what happens after you use one, and it
+  claims nothing about response times that the site does not already claim
+  elsewhere.
+- **`WorkRow` now renders `project.status`.** It only lived on `PlainRow`
+  before, so a case-tier project's `status` field was silently inert — the
+  one place this bit (ReFractor.ai) worked around it by duplicating "In
+  progress" into its `tags` array instead. That duplicate is gone now that
+  the real mechanism works; J.A.R.V.I.S and PlayHub carry `status: 'In
+  progress'` the same way, each with an honest reason in `projects.ts` (no
+  public URL exists for a local voice assistant; PlayHub's own screenshots
+  show a gamification layer the case study doesn't describe).
+- **DealAI Agent replaces Hindsight** as the fifth featured project. Both
+  were hackathon builds about memory and read as repetitive back to back;
+  DealAI has a live demo and a public repo to click through, Hindsight has
+  neither. Hindsight is `pending: true`, not deleted — full write-up still in
+  `cases.ts`, and there's no git here so deletion is permanent. Flip
+  `pending` back if a demo or repo ever exists for it.
+- **Two more case studies photographed**: Connected Ambulance (paramedic
+  view, hospital ER queue, audit trail — all synthetic demo data, "DEMO
+  MODE" visible in every shot, no real patient information) and LearnFlex
+  (Practice Mode — the part actually built — plus session results, history,
+  and the dashboard as a gallery extra). `scripts/images.mjs` now converts
+  `.jpg`/`.jpeg` sources as well as `.png` — the Ambulance screenshots were
+  JPEGs and the script silently skipped non-PNG files before this. Both
+  case studies' `figures`/`heroFigure` captions were rewritten to describe
+  what the real screenshots show, replacing guesses written before any
+  screenshot existed (e.g. LearnFlex's placeholder said "1v1 match", a
+  screen that was never actually captured).
 
 ---
 
@@ -196,9 +253,14 @@ against one lazy route before assuming the naive approach works.
 There is none. One uncaught error anywhere = blank white page, no way out.
 Catch, render the NotFound-style page, offer a link home.
 
-### 3. SPA rewrite rule on the host
-`/*` → `/index.html`, or every clean URL 404s on refresh.
-Netlify `_redirects`, Vercel `rewrites`, or the GitHub Pages 404 trick.
+### 3. SPA rewrite rule on the host  ✅ done
+`vercel.json` at the repo root now carries `rewrites: [{ source: '/(.*)',
+destination: '/index.html' }]`, plus `outputDirectory: 'site-react'` (see
+"What this is" above — that second part is what the last deploy actually
+needed). Static assets under `outputDirectory` still serve directly; Vercel
+checks the filesystem before falling through to the rewrite. If this site
+ever moves host, the equivalent rule (Netlify `_redirects`, the GitHub Pages
+404 trick) still needs adding there.
 
 ### 4. Real images — mostly done
 Screenshots are in `web/public/<Project>/`. Seven case studies use them:
@@ -305,9 +367,163 @@ a 370-line file, which is a real change to get right rather than a
 five-minute one, and the code-splitting already done was the higher-confidence
 win for the time available.
 
+### 10. Codolio — endpoint found, but the profile 404s
+Meet asked for a Codolio integration on `/stats`, reverse-engineered rather
+than scraped. Investigated live against `codolio.com/profile/Lucifer_17`
+(Next.js App Router; no `window.__NEXT_DATA__`, data streams in via RSC
+`self.__next_f.push`, so nothing useful sits in the initial HTML — the real
+data comes from a client-side fetch).
+
+**The endpoint**: `GET https://api.codolio.com/profile?userKey=<handle>`
+(siblings exist: `/github/profile`, `/dev/project`, `/dev/project/config`,
+same `userKey` param). No cookies, no auth header, no login required — a
+plain cross-origin `fetch()` from a completely different origin got a real,
+specific JSON response back rather than a CORS block, which means it's
+genuinely public.
+
+**The problem**: for `userKey=Lucifer_17`, it returns HTTP 400 —
+`{"error":"Profile not found","errorDetails":"Authentication Failure"}` —
+and **the live profile page shows Codolio's own 404** ("Oops... Page Not
+Found"). This isn't a fetch-side mistake: it's what Codolio's own frontend
+gets back for this exact handle right now. Tried case variants
+(`lucifer_17`, `LUCIFER_17`) — same 406 "Profile not found". A hyphen
+variant (`Lucifer-17`) returned a *different* error (404 "User not found"),
+which suggests `Lucifer_17` with the underscore is a real registered
+identifier, just not one whose profile currently resolves — most likely
+either renamed, or set to private, or `userKey` wants something other than
+the display handle (a slug/ID that isn't `Lucifer_17` even though the URL
+shows it).
+
+**Nothing was built against this.** Wiring a card to an endpoint that 404s
+for its own subject would ship a broken feature, not a working one — Stats
+already has the pattern for a service that might fail (`loading → error →
+ready`, GitHub/LeetCode), but that pattern is for *transient* failures, not
+"this profile doesn't exist." **Needs from Meet before this goes further**:
+confirm the current, correct Codolio profile URL — check codolio.com while
+logged in — and re-share it. Once one resolves, the endpoint above (`GET
+/profile?userKey=<handle>`, public, unauthenticated, JSON) is what to build
+against; it slots into the same `useGitHubCalendar`/`useLeetCode` pattern
+already in `components/Heatmap.tsx`, client-side, no backend needed — this
+is a static Vercel SPA, and a Node proxy for one already-public GET endpoint
+would be new infrastructure to solve a problem that doesn't exist here.
+
+### 11. 3D hero — built, but never seen rendering  ⚠️ needs a human look
+`web/components/Hero3D/` is implemented and wired into Home. **Every
+structural claim below was verified against the production build. The one
+thing that could not be checked is whether it actually looks good** — see
+"what is unverified" at the end of this entry. Look at it before trusting it.
+
+**Architecture.** `index.tsx` is the gate and the only file here in the main
+bundle; it must never import three. It calls `getDeviceProfile()`, and on
+`'none'` returns `null` — the `React.lazy` import is inside a branch that
+never runs, so an unsupported device downloads nothing. Everything else
+(`HeroCanvas`, `OrganicField`, `Particles`, `CameraRig`, `palette`) is
+reachable only through that lazy import and lands in one chunk.
+
+**Measured cost** (`npm run build`):
+
+| | gzip |
+|---|---|
+| main bundle before | 80.38 kB |
+| main bundle after | 81.02 kB (**+0.64 kB** — the gate and the device profile) |
+| `HeroCanvas` chunk | **242.19 kB** (896.77 kB raw), lazy, gated |
+
+Verified by grep that `WebGLRenderer`/`IcosahedronGeometry` appear in the
+hero chunk and in **neither** the main bundle nor `react-vendor`. The 242 kB
+is essentially the price of three.js itself; it is worth revisiting only by
+dropping features (`transmission` and the PMREM environment are the two
+candidates), and that trade was not measured — it would cost real visual
+quality for a fraction of a chunk that already never blocks first paint.
+
+**Dependencies added**: `three`, `@react-three/fiber`, `@types/three`.
+Deliberately **not** Drei (its `<Environment>` wants an HDR over the network,
+which the brief rules out; everything else wanted from it is a few lines) and
+**not** postprocessing (bloom/DOF is two more packages and a second
+full-screen pass on exactly the phones this has to stay smooth on).
+
+**Device gating** — `hooks/useDeviceProfile.ts`, resolved synchronously and
+cached:
+- `none` (no chunk at all): `prefers-reduced-motion`, no WebGL2 context,
+  Data Saver on, ≤2 GB RAM or ≤2 cores.
+- `low` (4 forms, 90 particles, no transmission, DPR ≤1.5): coarse pointer,
+  <900px wide, ≤4 GB or ≤4 cores.
+- `high` (7 forms, 260 particles, transmission, DPR ≤2): everything else.
+Verified live: 1440px → `high`, DPR-2 buffer; 375px → `low`, buffer clamped
+to 1.5×.
+
+**Colours come from the stylesheet, not from constants.** `palette.ts` reads
+`--color-accent-*` / `--color-accent-2-*` off `document.documentElement` and
+`HeroCanvas` re-reads on every `useTheme()` change, so the scene inverts with
+the ramps in dark mode like everything else. **Do not hardcode a hex in this
+folder** — that is the one change that would visibly break the branding.
+
+**The static blob is the failure path, and it is not conditional.** Home
+always renders `.hero-blob`; it fades out only via
+`.hero3d.is-ready ~ .hero-blob` once the canvas reports a live WebGL context.
+An earlier version hid the blob whenever the *capability check* passed, which
+was wrong — the check says the device could run WebGL, not that it did, so a
+lost context or a chunk that never arrived would have left the hero emptier
+than before the 3D existed. Two consequences: **the blob must stay after
+`<Hero3D />` in the DOM** (forward sibling selector), and **its opacity must
+stay in the stylesheet, not inline** — an inline value outranks the fade rule
+and the blob sits on top of the scene forever. Both of those were real bugs
+during the build.
+
+**Why not instanced meshes for the forms.** The brief asked for instancing
+"where possible". Seven meshes is seven draw calls, noise next to the
+transmission pass, and instancing forces one shared material — losing the
+per-form colour and opacity that make the cluster read as depth. The
+particles *are* the thousands-of-elements case and are a single `<points>`.
+
+**What is unverified — read this before assuming it works.** The preview
+browser reports `document.visibilityState === 'hidden'` and fires **zero**
+rAF callbacks (measured: 0 frames in 1s). Consequences:
+- R3F never receives a ResizeObserver callback, so it never sizes itself.
+  Dispatching a manual `window.resize` unblocks it, and after that the canvas
+  sized correctly (1685×828), `onCreated` fired, `.is-ready` applied and the
+  fade rules resolved to their correct targets (0.85 high / 0.7 low, blob 0).
+  So init, WebGL2 context, shader compilation and the fade chain are all
+  confirmed working — **that is an environment artifact, not a bug.**
+- CSS transitions do not advance either, so opacity had to be read with
+  transitions forced off to see target values.
+- **No frame was ever rendered, and no screenshot was ever obtained.** The
+  composition, the colours in motion, whether the forms read as organic
+  rather than as spheres, whether 0.85 opacity is too strong behind the
+  headline — none of that has been seen by anyone. `gl.render()` could have
+  been forced synchronously, but R3F v9 no longer exposes `__r3f` on the
+  canvas, so the scene/camera handles were not reachable.
+
+Confirmed clean regardless: no console **errors** (only a three.js
+`Clock`-deprecation warning that comes from R3F itself, and an ANGLE
+float-precision warning from three's own shaders); no horizontal overflow at
+1440px or 375px — a real risk given the layer is inset `-10vw`; the canvas is
+`pointer-events: none` and hit-testing at the headline and the CTA tag
+returns the text, not the canvas, so nothing in the hero became unclickable.
+
+**Likely first adjustments once someone sees it**: the opacity pair in
+`site.css` (`.hero3d[data-tier=...].is-ready`), and the `FORMS` table at the
+top of `OrganicField.tsx`, which is the whole composition in seven lines.
+
 ---
 
 ## Gotchas — read before touching these
+
+**@react-three/fiber augments the global JSX namespace, and it broke a file
+that has nothing to do with 3D.** Installing R3F adds every Three.js object
+(`<mesh>`, `<points>`, `<meshPhysicalMaterial>`…) to `JSX.IntrinsicElements`
+*globally*. `SplitText` typed its `as` prop as React's `ElementType`, so
+TypeScript started trying to find props valid across HTML elements **and**
+Three.js objects simultaneously, and collapsed `children`, `ref`, `className`
+and `style` to `never` — four errors in a component that renders a headline.
+Fixed by narrowing `as` to the tags it actually supports (`SplitTag`), which
+was more honest anyway. **If a similar `never` error appears in an unrelated
+component after any R3F upgrade, this is why** — narrow the type, don't cast
+the props.
+
+**The hero scene's colours are read from CSS, and must stay that way.** See
+outstanding item 11; `Hero3D/palette.ts` is the only place that knows what a
+colour is, and hardcoding a hex anywhere in that folder breaks dark mode
+silently.
 
 **Every page but Home is `React.lazy`, and the loader functions are shared
 between two things that must never drift apart.** `router.tsx` keeps one

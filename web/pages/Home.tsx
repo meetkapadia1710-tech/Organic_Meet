@@ -5,6 +5,7 @@ import { WorkRow } from '../components/WorkRow';
 import { Deck } from '../components/Deck';
 import { Contact } from '../components/Contact';
 import { TechMarquee } from '../components/TechMarquee';
+import { Hero3D } from '../components/Hero3D';
 import { stack, stackCount, stackRows } from '../content/stack';
 import { setView, useWorkView } from '../state/view';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
@@ -64,12 +65,32 @@ export function Home() {
   return (
     <>
       <header id="main" style={{ padding: '22vh var(--space-8) 0', maxWidth: 1400, margin: '0 auto', position: 'relative' }}>
+        <Hero3D />
+
+        {/* The original static blob, always rendered, never conditional.
+
+            It fades out only once the 3D scene has actually confirmed it is
+            live — `.hero3d.is-ready ~ .hero-blob` in site.css, a forward
+            sibling selector, which is why this element must stay *after*
+            <Hero3D /> in the DOM.
+
+            Gating it on the capability check instead was wrong: the check
+            says the device *could* run WebGL, not that it did. Anything that
+            fails after that point — a lost context, a chunk that never
+            arrives, a renderer that never initialises — would have left the
+            hero with neither the scene nor the blob, emptier than before the
+            3D was added. Now the failure mode is simply the old hero. */}
         <div
           aria-hidden="true"
           data-parallax
-          style={{ position: 'absolute', top: '14vh', right: -120, width: 420, height: 420, borderRadius: 999, background: 'var(--color-accent-2-200)', opacity: 0.55, animation: 'float 9s ease-in-out infinite' }}
+          className="hero-blob"
+          /* `opacity` lives in the stylesheet, not here: an inline value
+             would outrank the `.hero3d.is-ready ~ .hero-blob` rule that
+             fades it out, and the blob would sit on top of the scene
+             forever. */
+          style={{ position: 'absolute', top: '14vh', right: -120, width: 420, height: 420, borderRadius: 999, background: 'var(--color-accent-2-200)', animation: 'float 9s ease-in-out infinite' }}
         />
-        <div style={{ position: 'relative' }}>
+        <div className="hero-content">
           <span className="tag tag-accent" style={{ borderRadius: 999 }}>Open to internships &amp; freelance</span>
           <SplitText
             as="h1"

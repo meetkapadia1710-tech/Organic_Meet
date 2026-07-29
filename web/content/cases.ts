@@ -371,6 +371,26 @@ export const cases: Record<string, CaseContent> = {
   },
   'ambulance': {
     heroFigure: 'paramedic view — severity, vitals and destination',
+    heroImage: {
+      src: '/Ambulance/AnotherScreen2.webp',
+      alt: 'The paramedic view: a CRITICAL severity banner explaining which vitals triggered it, live heart-rate/SpO2/blood-pressure readings, a NEWS2 composite gauge and parameter radar, and a route map to the recommended hospital',
+      width: 1600,
+      height: 833,
+    },
+    figureImages: [
+      {
+        src: '/Ambulance/AnotherScreen.webp',
+        alt: 'The audit trail for one trip: a severity-over-time chart with tier-band crossings marked, and the vitals trace beneath it',
+        width: 1600,
+        height: 897,
+      },
+      {
+        src: '/Ambulance/MainScreen.webp',
+        alt: 'The hospital ER view: an inbound patient queue sorted by severity, a full handover detail with heart-rate and SpO2 trends, and an auto-generated resource-preparation checklist',
+        width: 1600,
+        height: 854,
+      },
+    ],
     problem: {
       heading: 'The patient deteriorates in transit, and the hospital finds out when the doors open.',
       paras: [
@@ -390,7 +410,10 @@ export const cases: Record<string, CaseContent> = {
       { title: 'Match on capability, not distance', body: 'Hospitals are ranked on specialty fit and centre level against the patient acuity first, then distance, then free beds. Forty real facilities from OpenStreetMap, each candidate carrying the reasons it was chosen so the crew can see the argument and override it.' },
       { title: 'Arrive already expected', body: 'On confirmation the receiving hospital gets the tier, the full score breakdown, the trend history, a live ETA, and a preparation checklist generated from the actual vitals — the intubation trolley appears because oxygen saturation is scoring three, and it says so.' },
     ],
-    figures: ['model vs NEWS2 baseline, side by side', 'hospital ER — inbound queue and readiness'],
+    // Captions written against real screenshots now, not the speculative
+    // ones from before any existed — "model vs NEWS2 baseline, side by side"
+    // was a guess at a comparison view that was never actually screenshotted.
+    figures: ['audit trail — severity over the trip', 'hospital ER — inbound queue and readiness'],
     hard: [
       'Justifying the model at all. Label your training data with NEWS2, then feed NEWS2 sub-scores in as features, and you have spent a week rebuilding a lookup table. Two things break the circle: labels come from each synthetic patient’s true physiological state while the model only ever sees a noisy measurement of it, so its real job is surviving sensor error; and the labels encode two interactions the score cannot express — shock index, and silent hypoxia, where a low saturation with a normal respiratory rate is dangerous precisely because the body has stopped responding. On those conflicting cases the model is right 53% of the time against the rules’ 8%. That gap is the entire argument for the model; without it, the rules alone would have been the right call.',
       'The second was learning to distrust it — and the fix is the part worth reading. Version 1.0.0 scored a patient responding only to voice, with every other vital normal, as Stable — at 0.73 confidence — because the training data had never shown it impaired consciousness on its own. The fix was three-layered: new training cases for that slice, a decision threshold tuned for recall on the Critical class rather than overall accuracy, and a hard floor that lets the model escalate above the rules but never below a NEWS2 red score. The trainer now refuses to save a model whose Critical recall drops under 0.95. Over-triage costs a resus bay; the other error costs something else.',
@@ -474,6 +497,34 @@ export const cases: Record<string, CaseContent> = {
   },
   'learnflex': {
     heroFigure: 'learnflex — practice mode, full width',
+    heroImage: {
+      src: '/learnFlex/PracticeModeScreen.webp',
+      alt: 'Practice Mode: a Chemistry multiple-choice question with an answer grid, a live question map, and a session panel showing subject, question count and scoring',
+      width: 1600,
+      height: 793,
+    },
+    figureImages: [
+      {
+        src: '/learnFlex/PracticeModeAnalyticsScreen.webp',
+        alt: 'A completed session: accuracy, score and correct/incorrect/skipped counts, with a per-question breakdown showing the submitted answer against the verified solution',
+        width: 1600,
+        height: 786,
+      },
+      {
+        src: '/learnFlex/HistoryScreen.webp',
+        alt: 'Recent sessions: score, percentage change and correct/wrong counts for each past attempt, with a review link into any of them',
+        width: 1600,
+        height: 792,
+      },
+    ],
+    gallery: [
+      {
+        src: '/learnFlex/MainScreen.webp',
+        alt: 'The JEE Advanced dashboard: a target-exam selector, and entry points into the Daily Challenge and a full-length Mega Mock test',
+        width: 1600,
+        height: 784,
+      },
+    ],
     problem: {
       heading: 'Preparation is lonely, and question banks are boring.',
       paras: [
@@ -493,7 +544,11 @@ export const cases: Record<string, CaseContent> = {
       { title: 'Real-time 1v1', body: 'Two students, the same questions, live. Competition does what streak counters cannot.' },
       { title: 'A schema that holds', body: 'Questions, attempts, subjects and users normalized to 3NF/BCNF, so adding a new exam does not mean duplicating the question model.' },
     ],
-    figures: ['daily challenge screen', '1v1 match'],
+    // Captions match real screenshots of the part actually built (Practice
+    // Mode) rather than the speculative "daily challenge" / "1v1 match"
+    // captions written before any screenshots existed — neither of those
+    // screens was ever photographed.
+    figures: ['session results — accuracy and per-question breakdown', 'session history'],
     hard: [
       'Working in a five-person team meant the schema was the contract. We normalized to 3NF/BCNF early and argued it out once, which is why Practice Mode could be built against attempts and questions without renegotiating them every week.',
       'Practice Mode itself had to stay honest about progress. Showing accuracy per subject over time is more useful — and more sobering — than a single score, so that is what it reports.',

@@ -47,6 +47,7 @@ export const projects: Project[] = [
   },
   {
     slug: 'dealai',
+    featured: true,
     name: 'DealAI Agent',
     year: '2026',
     tier: 'case',
@@ -84,6 +85,11 @@ export const projects: Project[] = [
     year: '2026',
     tier: 'case',
     category: 'AI & tooling',
+    // No links because there's nowhere to point yet — an offline-first voice
+    // assistant living on one machine has no public URL by nature. "In
+    // progress" says that plainly instead of the row implying it's finished
+    // and simply undocumented.
+    status: 'In progress',
     tags: ['Python', 'Voice AI', 'Offline-first'],
     summary:
       'An offline-first voice assistant for Windows with 29 tools, a swappable LLM brain, semantic memory and a live FastAPI/WebSocket dashboard.',
@@ -102,7 +108,7 @@ export const projects: Project[] = [
     summary:
       'A fine-tuned DeBERTa-v3 classifier that separates AI-written text from human writing at 99.77% accuracy — published to Hugging Face with a live demo and an honest limitations section.',
     demo: {
-      embed: 'https://huggingface.co/spaces/Meet-1710/AI_Detector?embed=true',
+      embed: 'https://meet-1710-ai-detector.static.hf.space',
       label: 'Hugging Face Space',
       note: 'The published model, running live. Paste your own writing and see the probability — bearing in mind everything in the limitations below: under about fifty words the answer is close to a coin flip.',
     },
@@ -115,10 +121,17 @@ export const projects: Project[] = [
   },
   {
     slug: 'hindsight',
-    featured: true,
     name: 'Hindsight',
     year: '2026',
     tier: 'case',
+    // Deliberately excluded, not unfinished: it read as too similar next to
+    // DealAI Agent on the homepage row — both hackathon builds anchored on
+    // "memory" — and DealAI has a live demo and a public repo to click
+    // through to, where Hindsight has neither. The case-study prose is kept
+    // (cases.ts still has the full write-up); this only pulls it from the
+    // build. Set pending: false to bring it back — e.g. if a live capture
+    // demo or a public repo ever exists to point at.
+    pending: true,
     category: 'Hackathons',
     tags: ['Hackathon', 'Local-first', 'OCR'],
     summary:
@@ -185,6 +198,10 @@ export const projects: Project[] = [
     year: '2025',
     tier: 'case',
     category: 'Products',
+    // Live, but not finished — the leaderboard/gamification layer visible in
+    // the screenshots (ranks, court hours, badges) isn't described anywhere
+    // in the case study below. "In progress" is accurate, not decorative.
+    status: 'In progress',
     tags: ['React Native', 'Payments', 'Cross-platform'],
     summary:
       'Turf booking for cricket and pickleball, built once with Expo and Capacitor. Razorpay payments, Google Wallet passes, and separate flows for customers, owners and admins.',
@@ -321,7 +338,11 @@ export const projects: Project[] = [
     tier: 'case',
     category: 'AI & tooling',
     status: 'In progress',
-    tags: ['Vite', 'Supabase', 'In progress'],
+    // 'In progress' used to also be duplicated into a tag, because WorkRow
+    // (case-tier rows) didn't render `status` yet — only PlainRow did. Now
+    // that WorkRow shows the badge too (see components/WorkRow.tsx), the tag
+    // duplicate is gone; `status` alone carries it.
+    tags: ['Vite', 'Supabase'],
     summary: 'A site analysis tool, early days — the core infrastructure and the analysis routes are in, the scoring is not.',
     title: 'ReFractor.ai',
     desc: 'A site analysis tool in progress: the Supabase schema, auth and analysis routes are working end to end; the scoring model that turns a crawl into advice is the part still being built.',

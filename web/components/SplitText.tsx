@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState, type ElementType } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 
 /* Headlines rise word by word out of a mask. The mask/inner pair and the
    --i stagger index are exactly what motion.css already styles, so this is
@@ -8,19 +8,35 @@ import { Fragment, useEffect, useRef, useState, type ElementType } from 'react';
    Above the fold it lights on the next frame; lower down it waits for the
    viewport, with the same 4s safety net so a headline can never stay hidden
    because an observer didn't fire. */
+
+/* `as` used to be React's `ElementType`, which broke the moment
+   @react-three/fiber was added: R3F augments the global JSX namespace with
+   every Three.js object, so `ElementType` started including `<mesh>`,
+   `<points>` and the rest. TypeScript then tried to find props valid for
+   *all* of them at once and collapsed `children`, `ref`, `className` and
+   `style` to `never`.
+
+   Narrowing to the tags this is actually used with fixes that, and is more
+   honest besides — it was never meant to render arbitrary components. */
+type SplitTag = 'h1' | 'h2' | 'h3' | 'h4' | 'p' | 'span' | 'div';
+
 export function SplitText({
-  as: Tag = 'h1',
+  as = 'h1',
   text,
   className,
   style,
   ...rest
 }: {
-  as?: ElementType;
+  as?: SplitTag;
   text: string;
   className?: string;
   style?: React.CSSProperties;
 } & Record<string, unknown>) {
-  const ref = useRef<HTMLElement>(null);
+  /* Pinned to one concrete tag for typing only; the runtime value is
+     whatever `as` was. Every tag in SplitTag takes the same className/style/
+     ref shape, so the substitution is safe. */
+  const Tag = as as 'h1';
+  const ref = useRef<HTMLHeadingElement>(null);
   const [lit, setLit] = useState(false);
   const words = text.trim().split(/\s+/);
 
