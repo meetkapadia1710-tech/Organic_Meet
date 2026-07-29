@@ -3,7 +3,7 @@ import { Contact } from '../components/Contact';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { stats } from '../content/stats';
 import { archive, caseStudies } from '../content/projects';
-import { Heatmap, HeatmapLegend, useGitHubCalendar, useLeetCodeCalendar } from '../components/Heatmap';
+import { Heatmap, HeatmapLegend, useGitHubCalendar, useLeetCode } from '../components/Heatmap';
 
 /* A panel wrapping a third-party image. It always renders the link, so if the
    service is slow, blocked or gone, the visitor still has somewhere to go —
@@ -60,7 +60,7 @@ export function Stats() {
 
   const { github, leetcode, codolio, hackerrank } = stats;
   const gh = useGitHubCalendar(github);
-  const lc = useLeetCodeCalendar(leetcode);
+  const lc = useLeetCode(leetcode);
   const shipped = caseStudies.length + archive.length;
   const withCaseStudies = caseStudies.length;
   const live = [...caseStudies, ...archive].filter((p) => p.links?.live).length;
@@ -176,11 +176,53 @@ export function Stats() {
                   )}
                   {lc.state === 'ready' && (
                     <>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)', marginBottom: 'var(--space-4)', fontSize: 15 }}>
-                        <span><strong>{lc.data.streak}</strong> day streak</span>
-                        <span><strong>{lc.data.activeDays}</strong> active days</span>
-                        <span><strong>{lc.data.total.toLocaleString()}</strong> submissions</span>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
+                        <span style={{ fontFamily: 'var(--font-heading)', fontSize: 44, lineHeight: 1 }}>
+                          {lc.data.solved.total.toLocaleString()}
+                        </span>
+                        <span style={{ fontSize: 15, color: 'var(--color-neutral-700)' }}>
+                          problems solved
+                          {lc.data.ranking > 0 && <> · rank {lc.data.ranking.toLocaleString()}</>}
+                        </span>
                       </div>
+
+                      {/* Solved-by-difficulty. The bar is the share of that
+                          tier that has been solved, so "37 hard" is read
+                          against the 958 that exist rather than in a vacuum. */}
+                      <div style={{ display: 'grid', gap: 'var(--space-3)', margin: 'var(--space-4) 0' }}>
+                        {([
+                          ['Easy', lc.data.solved.easy, lc.data.available.easy, 'var(--color-accent-2-600)'],
+                          ['Medium', lc.data.solved.medium, lc.data.available.medium, 'var(--color-accent-600)'],
+                          ['Hard', lc.data.solved.hard, lc.data.available.hard, 'var(--color-accent-800)'],
+                        ] as const).map(([tier, done, available, colour]) => (
+                          <div key={tier}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 600, marginBottom: 5 }}>
+                              <span>{tier}</span>
+                              <span style={{ color: 'var(--color-neutral-700)', fontVariantNumeric: 'tabular-nums' }}>
+                                {done.toLocaleString()}
+                                {available > 0 && <span style={{ opacity: 0.65 }}> / {available.toLocaleString()}</span>}
+                              </span>
+                            </div>
+                            <div style={{ height: 6, borderRadius: 999, background: 'var(--color-neutral-300)', overflow: 'hidden' }}>
+                              <div
+                                style={{
+                                  height: '100%',
+                                  width: available > 0 ? `${Math.max(1.5, (done / available) * 100)}%` : '0%',
+                                  background: colour,
+                                  borderRadius: 999,
+                                }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-4)', marginBottom: 'var(--space-4)', fontSize: 14, color: 'var(--color-neutral-800)' }}>
+                        {lc.data.streak > 0 && <span><strong>{lc.data.streak}</strong> day streak</span>}
+                        {lc.data.activeDays > 0 && <span><strong>{lc.data.activeDays}</strong> active days</span>}
+                        <span><strong>{lc.data.submissions.toLocaleString()}</strong> submissions</span>
+                      </div>
+
                       <Heatmap grid={lc.data.grid} unit="submission" ramp="accent-2" />
                       <HeatmapLegend />
                     </>

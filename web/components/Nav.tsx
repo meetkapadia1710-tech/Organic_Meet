@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router';
 import { toggleTheme, useTheme } from '../state/theme';
 import { usePalette } from './CommandPalette';
+import { prefetchRoute } from '../router';
 
 const NAV_STYLE: React.CSSProperties = {
   viewTransitionName: 'site-nav',
@@ -80,9 +81,12 @@ export function Nav() {
       ) : (
         <NavLink className="nlink" to="/" viewTransition style={LINK_STYLE}>Index</NavLink>
       )}
-      <NavLink className="nlink nlink-projects" to="/projects" viewTransition style={LINK_STYLE}>Projects</NavLink>
-      <NavLink className="nlink" to="/approach" viewTransition style={LINK_STYLE}>Approach</NavLink>
-      <NavLink className="nlink" to="/stats" viewTransition style={LINK_STYLE}>Stats</NavLink>
+      {/* These three are lazy-loaded routes (see router.tsx); warming the
+          chunk on hover/focus is what makes the click land instantly instead
+          of pausing on a Suspense fallback. */}
+      <NavLink className="nlink nlink-projects" to="/projects" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/projects')} onFocus={() => prefetchRoute('/projects')}>Projects</NavLink>
+      <NavLink className="nlink" to="/approach" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/approach')} onFocus={() => prefetchRoute('/approach')}>Approach</NavLink>
+      <NavLink className="nlink" to="/stats" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/stats')} onFocus={() => prefetchRoute('/stats')}>Stats</NavLink>
     </>
   );
 

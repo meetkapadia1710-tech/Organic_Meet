@@ -107,44 +107,121 @@ function leetLevel(count: number): number {
   return 4;
 }
 
-export function useLeetCodeCalendar(
-  user: string | undefined
-): Load<{ grid: Day[][]; total: number; streak: number; activeDays: number }> {
-  const [result, setResult] = useState<Load<{ grid: Day[][]; total: number; streak: number; activeDays: number }>>({
-    state: 'loading',
-  });
+/* The API is a free-tier Render service with rate limiting, so a single failed
+   request means nothing — it is usually a cold start (the instance sleeps) or
+   a 429. Retrying with backoff turns "the panel was empty that one time" into
+   "the panel took four seconds", which is the better failure.
+
+   4xx other than 429 is a real answer — a wrong username will not improve by
+   being asked again — so only 429 and 5xx are retried. */
+async function fetchRetrying(url: string, attempts = 3): Promise<Response> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    if (attempt > 0) await new Promise((r) => setTimeout(r, 700 * 2 ** (attempt - 1)));
+    try {
+      const response = await fetch(url);
+      if (response.ok) return response;
+      if (response.status !== 429 && response.status < 500) throw new Error(String(response.status));
+      lastError = new Error(String(response.status));
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError ?? new Error('failed');
+}
+
+/* The two endpoints disagree about this field, which cost an afternoon:
+   `/<user>/calendar` returns submissionCalendar as a JSON **string**, while
+   `/userProfile/<user>` returns the same data already parsed into an object.
+   Calling JSON.parse on the object throws, which used to land the whole panel
+   in its error state while the request itself was a perfectly good 200.
+   Accept either shape. */
+function parseCalendar(value: unknown): Record<string, number> {
+  if (typeof value === 'string') {
+    try {
+      return JSON.parse(value || '{}');
+    } catch {
+      return {};
+    }
+  }
+  return value && typeof value === 'object' ? (value as Record<string, number>) : {};
+}
+
+export interface LeetCodeData {
+  grid: Day[][];
+  submissions: number;
+  solved: { total: number; easy: number; medium: number; hard: number };
+  available: { easy: number; medium: number; hard: number };
+  ranking: number;
+  /** From a second, optional request — 0 if it did not answer. */
+  streak: number;
+  activeDays: number;
+}
+
+export function useLeetCode(user: string | undefined): Load<LeetCodeData> {
+  const [result, setResult] = useState<Load<LeetCodeData>>({ state: 'loading' });
 
   useEffect(() => {
     if (!user) return;
     let live = true;
+    const handle = encodeURIComponent(user);
 
-    fetch(`https://alfa-leetcode-api.onrender.com/${encodeURIComponent(user)}/calendar`)
-      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
-      .then((json: { submissionCalendar?: string; streak?: number; totalActiveDays?: number }) => {
+    /* userProfile carries the submission calendar *and* the solved counts, so
+       the grid and the numbers cost one request rather than two. The streak
+       lives on a different endpoint and is a nice-to-have: it is fetched
+       separately and its failure is swallowed, because losing a streak count
+       is not a reason to show an error where a heatmap could be. */
+    (async () => {
+      const profile = await fetchRetrying(`https://alfa-leetcode-api.onrender.com/userProfile/${handle}`).then((r) =>
+        r.json()
+      );
+      if (!live) return;
+
+      const raw = parseCalendar(profile.submissionCalendar);
+      const counts = new Map<string, number>();
+      let submissions = 0;
+
+      for (const [seconds, count] of Object.entries(raw)) {
+        const date = new Date(Number(seconds) * 1000);
+        counts.set(iso(new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())), count);
+        submissions += count;
+      }
+
+      const data: LeetCodeData = {
+        grid: buildGrid(counts, leetLevel),
+        submissions,
+        solved: {
+          total: profile.totalSolved ?? 0,
+          easy: profile.easySolved ?? 0,
+          medium: profile.mediumSolved ?? 0,
+          hard: profile.hardSolved ?? 0,
+        },
+        available: {
+          easy: profile.totalEasy ?? 0,
+          medium: profile.totalMedium ?? 0,
+          hard: profile.totalHard ?? 0,
+        },
+        ranking: profile.ranking ?? 0,
+        streak: 0,
+        activeDays: 0,
+      };
+
+      setResult({ state: 'ready', data });
+
+      try {
+        const calendar = await fetchRetrying(`https://alfa-leetcode-api.onrender.com/${handle}/calendar`, 2).then((r) =>
+          r.json()
+        );
         if (!live) return;
-
-        // submissionCalendar arrives as a JSON *string*, not an object.
-        const raw: Record<string, number> = JSON.parse(json.submissionCalendar ?? '{}');
-        const counts = new Map<string, number>();
-        let total = 0;
-
-        for (const [seconds, count] of Object.entries(raw)) {
-          const date = new Date(Number(seconds) * 1000);
-          counts.set(iso(new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate())), count);
-          total += count;
-        }
-
         setResult({
           state: 'ready',
-          data: {
-            grid: buildGrid(counts, leetLevel),
-            total,
-            streak: json.streak ?? 0,
-            activeDays: json.totalActiveDays ?? 0,
-          },
+          data: { ...data, streak: calendar.streak ?? 0, activeDays: calendar.totalActiveDays ?? 0 },
         });
-      })
-      .catch(() => live && setResult({ state: 'error' }));
+      } catch {
+        // Keep the panel exactly as it is; the streak line simply stays out.
+      }
+    })().catch(() => live && setResult({ state: 'error' }));
 
     return () => {
       live = false;

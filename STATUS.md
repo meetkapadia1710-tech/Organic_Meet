@@ -5,7 +5,7 @@ something.** It is the handoff document — anyone (or any agent) picking this u
 should be able to read it and know what exists, what is deliberately unfinished,
 and what will bite them.
 
-_Last updated: 2026-07-29_
+_Last updated: 2026-07-30_
 
 ---
 
@@ -34,14 +34,16 @@ superseded work went to `_archive/` instead of being removed.
 | --- | --- |
 | `web/content/projects.ts` | **The project list.** Order, categories, tags, links, which five are featured. |
 | `web/content/cases.ts` | Case-study prose, keyed by slug. |
+| `web/content/stack.ts` | **The technology list**, by category. Feeds the homepage Stack rows. |
 | `web/content/stats.ts` | Handles for the Stats page. |
 | `web/content/types.ts` | `Project`, `ProjectLinks`. |
-| `web/pages/` | Home, Projects, Approach, Stats, CasePage, NotFound. |
+| `web/pages/` | Home, Projects, Approach, Stats, CasePage, NotFound. All but Home are lazy-loaded — see `router.tsx`. |
 | `web/components/` | Layout, Nav, Deck, CommandPalette, Figure, SplitText, demos. |
 | `web/hooks/` | Motion, keyboard, document meta, transition navigation. |
 | `web/state/` | Shared stores: theme, work view, shortcuts sheet. |
 | `web/styles/` | Design system + site/motion/ui/deck layers. |
 | `_archive/` | The previous static build, rejected design directions, original `.dc.html` canvas sources. Nothing references it. |
+| `_archive/backdrop-reverted/` | A fixed decorative layer (colour fields, rings, dot field, grain) plus hero-recede / figure-parallax scroll effects. Built, worked, and **reverted at Meet's request** — do not re-add without asking. |
 
 ---
 
@@ -71,10 +73,10 @@ superseded work went to `_archive/` instead of being removed.
   to `tier: 'case'` with full entries in `cases.ts`. MeetOS and ReFractor.ai
   moved to **AI & tooling**; the rest kept their category.
 - **Tech-stack icons** — `components/TechIcon.tsx`. Hand-drawn 24x24 glyphs in
-  `currentColor`, matched by substring against a technology name. Used on the
-  homepage Core Tools cards and as `<StackChips>` on every case study, which
-  splits the `facts.stack` string on `·` into chips. See the header comment
-  for why these aren't a dependency.
+  `currentColor`, matched by substring against a technology name. Used by the
+  homepage Stack rows and as `<StackChips>` on every case study, which splits
+  the `facts.stack` string on `·` into chips. See the header comment for why
+  these aren't a dependency.
 - **Mobile navigation is a real menu.** Below 640px the links move into a
   sheet behind a burger. It previously hid Approach, then Stats, to make room
   — which left both pages unreachable on a phone.
@@ -86,7 +88,16 @@ superseded work went to `_archive/` instead of being removed.
   third-party card images are gone. Levels map onto palette ramp steps, so the
   grids invert with the theme; tiles carry a date/count tooltip and lift on
   hover. GitHub uses the accent ramp, LeetCode the second accent.
+- **LeetCode panel shows real stats**: problems solved and rank, plus a
+  solved-by-difficulty breakdown where each bar is that tier's share of the
+  problems that exist (37 hard read against 958, not in a vacuum), then
+  streak, active days and total submissions above the heatmap.
 - Seven case studies carry real screenshots, converted to WebP.
+- **Homepage "Core Tools" is now "Stack"** — five cards with a paragraph each
+  replaced by three rolling rows of icon chips (`TechMarquee`), carrying all
+  43 technologies from `content/stack.ts`. Every one resolves to a real glyph
+  in `TechIcon`; none fall through to the placeholder dot. Rows alternate
+  direction, pause on hover, and fade at both edges.
 - **Second motion layer** — `hooks/useMotionPlus.ts` + `styles/motion-plus.css`.
   Strictly additive: every selector targets a hook that did not exist before
   (`.is-split`, `.hl`, `[data-velocity]`, `[data-figure]`, `.kicker-rule`,
@@ -95,6 +106,73 @@ superseded work went to `_archive/` instead of being removed.
   inertial wheel scrolling, word-by-word text reveal, highlight sweeps,
   count-up numbers, scroll-velocity skew, figure wipe-in, section kicker
   rules. All off under `prefers-reduced-motion`.
+- **Performance pass — route-based code splitting, prefetch, and four fixed
+  full-tree rescans.** Measured, not assumed; numbers are from real
+  `npm run build` output, before and after:
+
+  | | Before | After (Home-only visit) |
+  |---|---|---|
+  | JS shipped | 441.25 kB (141.17 kB gzip), one file | 355.72 kB (113.43 kB gzip), two files fetched in parallel |
+  | CSS | 40.61 kB (8.67 kB gzip) | unchanged — one global stylesheet, see below |
+
+  - **`router.tsx`**: every route but Home (`Projects`, `Approach`, `Stats`,
+    `CasePage`, `NotFound`) is `React.lazy`. Home stays eager — it's the one
+    thing every first visit needs, and lazy-loading it would add a
+    round-trip for zero benefit. Real per-route chunk costs, gzipped: Projects
+    1.0 kB, Approach 2.6 kB, Stats 4.0 kB, CasePage 24.5 kB (carries every
+    case study's prose from `cases.ts`, correctly deferred until it's needed).
+  - **Hover/focus/keyboard-highlight prefetch**, not just lazy-loading. A
+    route chunk with no warning is a route that pauses to fetch itself the
+    first time anyone clicks it — the visible stutter this whole pass was
+    supposed to remove. `router.tsx` exports `prefetchRoute(path)`; `TLink`
+    calls it on `onPointerEnter`/`onFocus`, `Nav`'s primary links do the same,
+    and `CommandPalette` calls it as the arrow keys move the highlight over a
+    link entry. By the time a click lands, the chunk is almost always already
+    in the browser's cache. Verified against the real production build
+    (`npm run preview`): hovering a not-yet-loaded nav link fetches exactly
+    one chunk, matching exactly what was hovered — checked with a temporary
+    console log against the network panel, not assumed.
+  - **`components/RouteFallback.tsx`** is the Suspense fallback for the rare
+    case prefetch didn't win the race — a click that outran its own hover.
+    A quiet pulsing dot with `min-height: 60vh` so the footer doesn't jump up
+    to meet the nav for the instant it's showing.
+  - **`vite.config.ts`**: React/ReactDOM/react-router split into their own
+    `react-vendor` chunk (99.3 kB / 33.25 kB gzip). They change on a dependency
+    bump, not on every commit — separating them means a deploy only
+    invalidates the chunk that actually changed, and a returning visitor's
+    browser can keep serving `react-vendor` from cache indefinitely.
+  - **Four `MutationObserver`s were rescanning the entire document on every
+    DOM mutation anywhere in `<body>`.** `useReveals` (useMotion.ts),
+    `useTextReveal` and `useHighlights` (useMotionPlus.ts) each ran a full
+    `document.querySelectorAll(...)` inside their sweep callback — and that
+    callback fired on *any* childList mutation in `<body>`, including ones
+    with nothing to do with reveals, like the command palette re-rendering
+    its filtered list on every keystroke. That was four full-tree queries per
+    keypress while someone was trying to fast-search. Rewritten to scope each
+    sweep to `mutation.addedNodes` — the only place a new `[data-reveal]` /
+    `[data-lines]` / `.hl` element can ever appear — for identical behaviour
+    at a cost proportional to what actually changed. Verified: case-study
+    figures still reveal (including ones mounted well after initial load, via
+    a lazy-route navigation — the scenario this logic exists for), the
+    4-second safety net still fires, word-by-word text reveal still splits
+    and animates correctly.
+  - **Not changed, and why**: this codebase has no Framer Motion dependency
+    anywhere — it never did; the motion system is hand-rolled CSS transitions
+    plus `requestAnimationFrame` and `animation-timeline`. Introducing Framer
+    Motion now would add a real dependency to fight the bundle-size goal
+    this pass exists for, for animations that already work. `content-visibility:
+    auto` on the Projects page's 19 rows was considered and deliberately
+    **not** applied — the list is short enough that the paint/layout saving is
+    marginal, and guessing wrong on `contain-intrinsic-size` risks a small
+    scroll-jump on a page whose whole point is to feel smooth. `Deck.tsx` was
+    audited for a per-pointermove re-render (the classic cause of dropped
+    frames during a drag interaction) and found to already avoid it — the drag
+    and tilt-tracking handlers write straight to `style.setProperty` on refs;
+    `setState` only fires on a discrete threshold crossing, a click, or an
+    arrow key. No React.memo/useMemo were added to WorkRow, Deck, or the
+    stack marquee: none of them sit under a parent that re-renders on
+    anything faster than a route change, so memoizing them would be
+    inert — added complexity with nothing to actually prevent.
 
 ---
 
@@ -104,6 +182,15 @@ superseded work went to `_archive/` instead of being removed.
 This is an SPA. Crawlers and link previews get `<div id="root"></div>`.
 Walk the route list through `react-dom/server` at build time and emit real HTML
 per route. ~40 lines. **Nothing else on this list matters as much.**
+
+Since the last pass, every route but Home is behind `React.lazy` (see
+`router.tsx` and the Done list). Plain `renderToString` doesn't resolve
+Suspense boundaries — the prerender script will need `renderToStaticMarkup`
+run per-route with each route's own lazy import awaited first (or
+`renderToPipeableStream`/`renderToReadableStream` with the stream drained to
+completion), or every prerendered page except Home will emit the
+`RouteFallback` pulse rather than real content. Worth ten minutes of testing
+against one lazy route before assuming the naive approach works.
 
 ### 2. Error boundary  ⚠️ blocks launch
 There is none. One uncaught error anywhere = blank white page, no way out.
@@ -204,9 +291,50 @@ because publishing how to get into a live client's staff tool would be
 irresponsible. **Do not add that detail to the site.** It should move behind
 Firebase Auth with a role, like the loyalty app already does.
 
+### 9. Next performance win: lazy-load the command palette itself
+`CommandPalette.tsx` (370 lines — fuzzy search, the whole project index, the
+results list) is the single biggest thing left in the eager main chunk,
+because `PaletteProvider` wraps every route so `⌘K`/`/` work immediately
+everywhere. The provider (a few lines: `isOpen` state, the keyboard listener)
+needs to stay eager; the modal UI it renders when opened does not. Splitting
+those two apart — keep the open/close plumbing synchronous, `React.lazy` the
+`Palette` component it renders — would shrink the initial bundle further
+without costing the first keypress anything a prefetch-on-idle couldn't cover.
+Not done in this pass: it means reshaping the provider/component boundary in
+a 370-line file, which is a real change to get right rather than a
+five-minute one, and the code-splitting already done was the higher-confidence
+win for the time available.
+
 ---
 
 ## Gotchas — read before touching these
+
+**Every page but Home is `React.lazy`, and the loader functions are shared
+between two things that must never drift apart.** `router.tsx` keeps one
+`loaders` object; `lazy()` wraps each entry for the actual route element, and
+`prefetchRoute()` calls the *same* function reference to warm the chunk
+early. If a new page is added, it needs an entry in `loaders`, a `lazy()`
+wrapper, **and** a branch in `prefetchRoute`'s path-matching ladder — miss the
+last one and the page still works, it just loses the "already loaded by the
+time you click" feel every other route has.
+
+**Every page component is a named export, not a default one.** That's the
+existing convention throughout `web/pages/`, and `React.lazy` needs a
+`{ default }` shape — so each loader in `router.tsx` is wrapped with
+`.then((m) => ({ default: m.PageName }))` rather than changing how pages
+export themselves. Miss the rename on a new page and TypeScript catches it
+immediately (`Property 'default' is missing`), so this fails loudly, not
+silently.
+
+**Reveal/text-reveal/highlight sweeps are scoped to `mutation.addedNodes`,
+not the whole document.** They used to re-run a full `document.querySelectorAll`
+on every mutation anywhere in `<body>` — including the command palette
+re-rendering its list on every keystroke, which made typing to search cost
+four full-tree scans per keypress. If you're adding a fifth
+`[data-something]` sweep, copy this pattern (check the added node itself with
+`.matches()`, then its descendants with `.querySelectorAll()`) rather than the
+old whole-document one — the old shape is exactly the kind of thing that gets
+copy-pasted back in by accident.
 
 **View transitions are order-sensitive.** See `hooks/useTransitionNavigate.ts`.
 Three approaches failed before the working one:
@@ -275,6 +403,21 @@ to target, clamps at both ends, adopts an external jump in both directions).
 **CSS transitions still run**, so the reveal, highlight and figure states are
 verifiable normally. Anything rAF-driven needs a real browser to check.
 
+**A marquee half must be wider than the viewport.** Both marquees translate
+their track by -50%, which needs two *identical* halves or the loop jumps at
+the seam. Less obviously, each half must also exceed the widest screen it will
+meet, or a gap opens as it slides. One pass of the shortest Stack row is about
+1700px — fine on a laptop, a visible hole on a wide monitor — so each half
+renders its items **twice**. Halves currently measure 3353 / 4196 / 4470px.
+
+**The Stack rows are aria-hidden, with a replacement.** They duplicate every
+chip four times over, scramble the reading order and drop the category each
+item belongs to, so the animated rows are hidden and a real `<ul class="sr-only">`
+carries the grouped list once. This is *not* the same as the hero marquee,
+which is aria-hidden with no replacement because the paragraph above it already
+says the same words. **If you add anything to `stack.ts`, it reaches assistive
+tech only through that list** — do not delete it.
+
 **Counters derive from order.** `caseStudies` is sorted by category rank in
 `projects.ts`; `/projects` re-sorts the combined list the same way so the row
 counter matches its position. If you add a category, add it to `CATEGORIES` or
@@ -286,8 +429,25 @@ which is why they were chosen — LeetCode's own GraphQL endpoint is not, so it
 cannot be called from the browser. Neither has an uptime guarantee. Each panel
 renders `loading → error → ready` explicitly, and the error state keeps the
 heading and the profile link, so a dead API costs a grid and nothing else.
-LeetCode's `submissionCalendar` arrives as a JSON **string** inside the JSON
-response, keyed by UTC-midnight unix seconds — it needs a second parse.
+**The two LeetCode endpoints disagree about `submissionCalendar`.** This is the
+trap in that file. `/<user>/calendar` returns it as a JSON **string** that needs
+a second parse; `/userProfile/<user>` returns the same data **already parsed
+into an object**. Calling `JSON.parse` on the object throws, which silently put
+the whole panel into its error state while the request itself was a healthy
+200 — exactly the symptom that looks like "the API is down" and is not.
+`parseCalendar()` accepts either shape. Keys are UTC-midnight unix seconds
+in both.
+
+**One request, not two.** `/userProfile` carries the calendar *and* the solved
+counts, so the grid and the numbers cost a single call. The streak and
+active-day totals only exist on `/calendar`, so that is fetched second and its
+failure is swallowed — losing a streak line is not a reason to show an error
+where a heatmap could be.
+
+**Retries are load-bearing.** Free-tier Render sleeps and rate-limits, so a
+lone failure means nothing. `fetchRetrying` backs off 700ms then 1.4s, and
+retries only 429 and 5xx — a wrong username will not improve by being asked
+again.
 
 **Heatmap levels are not the same on both.** GitHub's API buckets days into
 0–4 itself, so those are used as given. LeetCode returns raw counts, bucketed

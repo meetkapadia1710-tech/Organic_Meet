@@ -4,19 +4,12 @@ import { SplitText } from '../components/SplitText';
 import { WorkRow } from '../components/WorkRow';
 import { Deck } from '../components/Deck';
 import { Contact } from '../components/Contact';
-import { TechIcon } from '../components/TechIcon';
+import { TechMarquee } from '../components/TechMarquee';
+import { stack, stackCount, stackRows } from '../content/stack';
 import { setView, useWorkView } from '../state/view';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 
 const NUMBERS = ['zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'];
-
-const CORE_TOOLS = [
-  ['TypeScript', 'My default language for anything that has to survive a second reading. Types carry the contract between database, API and interface, so a rename breaks loudly instead of quietly.'],
-  ['React & Next.js', 'Where the product gets built — server components for the heavy lifting, client islands for the parts that need to feel alive, Turborepo when app, extension and action share one core.'],
-  ['Python', 'For work closest to the machine: OCR pipelines, tool-calling agents, FastAPI services streaming over WebSockets, and everything that has to run offline on someone’s own hardware.'],
-  ['Node.js', 'The parts nobody sees — background jobs, GitHub Actions, webhook handlers, and Postgres through Drizzle where the schema is written once and trusted everywhere.'],
-  ['Tailwind CSS', 'Constraint as a feature. A fixed scale keeps the interface coherent while I’m moving fast, and design decisions live next to the markup instead of in a file nobody opens.'],
-];
 
 /* A ticking clock was a second thing saying "Bharuch, Gujarat", and it re-rendered
    this whole page once a second to say it. Shipped-project count is a fact
@@ -134,21 +127,19 @@ export function Home() {
       </section>
 
       <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
-        <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}>Core Tools</h6>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-4)' }}>
-          {CORE_TOOLS.map(([title, body], i) => (
-            <div key={title} className="card elev-sm" data-tilt data-reveal style={{ borderRadius: 'var(--radius-lg)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'var(--space-3)' }}>
-                <div className="card-kicker">{String(i + 1).padStart(2, '0')}</div>
-                <span style={{ color: 'var(--color-accent-700)' }}>
-                  <TechIcon name={title ?? ''} size={26} />
-                </span>
-              </div>
-              <h3 className="card-title">{title}</h3>
-              <p className="card-body">{body}</p>
-            </div>
-          ))}
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 'var(--space-4)', flexWrap: 'wrap', marginBottom: 'var(--space-4)' }}>
+          <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', margin: 0, flex: 1 }}>Stack</h6>
+          <span className="tag tag-neutral" style={{ borderRadius: 999 }}>{stackCount} technologies</span>
         </div>
+
+        {/* The categories are worth keeping visible even though the rows
+            themselves are mixed — it is the difference between a list of
+            logos and a claim about what he actually does. */}
+        <p style={{ margin: '0 0 var(--space-5)', fontSize: 15, color: 'var(--color-neutral-700)' }}>
+          {stack.map((group) => group.name).join(' · ')}
+        </p>
+
+        <TechMarquee rows={stackRows} groups={stack} />
       </section>
 
       <section style={{ maxWidth: 1400, margin: '0 auto', padding: '14vh var(--space-8) 0' }}>

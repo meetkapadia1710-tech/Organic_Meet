@@ -16,6 +16,7 @@ import {
 } from 'react';
 import { useLocation } from 'react-router';
 import { useTransitionNavigate } from '../hooks/useTransitionNavigate';
+import { prefetchRoute } from '../router';
 import { toggleTheme, useTheme } from '../state/theme';
 import { setView, useWorkView, type WorkView } from '../state/view';
 import { setSheetOpen } from '../state/sheet';
@@ -300,6 +301,14 @@ function Palette({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     listRef.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: 'nearest' });
   }, [active]);
+
+  // Arrowing onto a result warms its chunk, so pressing Enter a moment later
+  // never pauses on the Suspense fallback — the same hover-prefetch TLink and
+  // Nav do, triggered by keyboard highlight instead of a pointer.
+  useEffect(() => {
+    const entry = results[active]?.entry;
+    if (entry?.kind === 'link' && !/^(https?:|mailto:)/.test(entry.url)) prefetchRoute(entry.url);
+  }, [active, results]);
 
   let lastGroup: string | null = null;
 

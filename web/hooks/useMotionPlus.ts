@@ -230,21 +230,31 @@ export function useTextReveal(): void {
     const seen = new WeakSet<Element>();
     const timers: number[] = [];
 
-    const sweep = () => {
-      document.querySelectorAll<HTMLElement>('[data-lines]').forEach((el) => {
-        if (seen.has(el)) return;
-        seen.add(el);
-        splitWords(el);
-        el.classList.add('is-split');
-        io.observe(el);
-        // Same promise the base reveal makes: text is never left hidden
-        // because an observer did not fire.
-        timers.push(window.setTimeout(() => el.classList.add('is-in'), 4000));
-      });
+    const claim = (el: HTMLElement) => {
+      if (seen.has(el)) return;
+      seen.add(el);
+      splitWords(el);
+      el.classList.add('is-split');
+      io.observe(el);
+      // Same promise the base reveal makes: text is never left hidden
+      // because an observer did not fire.
+      timers.push(window.setTimeout(() => el.classList.add('is-in'), 4000));
     };
 
-    sweep();
-    const mo = new MutationObserver(sweep);
+    document.querySelectorAll<HTMLElement>('[data-lines]').forEach(claim);
+
+    // Scoped to each mutation's addedNodes rather than the whole document —
+    // see the matching comment on useReveals in hooks/useMotion.ts. The same
+    // full-tree query here re-ran on every keystroke in the command palette.
+    const mo = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        mutation.addedNodes.forEach((node) => {
+          if (!(node instanceof HTMLElement)) return;
+          if (node.matches('[data-lines]')) claim(node);
+          node.querySelectorAll<HTMLElement>('[data-lines]').forEach(claim);
+        });
+      }
+    });
     mo.observe(document.body, { childList: true, subtree: true });
 
     return () => {
@@ -277,16 +287,25 @@ export function useHighlights(): void {
     );
 
     const seen = new WeakSet<Element>();
-    const sweep = () => {
-      document.querySelectorAll('.hl').forEach((el) => {
-        if (seen.has(el)) return;
-        seen.add(el);
-        io.observe(el);
-      });
+    const claim = (el: Element) => {
+      if (seen.has(el)) return;
+      seen.add(el);
+      io.observe(el);
     };
 
-    sweep();
-    const mo = new MutationObserver(sweep);
+    document.querySelectorAll('.hl').forEach(claim);
+
+    // See useReveals: scoped to addedNodes instead of a full-document query
+    // per mutation.
+    const mo = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        mutation.addedNodes.forEach((node) => {
+          if (!(node instanceof HTMLElement)) return;
+          if (node.matches('.hl')) claim(node);
+          node.querySelectorAll('.hl').forEach(claim);
+        });
+      }
+    });
     mo.observe(document.body, { childList: true, subtree: true });
 
     return () => {

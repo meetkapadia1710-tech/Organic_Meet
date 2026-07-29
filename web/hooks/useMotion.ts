@@ -329,19 +329,34 @@ export function useReveals(): void {
     const known = new WeakSet<Element>();
     const timers: number[] = [];
 
-    const sweep = () => {
-      document.querySelectorAll<HTMLElement>('[data-reveal]').forEach((node) => {
-        if (known.has(node) || node.classList.contains('is-in')) return;
-        known.add(node);
-        io.observe(node);
-        // Each node carries its own safety net, so late arrivals get the same
-        // promise as the ones present at load: never permanently hidden.
-        timers.push(window.setTimeout(() => reveal(node), 4000));
-      });
+    const claim = (node: HTMLElement) => {
+      if (known.has(node) || node.classList.contains('is-in')) return;
+      known.add(node);
+      io.observe(node);
+      // Each node carries its own safety net, so late arrivals get the same
+      // promise as the ones present at load: never permanently hidden.
+      timers.push(window.setTimeout(() => reveal(node), 4000));
     };
 
-    sweep();
-    const mo = new MutationObserver(sweep);
+    // Initial pass covers whatever the route already rendered.
+    document.querySelectorAll<HTMLElement>('[data-reveal]').forEach(claim);
+
+    /* The observer used to re-run this same full-document query on every
+       mutation anywhere in <body> — including ones with nothing to do with
+       reveals, like the command palette re-rendering its filtered list on
+       every keystroke. That is a full-tree querySelectorAll per keypress.
+       Restricting the scan to each mutation's own addedNodes finds exactly
+       the same elements (nothing with [data-reveal] can appear except by
+       being added), for a cost proportional to what actually changed. */
+    const mo = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        mutation.addedNodes.forEach((node) => {
+          if (!(node instanceof HTMLElement)) return;
+          if (node.matches('[data-reveal]')) claim(node);
+          node.querySelectorAll<HTMLElement>('[data-reveal]').forEach(claim);
+        });
+      }
+    });
     mo.observe(document.body, { childList: true, subtree: true });
 
     return () => {

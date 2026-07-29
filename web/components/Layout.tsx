@@ -1,10 +1,11 @@
 import { Outlet, useLocation, useNavigationType } from 'react-router';
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { Suspense, useEffect, useLayoutEffect, useRef } from 'react';
 import { Nav } from './Nav';
 import { Footer } from './Footer';
 import { Preloader } from './Preloader';
 import { PaletteProvider } from './CommandPalette';
 import { ShortcutsSheet } from './ShortcutsSheet';
+import { RouteFallback } from './RouteFallback';
 import { useSiteMotion } from '../hooks/useMotion';
 import { useMotionPlus } from '../hooks/useMotionPlus';
 import { useKeyboard } from '../hooks/useKeyboard';
@@ -96,7 +97,12 @@ function Shell() {
 
       <div className="site-main">
         <Nav />
-        <Outlet />
+        {/* Every route past Home is a separate chunk (see router.tsx). This
+            boundary only ever shows RouteFallback for a click that outran its
+            own hover-prefetch. */}
+        <Suspense fallback={<RouteFallback />}>
+          <Outlet />
+        </Suspense>
         <Footer />
       </div>
     </>
