@@ -56,36 +56,10 @@ const METHODS = [
   },
 ];
 
-const FIT = [
-  'Full-stack web apps where one person owns schema through UI',
-  'AI tooling that has to be grounded in real data, not vibes',
-  'Local-first or privacy-constrained systems',
-  'Getting a stalled prototype to something shippable',
-];
-
 const FACTS: Array<[string, string]> = [
   ['Based in', 'Bharuch, Gujarat'],
   ['Status', 'Available now'],
   ['Open to', 'Internships & freelance'],
-];
-
-/* Kept to what the site already claims elsewhere — the shared Contact block
-   says the inbox is open and answered quickly, and the footer already puts
-   the clock in IST. Nothing here invents a response-time promise Meet hasn't
-   made. */
-const EXPECT: Array<[string, string]> = [
-  [
-    'A real reply',
-    'There is no form, no autoresponder and nobody else reading it. Mail goes straight to me and I answer it myself.',
-  ],
-  [
-    'Allow for IST',
-    'I am in Gujarat, so a message sent during a European or US working day will usually be answered the following morning my time.',
-  ],
-  [
-    'Say what you are building',
-    'A sentence about the problem is worth more than a formal introduction — it is the fastest way for me to tell you honestly whether I am the right person for it.',
-  ],
 ];
 
 export function Contact() {
@@ -128,8 +102,13 @@ export function Contact() {
 
       {/* The nav's persistent "Get in touch" pill jumps to #contact on every
           page; here that means this block, since the page it's already on
-          doesn't need a second jump target further down. */}
-      <section id="contact" style={{ maxWidth: 1400, margin: '0 auto', padding: '14vh var(--space-8) 0' }}>
+          doesn't need a second jump target further down.
+
+          This is now the last section on the page, so it carries the `10vh`
+          of bottom padding that every other page gets from the shared
+          <Contact /> band. Without it the cards run straight into the footer
+          with no gap. */}
+      <section id="contact" style={{ maxWidth: 1400, margin: '0 auto', padding: '14vh var(--space-8) 10vh' }}>
         <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>Ways to reach me</ScrambleText></h6>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-4)' }}>
           {METHODS.map(({ icon: Icon, title, body, label, href, external }) => (
@@ -165,55 +144,6 @@ export function Contact() {
         </div>
       </section>
 
-      <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
-        <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>Worth reaching out about</ScrambleText></h6>
-        <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-3)' }}>
-          {FIT.map((item) => (
-            <li key={item} data-reveal style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'baseline', fontSize: 17, lineHeight: 1.6, background: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-5)' }}>
-              <span style={{ color: 'var(--color-accent-2-700)', fontWeight: 700 }}>✦</span>
-              {item}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* The page needs an ending, and it needs bottom padding.
-
-          Every other page closes on the shared <Contact /> band, which is
-          also where their `10vh` of bottom padding comes from. This page
-          can't use that block — it would be a third copy of the same email
-          button — so without something here the last list ran straight into
-          the footer with no gap, which is what made the page feel unfinished.
-
-          What it says is deliberately not a repeat of the cards above: those
-          explain *which* channel, this explains what actually happens after
-          you use one. */}
-      <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 10vh' }}>
-        <div
-          data-reveal
-          style={{ background: 'var(--color-accent-200)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-8)', position: 'relative', overflow: 'hidden' }}
-        >
-          <div
-            aria-hidden="true"
-            data-parallax
-            style={{ position: 'absolute', right: -90, bottom: -120, width: 340, height: 340, borderRadius: 999, background: 'var(--color-accent-300)', opacity: 0.55 }}
-          />
-          <div style={{ position: 'relative' }}>
-            <h6 style={{ color: 'var(--color-accent-800)', marginBottom: 'var(--space-4)' }}>Before you write</h6>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 'var(--space-6)', marginBottom: 'var(--space-8)' }}>
-              {EXPECT.map(([title, body]) => (
-                <div key={title}>
-                  <div style={{ fontSize: 17, fontWeight: 700, color: 'var(--color-accent-900)', marginBottom: 6 }}>{title}</div>
-                  <p style={{ margin: 0, fontSize: 15, lineHeight: 1.7, color: 'var(--color-accent-900)', opacity: 0.85 }}>{body}</p>
-                </div>
-              ))}
-            </div>
-            <a data-magnetic className="btn btn-primary" href="mailto:kapadiameet07@gmail.com" style={{ borderRadius: 999 }}>
-              kapadiameet07@gmail.com
-            </a>
-          </div>
-        </div>
-      </section>
     </>
   );
 }

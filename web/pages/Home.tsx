@@ -260,7 +260,10 @@ export function Home() {
             I started by breaking things — scripts, side projects, half-finished repos. That habit became a method.
           </h2>
           <p style={{ margin: 0, fontSize: 17, lineHeight: 1.8, color: 'var(--color-neutral-800)', background: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-6)' }}>
-            Most of what I make sits where <span className="hl">AI meets infrastructure</span>: a tool that grades a repository against its actual code, an assistant with a swappable brain and semantic memory, a memory layer that never leaves the machine. I care about <span className="hl hl-accent">the seams</span> — the schema that stays normalized, the payment flow that doesn&apos;t drop, the transition that lands.
+            {/* No counts written into this sentence on purpose — the fact
+                strip above already derives them, and a number typed into
+                prose is the one that goes stale first. */}
+            I work alone, which means there is nobody to hand the hard part to. <span className="hl">One person owns the whole stack</span> — the migration, the auth flow, the empty state, the thing that breaks at 2am — and that constraint has shaped how I build: decide fast, cut scope honestly, get it running before it is pretty. Somewhere between the first client invoice and the last late-night deploy I stopped being precious about the parts nobody sees, and started being <span className="hl hl-accent">stubborn about the parts they do</span>.
           </p>
         </div>
       </section>
