@@ -1,4 +1,7 @@
 import { useEffect, useState } from 'react';
+import { TLink } from './TLink';
+import { prefetchRoute } from '../router';
+import { SOCIAL } from '../content/site';
 
 /** The owner's clock, not the visitor's — Asia/Kolkata regardless of where
  *  the page is being read. */
@@ -38,6 +41,16 @@ export function Footer() {
       }}
     >
       <span>Designed &amp; developed by Meet Kapadia</span>
+      {/* Secondary pages live here rather than in the nav pill, which is
+          already carrying six items plus three controls before anything is
+          added to it. /uses in particular is a page people arrive at from
+          elsewhere, not one they hunt for in a navbar. */}
+      <span style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
+        <TLink to="/about" onPointerEnter={() => prefetchRoute('/about')}>About</TLink>
+        <TLink to="/uses" onPointerEnter={() => prefetchRoute('/uses')}>Uses</TLink>
+        <a href={SOCIAL.github} target="_blank" rel="noopener noreferrer">GitHub</a>
+        <a href={SOCIAL.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
+      </span>
       <span>Bharuch, Gujarat — {time} IST</span>
       <span>© 2026</span>
     </footer>

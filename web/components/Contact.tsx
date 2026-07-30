@@ -1,3 +1,7 @@
+import { CopyEmail } from './CopyEmail';
+
+const EMAIL = 'kapadiameet07@gmail.com';
+
 /* The closing block, identical on every page that carries it. */
 export function Contact({ withBlurb = true }: { withBlurb?: boolean }) {
   return (
@@ -19,9 +23,10 @@ export function Contact({ withBlurb = true }: { withBlurb?: boolean }) {
             </p>
           )}
           <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
-            <a data-magnetic className="btn btn-primary" href="mailto:kapadiameet07@gmail.com" style={{ borderRadius: 999 }}>
-              kapadiameet07@gmail.com
+            <a data-magnetic className="btn btn-primary" href={`mailto:${EMAIL}`} style={{ borderRadius: 999 }}>
+              {EMAIL}
             </a>
+            <CopyEmail address={EMAIL} />
             <a data-magnetic className="btn btn-secondary" href="https://github.com/meetkapadia1710-tech" target="_blank" rel="noopener noreferrer" style={{ borderRadius: 999 }}>
               GitHub
             </a>

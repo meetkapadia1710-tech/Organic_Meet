@@ -87,3 +87,51 @@ console.log(
   `\n${converted} converted. ${kb(before)} → ${kb(after)} ` +
     `(${(100 - (after / before) * 100).toFixed(0)}% smaller)`
 );
+
+/* ── blur-up placeholders ───────────────────────────────────────────────
+   A ~24px blurred copy per image, written as `-lqip.webp` beside the base.
+   Figure resolves it by the same filename convention it already uses for
+   the -800/-1200 widths, so nothing has to be registered anywhere.
+
+   Derived from the .webp base, not from the original PNG/JPEG, because the
+   originals are no longer in the tree — the conversion above kept them at
+   the time, but they have since been cleared out, and a placeholder pass
+   that only worked on a fresh checkout would be a pass that never runs.
+
+   As a file rather than an inlined data URI on purpose: a manifest of ~27
+   base64 strings is 10-15 kB that every visitor downloads with the first
+   JS chunk, to serve images most of them will never scroll to. These are
+   ~400 bytes each and fetched only for figures actually on the page. */
+
+const LQIP_WIDTH = 24;
+const LQIP_SUFFIX = '-lqip.webp';
+/** Excludes the generated variants — -800, -1200 and any previous -lqip. */
+const VARIANT = /-(?:\d{3,4}|lqip)\.webp$/;
+
+let placeholders = 0;
+let lqipBytes = 0;
+
+for (const file of walk(ROOT)) {
+  if (!file.endsWith('.webp') || VARIANT.test(file)) continue;
+
+  const out = file.replace(/\.webp$/, LQIP_SUFFIX);
+  const srcStat = fs.statSync(file);
+
+  if (!fs.existsSync(out) || fs.statSync(out).mtimeMs < srcStat.mtimeMs) {
+    await sharp(file)
+      .resize({ width: LQIP_WIDTH })
+      // Blurring before encoding is what makes these tiny: the encoder has
+      // almost no high-frequency detail left to spend bits on.
+      .blur(3)
+      .webp({ quality: 40 })
+      .toFile(out);
+    placeholders += 1;
+  }
+  lqipBytes += fs.statSync(out).size;
+}
+
+console.log(
+  `${placeholders} placeholders written ` +
+    `(${(lqipBytes / 1024).toFixed(1)} KB total, ` +
+    `${placeholders ? (lqipBytes / 1024 / Math.max(1, placeholders)).toFixed(2) : '0'} KB average).`
+);

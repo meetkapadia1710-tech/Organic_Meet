@@ -5,14 +5,14 @@ something.** It is the handoff document — anyone (or any agent) picking this u
 should be able to read it and know what exists, what is deliberately unfinished,
 and what will bite them.
 
-_Last updated: 2026-07-31_
+_Last updated: 2026-07-30_
 
 ---
 
 ## What this is
 
 Meet Kapadia's portfolio. React 19 + TypeScript, Vite, React Router (SPA).
-18 shown projects (19 in the data — Hindsight is `pending: true`), all with
+18 shown projects (20 in the data — `hindsight` and `paymatrix` are `pending: true`), all with
 full case studies. `tier: 'archive'` and `PlainRow` still exist and still
 work — nothing currently uses them.
 
@@ -348,6 +348,285 @@ superseded work went to `_archive/` instead of being removed.
   characters nest *inside* the word span, so the reveal keeps animating
   `.split > span` while the lift writes to `.lift-char` one level deeper —
   two elements, so the transforms compose instead of overwriting.
+- **Sticky works index, scroll-linked figure scale, velocity-reactive
+  marquee** — the three follow-ups, all verified live:
+  - **`WorkIndex`** in a sticky `.works-head`. The Selected Works header pins
+    below the nav and carries a counter that cross-fades `01 RepoGrade` →
+    `05 LocateMe` as the rows pass a reading line at 45% viewport height.
+    Verified the full sequence and that the header never leaves its pinned
+    band across 18 scroll positions.
+  - **Figure scale is scroll-linked now**, not reveal-triggered: `1.12 → 1`
+    across `entry 0% → cover 55%`, inside the existing clip-path wipe.
+    Measured 1.063 → 1.000 across four scroll positions. The transition-based
+    scale is kept as the fallback for browsers without view timelines — an
+    animation beats a transition on the same property, so only one ever
+    drives it.
+  - **The marquee reacts to scroll velocity.** `--mq-shift` is composed
+    *inside* the `mq` keyframe rather than changing `animation-duration` or
+    `animation-direction`, both of which restart the loop and make the track
+    jump. Custom properties re-resolve at computed-value time, so the offset
+    blends in smoothly. Measured: 0px at rest, −66.6px scrolling down,
+    +59.8px scrolling up — the sign reverses, which is the "drags back on
+    scroll-up" effect. Eased at 0.06/frame, far slower than the skew, because
+    a positional nudge that tracked velocity exactly would stutter on every
+    wheel tick. Defaults to `0px`, so `.tech-track` — which shares the
+    keyframe — is untouched.
+
+  Also fixed in passing: `.kicker-rule::after` had lost its
+  `animation-duration: auto` in the backdrop revert, which pinned every
+  section hairline at its end state instead of growing it.
+- **Frontend polish pass — fourteen items.** Three of the fourteen turned out
+  to already exist and were verified rather than rebuilt; the rest are new.
+
+  **Already present, not rebuilt:** the theme toggle's circular View
+  Transition wipe (`state/theme.ts` `toggleTheme(origin)` + the
+  `.theme-switching` rules in theme.css, with Nav passing the button centre);
+  the contextual cursor (dot / ring / label in `useMotion.ts` and motion.css,
+  driven by `data-cursor`); and a `::selection` rule. Check before building —
+  two of these were on the proposed list and already worked.
+
+  **New:**
+  - **`.fill-scroll`** — section headlines ink themselves in as they cross the
+    viewport, ghost ahead of the sweep and solid behind it with an accent
+    hairline riding the boundary. Anonymous `view()` timeline, so there is no
+    wrapper element and no name to keep in sync. On the homepage intro `h2`
+    and each case study's problem heading.
+  - **Nav condense.** The hide-on-down / return-on-up half already existed;
+    what was missing was the bar actually shrinking past the hero. Measured
+    57px → 48px, wordmark 19 → 16, links 9/18 → 7/14, tuck translates -74.9px.
+  - **`CaseToc`** — the contents bar is now sticky, carries a reading-progress
+    line across its top edge, and has a marker that slides between sections.
+    The scroll-spy moved here from CasePage unchanged.
+  - **Sticky case section kickers**, pinned directly below the contents bar.
+  - **`Arrow`** — two glyphs on a double-width track; the resting -50% means
+    the hover slide travels rightwards, so the arrow exits right and its
+    replacement enters left. Verified: 14px clip, 28px track, `translateX(-14px)`
+    → `translateX(0)`.
+  - **`WorkPreview`** — a thumbnail trailing the pointer across the work list.
+  - **`CopyEmail`** — copies in place, label swaps inside a fixed-width button
+    (127px in both states, measured) instead of raising a toast.
+  - **Mobile menu stagger**, **blur-up placeholders** (35 files, 2.5 KB total,
+    71 bytes average — see the LQIP pass in scripts/images.mjs), a **404 with
+    three real destinations**, and **`::selection` at full accent strength**.
+
+  Also fixed in passing: the nav no longer tucks itself away while the mobile
+  sheet is open, which used to slide the burger off screen and leave the menu
+  hanging under nothing.
+- **Hero rebuild — ten additions.** The hero had no call to action in it at
+  all: the only route into the work was the nav. That was the largest of the
+  ten gaps.
+
+  1. **Action pair** — "See the work" (to a new `#work` anchor on the works
+     section) and "Get in touch", both with the `Arrow`.
+  2. **`.hero-scrim`** — a radial wash of the page ground between the canvas
+     (z-0) and the copy (z-1). The 3D cluster drifts through the same space
+     the headline occupies and contrast collapsed where a sphere passed
+     behind the type. Deliberately short of opaque at the centre (88%, not
+     100%) so the scene stays readable *through* the headline instead of
+     having a flat hole punched in it.
+  3. **Two-face headline** — `Software developer,` in Caprasimo 400 over
+     `systems builder.` in Figtree 800 at -0.045em, so the headline has
+     typographic contrast inside itself. The full string stays on the `h1`'s
+     `aria-label`; developer mode swaps both lines.
+  4. **`NowBuilding`** — reads the projects marked `status: 'In progress'`
+     and cycles them, so the claim cannot go stale independently of the data.
+     Six-second interval, paused while the tab is hidden, static under
+     reduced motion.
+  5. **Pulsing availability dot** on the open-to-work tag. The ring is a
+     separate pseudo-element so the dot never changes size and never moves
+     the baseline it sits on.
+  6. **`HeroLinks`** — GitHub, LinkedIn, LeetCode and email as icons whose
+     labels grow in on hover. Handles come from `content/stats.ts`, so they
+     stay in step with the Stats page.
+  7. **`ScrollCue`** — a rail with a travelling dot, bottom-left. Removes
+     itself permanently on the first scroll, and never mounts if the page
+     loaded already scrolled.
+  8. **Command-palette hint** — the fastest route through the site and
+     nothing said so.
+  9. **Facts row** — numbers now set large in the display face, with the
+     shipped count counting itself up. `LEAD` splits a leading integer off so
+     `useCountUp` gets its own element; "Bharuch, Gujarat" doesn't match and
+     stays whole.
+  10. **`scroll-padding-top` on `html`** — every in-page anchor on the site
+      was landing under the fixed nav, including `#main` from the skip link
+      and `#contact` from the nav. 101.2px against a 75px nav.
+
+  Caught on the 375px pass: the hero links were 40px against the site's own
+  44px touch floor (now in that rule), and the ⌘K hint needed a width query
+  as well as a pointer query — a resized desktop window still reports a fine
+  pointer while laying out as a phone.
+- **Hero redesigned from scratch as a full-bleed scene.** Meet rejected two
+  earlier versions of this hero; the third is a different architecture, not a
+  revision. **Direction was chosen by Meet from four options** (knockout type
+  / editorial split / full-bleed scene / type-only) — do not restructure it
+  again without asking.
+
+  The diagnosis: it was a conventional left-aligned text column with
+  decorative blobs behind it, and the WebGL was not earning its place. The
+  text block and the cluster were competing for the same space. Adding
+  features to that structure made it denser, not better.
+
+  Now the scene owns the viewport and the type is pushed to its edges:
+
+  - **`.hero-full`** is `min-height: 100svh` and *not* width-constrained, so
+    the canvas reaches the window edges. `svh` not `vh`: a phone's `vh`
+    includes chrome that is about to retract, which would push the action row
+    below the fold on exactly the devices least likely to go looking for it.
+    The 1400px measure moved inside to `.hero-frame`, so the headline still
+    lines up with every section below.
+  - **`.hero-meta`** on the top edge — availability, what's being built now,
+    location. **`.hero-foot`** on the bottom — headline and actions in one
+    corner, profile links and the scroll cue in the other.
+  - **The scene was recomposed**, which was the actual complaint. The old
+    `FORMS` array pushed everything right of centre because the headline used
+    to occupy the left half of the same box, and every form sat within four
+    units of the camera, so the cluster read as flat circles on a plane.
+    There are now three depth layers (near/mid/far), **fog** to the page
+    ground so the far layer reads as distance rather than haze, and the
+    cheap material path is at 0.82 opacity rather than 0.62, which had
+    washed it out to a stain. Ordered so a truncated slice is still a
+    composition — `profile.forms` takes the first n, and the first five carry
+    one of each layer because that is the entire low-tier scene.
+  - Canvas opacity went from 0.85/0.7 to 1/0.92. The old value existed
+    because the scene sat behind body copy; nothing is over its middle now.
+  - The radial scrim was replaced by **`.hero-veil`**, two linear washes at
+    the top and bottom edges. The type is at the edges, so that is where the
+    guard belongs, and the middle stays completely clear.
+  - The lede, marquee, facts and portrait moved out to **`.hero-after`**.
+
+  Measured: hero is exactly one viewport at 1265x720 and at 1440x620 (52px
+  to spare at the short one), canvas bleeds 0 → full width, metadata clears
+  the nav at every size, no horizontal overflow, and on mobile the two
+  corners collapse to one column with all four blocks sharing a left edge and
+  every target at 44px.
+- **Hero clarity and resolution pass.** Meet's feedback on the full-bleed
+  build: "clarity is missing" and "the background is very pixelated". Five
+  causes, four of them mistakes made in the redesign itself.
+
+  **Clarity:**
+  - **Fog was swallowing the subject.** The camera is at z=6, so a form's
+    distance is `6 - z`. Fog was set to start at 5.5 — which put the *entire
+    mid layer* (6.6 to 8.6 units) inside it, washing the main form 10% toward
+    the background and the far side of that layer 27%. Those are the bodies
+    that are supposed to read sharply. Now starts at 8.5, which clears the
+    near and mid layers completely and leaves fog doing only its intended job
+    on the far layer. **If these positions ever change, recompute the fog
+    start — it is derived from them, not chosen.**
+  - **Every form was part-transparent**, so overlapping bodies dissolved into
+    each other and no silhouette survived. Near and mid are effectively solid
+    now; transparency is reserved for the far layer where it means distance.
+  - **Transmission 0.94 → 0.78, roughness 0.22 → 0.16, clearcoat 0.5 → 0.85.**
+    At 0.94 the glass was near-invisible and two overlapping had no readable
+    edge. The higher clearcoat draws the silhouette — a specular rim is the
+    only edge definition available without a postprocessing pass, which this
+    scene deliberately does not have.
+  - **The veil was guarding contrast that was never at risk.** It ran the
+    bottom wash to 52% of the frame at 70% strength; measured, every piece of
+    hero type is 12:1 or better against the page ground. Shortened to 42% at
+    48%. A long ramp from dark brown to transparent is also the classic
+    8-bit banding case, and banding reads as "pixelated".
+
+  **Resolution:**
+  - **The low tier capped dpr at 1.5 and had antialiasing off entirely.**
+    Both were reasonable when the scene was a dim blur in the right-hand
+    margin at 70% opacity — there were no hard edges to alias. A full-bleed
+    scene at full opacity with crisp specular rims has hard edges everywhere.
+    Both tiers now cap at 2 and antialias. Note the low tier is **not only
+    phones**: `detect()` returns LOW for any window under 900px wide,
+    including a half-screen desktop.
+  - **Particles were 0.075** — under two pixels across once the canvas filled
+    the viewport. A sub-pixel dot cannot be drawn softly; it lands as one hard
+    lit pixel that crawls as it moves, which reads as noise or a dirty screen.
+    Now 0.14, with the count brought down to match.
+
+  Not diagnosable from here: the canvas in the preview pane reads 300x150,
+  the HTML default, because R3F sizes it from a ResizeObserver and this pane
+  fires none. Its CSS box is 300x150 too, so it is not being stretched — that
+  number is the environment, not a bug.
+- **Stats page expanded — five additions, no new external services.** The
+  page's standing trade-off is that it is the one place on the site making
+  third-party requests, so everything added here is derived from data already
+  in hand rather than fetched.
+
+  - **`GitHubInsights`** — longest streak, current streak, busiest day,
+    weekly average, consistency percentage and most-active weekday, all
+    computed from the `Day[][]` the heatmap already fetched and drew. Two
+    traps in that grid, both handled: it is padded at *both* ends, so the
+    trailing pad has to be dropped or the current streak is permanently zero
+    once the week turns over; and today reading zero must not break a streak,
+    because the day is not over. Dates are parsed at UTC noon so the weekday
+    tally does not shift for anyone west of GMT.
+  - **`StatBars`** — one shared bar-list component, so the four breakdowns
+    cannot drift apart visually. Scaled to the largest value in the set, not
+    to the total: eighteen projects across seven categories as share-of-total
+    is a row of stubs, and the ranking is what the chart is for. The raw
+    number is always printed alongside.
+  - **By discipline** (top 8 tags), **by category**, **shipped by year**
+    (chronological, not ranked — sorting a timeline by size destroys the only
+    thing it says) and **stack depth**, all counted out of
+    `content/projects.ts` and `content/stack.ts` at render.
+
+  Cross-checked against the source: categories sum to 18, years sum to 18,
+  and the stack groups sum to 43, matching `stackCount`. Add a project and
+  every bar moves on its own.
+
+  Also fixed: the provenance footnote said "the breakdowns below them", which
+  was true in document order and false from where the reader stands — at the
+  foot of the page those breakdowns are above. It now names the panels
+  instead of pointing at them, and is set as a bordered aside rather than a
+  bare paragraph in whitespace.
+
+  Stats chunk: 4.03 kB → 5.51 kB gzip.
+- **New pages and site plumbing.** From Meet's shortlist. Two routes added,
+  `/about` and `/uses`, both lazy like every route but Home (About 1.99 kB
+  gzip, Uses 1.50 kB).
+
+  - **`scripts/sitemap.mjs`** — runs in `npm run build` before Vite, emits
+    `robots.txt` and `sitemap.xml` into `web/public`. 25 URLs: 7 fixed routes
+    plus 18 case studies, with `pending: true` entries skipped. The slug list
+    is parsed out of projects.ts and the script **exits non-zero if it parses
+    fewer than five**, because a regex that silently matches nothing would
+    emit a plausible-looking sitemap containing only the fixed routes.
+  - **`web/content/site.ts`** — the canonical origin, email, socials and the
+    resume path, previously scattered or absent. `SITE_URL` reads
+    `VITE_SITE_URL`; **it is not set**, and both the sitemap and the canonical
+    tag fail *closed* rather than emitting a placeholder domain — a sitemap
+    carrying the wrong origin actively misdirects crawlers.
+  - **`web/env.d.ts`** — types only `VITE_SITE_URL`, deliberately not
+    `vite/client`. tsconfig sets `"types": []` on purpose.
+  - **`/about`** — bio, a numbers row, and education/experience timelines that
+    **do not render at all** while their entries are `todo: true`.
+  - **`/uses`** — the software half is `stack.ts` reordered, so it cannot
+    disagree with the rest of the site; groups missing from `SOFTWARE_ORDER`
+    are appended rather than dropped (which is how "Core CS" still shows).
+    The Desk section is hidden pending real hardware answers.
+  - **The Approach loop is a timeline**, not four separate cards — a rail
+    joins the numbered nodes, with the last step dropping its tail so it does
+    not point into empty space.
+  - **"Right now" on the homepage** — building (from `status: 'In progress'`)
+    and learning (from the new `content/now.ts`, which Approach now shares
+    rather than holding its own copy).
+  - **`ResumeButton`** renders nothing until `RESUME_READY` is flipped. A
+    download that 404s reads as a broken site to the one visitor it exists for.
+  - **`Testimonials`** renders nothing while the array is empty — no heading,
+    no "coming soon".
+
+  Caught while building: About showed "Shipped 18" and "Written up 18" as two
+  tiles, because `archive` is currently empty and both resolved to the same
+  number. Replaced with the live-project count.
+
+### Deliberately not done, and why
+
+- **Testimonials and client logos.** Both need assets only Meet can supply. A
+  testimonial is a statement attributed to a named real business; writing a
+  placeholder one produces a fabricated quote that can ship. The file and the
+  component exist and are wired — the array is empty on purpose.
+- **Analytics.** Needs a vendor decision, and it is the one item on the list
+  that sends visitor data to a third party. This site's documented position is
+  that it makes no external requests except the two Stats panels. Worth doing,
+  but it is Meet's call which provider and whether the trade is acceptable.
+- **WakaTime.** Needs an account and an API key.
+- **Resume PDF.** The button and the flag exist; the file does not.
 
 ---
 
@@ -625,6 +904,34 @@ top of `OrganicField.tsx`, which is the whole composition in seven lines.
 ---
 
 ## Gotchas — read before touching these
+
+**`.fill-scroll` is the one effect here that can fail to invisible text.**
+Every other scroll-linked effect fails safe — an inactive timeline leaves a
+hairline short or a progress bar empty and nobody notices. This one paints
+text with `color: transparent` + `background-clip: text`, so an inactive
+timeline leaves the headline sitting at whatever the unfilled gradient stop
+is. That stop is deliberately 40% of the text colour rather than the ~20%
+this effect is usually drawn at, purely so a stuck state stays readable. It
+is also triple-guarded: `@supports (background-clip: text)`, `@supports
+(animation-timeline: view())`, and `.js`. Do not lower the 40%.
+
+**Three of the sticky/floating indicators on this site were positioned wrong
+on the first attempt, all for the same reason.** A floating element over
+full-width content will find something to collide with. The works index went
+left rail → fixed pill → sticky header; the case-study section kickers were
+hardcoded to pin 74px below the contents bar when the bar is actually 104px
+tall, so every kicker stuck 30px *inside* it. That one is now measured — the
+`CaseToc` publishes `--toc-h` and the kickers pin against it. **Measure the
+thing you are pinning below; do not guess its height.**
+
+**A floating indicator over a full-width list will always collide.** The works
+index went through three positions before landing: a left rail (needed ~225px
+of margin against the ~128px the 1400px centred column leaves — measured
+overlapping rows at x=257), then a fixed bottom-left pill (no margin needed,
+but a fixed element over a full-width list passes straight across row titles,
+which reads as a bug), and finally the section's own **sticky header**, which
+is already full-width and in the flow so nothing can collide with it. If
+another indicator is ever added, start at the sticky header.
 
 **Any effect that puts text on the page twice must set `user-select: none` on
 the painted copy.** `SwapText`, `CascadeText` and `ScrambleText` all render a

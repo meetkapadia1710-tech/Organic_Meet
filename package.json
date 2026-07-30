@@ -6,10 +6,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -p tsconfig.web.json --noEmit && vite build",
+    "build": "tsc -p tsconfig.web.json --noEmit && node scripts/sitemap.mjs && vite build",
     "preview": "vite preview --port 4174",
     "typecheck": "tsc -p tsconfig.web.json --noEmit",
-    "og": "python tools/make-og.py"
+    "og": "python tools/make-og.py",
+    "sitemap": "node scripts/sitemap.mjs"
   },
   "engines": {
     "node": ">=18"

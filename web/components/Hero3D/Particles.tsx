@@ -114,7 +114,14 @@ export function Particles({
       <pointsMaterial
         map={texture}
         color={palette.spore}
-        size={0.075}
+        /* 0.075 put most of the field under two pixels across once the canvas
+           filled the viewport, and a sub-pixel dot cannot be drawn softly —
+           it lands as a single hard lit pixel that crawls as it moves, which
+           reads as noise or a dirty screen rather than as anything drifting.
+           At 0.14 the radial falloff in the texture actually has room to
+           resolve, so each one is a soft mote. Count came down to match:
+           bigger elements at the old density would be a snowstorm. */
+        size={0.14}
         sizeAttenuation
         transparent
         /* Additive glows against a dark ground and washes out to nothing

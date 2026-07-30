@@ -5,6 +5,7 @@ import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { stats } from '../content/stats';
 import { archive, caseStudies } from '../content/projects';
 import { Heatmap, HeatmapLegend, useGitHubCalendar, useLeetCode } from '../components/Heatmap';
+import { GitHubInsights } from '../components/GitHubInsights';
 
 /* A panel wrapping a third-party image. It always renders the link, so if the
    service is slow, blocked or gone, the visitor still has somewhere to go —
@@ -141,6 +142,10 @@ export function Stats() {
                 <>
                   <Heatmap grid={gh.data.grid} unit="contribution" ramp="accent" />
                   <HeatmapLegend />
+                  {/* Derived from the grid that was just drawn — no second
+                      request, and nothing here can be out of step with the
+                      squares above it. */}
+                  <GitHubInsights grid={gh.data.grid} />
                 </>
               )}
             </div>
@@ -244,14 +249,6 @@ export function Stats() {
           </div>
         </section>
       )}
-
-      <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
-        <p style={{ fontSize: 14, color: 'var(--color-neutral-700)', maxWidth: '62ch' }}>
-          The panels above are rendered by third-party services from a username. Everything else on this site makes no
-          external requests; these do, which means they can be slow or unavailable — so every panel links to the profile
-          it summarises.
-        </p>
-      </section>
 
       <Contact />
     </>

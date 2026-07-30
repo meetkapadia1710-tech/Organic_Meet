@@ -7,6 +7,10 @@ import { SwapText } from './SwapText';
 import { setDevMode, useDevMode } from '../state/devmode';
 import { useLogoTap } from '../hooks/useLogoTap';
 
+/* Padding and the wordmark size live in site.css rather than here, because
+   the condensed state past the hero has to override them — and an inline
+   style outranks any class, which would have meant `!important` on every
+   condensed rule. The resting values are unchanged, just relocated. */
 const NAV_STYLE: React.CSSProperties = {
   viewTransitionName: 'site-nav',
   position: 'fixed',
@@ -17,17 +21,18 @@ const NAV_STYLE: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: 'var(--space-2) var(--space-2) var(--space-2) var(--space-6)',
   borderRadius: 999,
   background: 'color-mix(in srgb, var(--color-surface) 88%, transparent)',
   backdropFilter: 'blur(10px)',
   boxShadow: 'var(--shadow-sm)',
 };
 
+/* Padding is in site.css for the same reason as the nav's own — see above.
+   `.nav-sheet .nlink` already carried `!important` on its padding to beat the
+   old inline value, so the mobile sheet is unaffected either way. */
 const LINK_STYLE: React.CSSProperties = {
   color: 'var(--color-text)',
   textDecoration: 'none',
-  padding: '9px 18px',
   borderRadius: 999,
 };
 
@@ -90,6 +95,7 @@ export function Nav() {
           chunk on hover/focus is what makes the click land instantly instead
           of pausing on a Suspense fallback. */}
       <NavLink className="nlink nlink-projects" to="/projects" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/projects')} onFocus={() => prefetchRoute('/projects')}><SwapText>Projects</SwapText></NavLink>
+      <NavLink className="nlink" to="/about" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/about')} onFocus={() => prefetchRoute('/about')}><SwapText>About</SwapText></NavLink>
       <NavLink className="nlink" to="/approach" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/approach')} onFocus={() => prefetchRoute('/approach')}><SwapText>Approach</SwapText></NavLink>
       <NavLink className="nlink" to="/stats" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/stats')} onFocus={() => prefetchRoute('/stats')}><SwapText>Stats</SwapText></NavLink>
       <NavLink className="nlink" to="/contact" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/contact')} onFocus={() => prefetchRoute('/contact')}><SwapText>Contact</SwapText></NavLink>
@@ -106,7 +112,7 @@ export function Nav() {
           to="/"
           viewTransition
           className="site-brand"
-          style={{ fontFamily: 'var(--font-heading)', fontSize: 19, color: 'var(--color-text)', textDecoration: 'none' }}
+          style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-text)', textDecoration: 'none' }}
           {...logoTap}
         >
           {devMode ? 'organic_meet.exe' : 'Meet Kapadia'}

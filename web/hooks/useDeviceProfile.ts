@@ -21,16 +21,30 @@ export interface DeviceProfile {
   particles: number;
   /** Real refraction is a whole extra render pass — earned, not assumed. */
   transmission: boolean;
-  /** Cap the pixel ratio; a 3x phone screen is 9x the fragments for no
-   *  visible gain on soft, blurred shapes. */
+  /**
+   * Cap the pixel ratio. This used to be 1.5 on the low tier, on the
+   * reasoning that soft blurred shapes gain nothing from more pixels. That
+   * reasoning expired when the hero became full-bleed: the canvas went from
+   * a inset box behind a headline, held at 70% opacity, to the full viewport
+   * at full strength with crisp specular edges. Rendering that at 1.5x on a
+   * 2x display is visible as a soft, pixelated background — and the low tier
+   * catches any window under 900px wide, including a half-screen desktop.
+   *
+   * Both tiers now cap at 2, which is the point past which a 3x phone screen
+   * really is 9x the fragments for nothing.
+   */
   dpr: [number, number];
 }
 
 const NONE: DeviceProfile = { tier: 'none', forms: 0, particles: 0, transmission: false, dpr: [1, 1] };
 
-const LOW: DeviceProfile = { tier: 'low', forms: 4, particles: 90, transmission: false, dpr: [1, 1.5] };
+/* Form counts went up with the full-bleed hero: the scene fills the viewport
+   now instead of sitting behind a headline in the right-hand margin, and the
+   old counts left it sparse at that size. Ten meshes is ten draw calls, which
+   is still noise next to the transmission pass. */
+const LOW: DeviceProfile = { tier: 'low', forms: 5, particles: 90, transmission: false, dpr: [1, 2] };
 
-const HIGH: DeviceProfile = { tier: 'high', forms: 7, particles: 260, transmission: true, dpr: [1, 2] };
+const HIGH: DeviceProfile = { tier: 'high', forms: 10, particles: 260, transmission: true, dpr: [1, 2] };
 
 /** Cached — the answer cannot change without a reload, and every caller
  *  asking the same question should get the same object identity. */

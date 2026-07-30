@@ -122,8 +122,14 @@ export function Deck({ projects }: { projects: Project[] }) {
 
   return (
     <div className="deck is-on" aria-roledescription="carousel" aria-label="Selected work, 3D view">
+      {/* The viewport and the cards each claim the cursor, and the cards are
+          inside the viewport — `closest('[data-cursor]')` walks up from the
+          hovered node and stops at the first match, so a card reads "View
+          case" and the empty space around it reads "Drag". That is the whole
+          contextual-cursor mechanism; no extra state is needed. */}
       <div
         className="deck-viewport"
+        data-cursor="Drag"
         ref={viewportRef}
         onPointerMove={onPointerMove}
         onPointerLeave={() => {

@@ -222,6 +222,10 @@
     transition: none;
     transform: scaleX(0);
     animation: kicker-grow linear both;
+    /* Lost in the backdrop revert, which pinned every hairline at its end
+       state. The shorthand resets duration to 0s — see the scroll-timeline
+       gotcha in STATUS.md. */
+    animation-duration: auto;
     animation-timeline: view();
     animation-range: entry 10% entry 70%;
   }
@@ -390,75 +394,87 @@ button:focus-visible .swap .swap-alt .swap-char,
 }
 
 /* ── works index ─────────────────────────────────────────────────────────
-   Fixed to the left edge, vertically centred, only while the Selected Works
-   section is on screen. See the header of WorkIndex.tsx for why this is fixed
-   rather than a sticky rail. */
+   The Selected Works header pins while you scroll its rows, and carries a
+   live counter that cross-fades 01 → 05.
 
-/* Bottom-left, not a vertically-centred rail.
+   Two earlier attempts are worth recording, because both looked reasonable
+   and both were wrong:
 
-   The rail was the first attempt and it collided: at 1600px the content
-   column is 1400px centred, leaving ~128px of margin, and the indicator is
-   ~225px wide — measured overlapping the rows at x=257 against a row edge of
-   x=128. Widening the breakpoint until it fit would have meant showing it
-   only above ~1900px, which is almost nobody.
+   1. A vertically-centred rail in the left margin. At 1600px the 1400px
+      centred column leaves ~128px of margin and the indicator is ~225px wide
+      — measured overlapping the rows at x=257 against a row edge of x=128.
+      Making it fit meant a >1900px breakpoint, i.e. almost nobody.
+   2. A fixed pill in the bottom-left corner. No margin needed, but a fixed
+      element over a full-width list passes straight across whatever is
+      underneath — caught it sitting on top of a row title, which reads as a
+      bug rather than as layering.
 
-   The bottom edge is outside the content column at every width, so it clears
-   the rows without needing any margin at all. */
-.workdex {
-  position: fixed;
-  left: var(--space-6);
-  bottom: var(--space-6);
-  z-index: 400; /* under the nav (500), over the page */
+   The header is already full-width and already in the flow, so nothing can
+   collide with it, and `position: sticky` costs no layout at all. */
+
+.works-head {
+  position: sticky;
+  /* Clears the fixed nav pill, which sits at `--space-4` from the top and is
+     about 62px tall. */
+  top: calc(var(--space-4) + 70px);
+  z-index: 40;
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: 10px var(--space-4);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
-  backdrop-filter: blur(10px);
-  box-shadow: var(--shadow-sm);
-  pointer-events: none;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-6);
+  padding: var(--space-3) 0;
+  /* Rows scroll underneath, so it needs a ground of its own or the type
+     would overlap as they pass. */
+  background: color-mix(in srgb, var(--color-bg) 92%, transparent);
+  backdrop-filter: blur(8px);
+}
+
+.workdex {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  /* Sits between the heading and the count, and takes the slack so both stay
+     pinned to their own edges. */
+  flex: 1;
+  justify-content: center;
+  min-width: 0;
   opacity: 0;
-  transform: translateY(10px);
-  transition: opacity 0.6s var(--ease-out-expo), transform 0.6s var(--ease-out-expo);
+  transition: opacity 0.5s var(--ease-out-expo);
 }
 
-.workdex.is-on {
-  opacity: 1;
-  transform: none;
-}
-
-/* Developer mode owns the bottom-left corner for its message, and has its own
-   interface language. */
-html.dev-mode .workdex { display: none; }
+.workdex.is-on { opacity: 1; }
 
 .workdex-num,
 .workdex-name {
-  /* Each is remounted on change, so this plays fresh every time. */
+  /* Remounted on change, so this replays every time. */
   display: inline-block;
-  animation: workdex-in 0.55s var(--ease-out-expo) both;
+  animation: workdex-in 0.5s var(--ease-out-expo) both;
 }
 
 .workdex-num {
   font-family: var(--font-heading);
-  font-size: 34px;
+  font-size: 19px;
   line-height: 1;
   color: var(--color-accent-700);
   font-variant-numeric: tabular-nums;
 }
 
 .workdex-rule {
-  width: 28px;
+  width: 22px;
   height: 1px;
   background: var(--color-divider);
+  align-self: center;
 }
 
 .workdex-name {
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.02em;
   color: var(--color-neutral-800);
-  max-width: 16ch;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .workdex-total {
@@ -468,14 +484,236 @@ html.dev-mode .workdex { display: none; }
 }
 
 @keyframes workdex-in {
-  from { opacity: 0; transform: translateY(9px); }
+  from { opacity: 0; transform: translateY(7px); }
   to { opacity: 1; transform: none; }
 }
 
-/* Below ~1500px the 1400px content column leaves no clear margin for this to
-   sit in without overlapping a row. */
-@media (max-width: 1500px) {
+/* Below the tablet breakpoint the header would eat too much of a short
+   viewport, and the counter is the least essential part of it. */
+@media (max-width: 899px) {
+  .works-head { position: static; background: none; backdrop-filter: none; }
   .workdex { display: none; }
+}
+
+/* ── scroll-linked headline fill ────────────────────────────────────────
+   The big section headlines ink themselves in as they cross the viewport:
+   ghosted ahead of the sweep, full-strength behind it, with a hairline of
+   accent riding the boundary.
+
+   Three guards, and all three matter, because the mechanism here is
+   `color: transparent` — the one effect on this site that can strand text
+   invisible if it half-applies:
+
+   1. `@supports (background-clip: text)` — without the clip, transparent text
+      over a transparent background is nothing at all.
+   2. `@supports (animation-timeline: view())` — Firefox has the clip but not
+      the timeline, so it would pin the headline at whatever the fill-mode
+      start happens to be.
+   3. `.js` — set by the inline script in index.html. If scripting is off the
+      headline stays ordinary text.
+
+   The sweep is a plain background-position move, not a gradient the browser
+   has to re-interpolate: a 200%-wide two-stop image slid from showing its
+   right half (ghost) to its left half (solid). `-webkit-text-fill-color` is
+   listed alongside `color` because WebKit ignores `color` once it is set. */
+
+@supports (animation-timeline: view()) and ((background-clip: text) or (-webkit-background-clip: text)) {
+  @media (prefers-reduced-motion: no-preference) {
+    .js .fill-scroll {
+      /* The unfilled stop is 40%, not the ~20% this effect is usually drawn
+         at, and that is a safety margin rather than a taste call.
+
+         Every other scroll-linked effect here fails safe — an inactive
+         timeline leaves a hairline short or a progress bar empty, and nobody
+         can tell. This one fails to *text*, so an inactive timeline would
+         leave a headline sitting at whatever the unfilled stop is. At 40% of
+         the text colour that is still comfortably readable on either ground;
+         at 20% it would have been a headline nobody could read. The sweep is
+         still obvious because the accent edge crossing it is doing most of
+         the work. */
+      background-image: linear-gradient(
+        90deg,
+        var(--color-text) 47%,
+        var(--color-accent-600) 50%,
+        color-mix(in srgb, var(--color-text) 40%, transparent) 53%
+      );
+      background-size: 200% 100%;
+      background-position: 100% 0;
+      background-repeat: no-repeat;
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      -webkit-text-fill-color: transparent;
+
+      /* Anonymous `view()`, not a named timeline. The element measures its
+         own progress through the viewport, so there is no wrapper to add and
+         no name to keep in sync. */
+      animation: fill-sweep linear both;
+      animation-duration: auto;
+      animation-timeline: view(block);
+      /* Finishes a little before centre — a headline that is still filling
+         when you have already read it is a headline that feels slow. */
+      animation-range: entry 25% cover 45%;
+    }
+  }
+}
+
+@keyframes fill-sweep {
+  to {
+    background-position: 0 0;
+  }
+}
+
+/* ── the arrow ──────────────────────────────────────────────────────────
+   Two glyphs on a track twice the width of its clip. See Arrow.tsx. The
+   `1em` box means it scales with whatever type it sits in without being
+   told the size. */
+
+.arrow {
+  display: inline-block;
+  overflow: hidden;
+  width: 1em;
+  height: 1.15em;
+  margin-left: 0.4em;
+  vertical-align: -0.14em;
+  line-height: 1.15;
+}
+.arrow-track {
+  display: flex;
+  width: 200%;
+  height: 100%;
+  /* Resting at -50% shows the *second* glyph, so the hover slide travels
+     rightwards — an arrow that exits left would read as "back". */
+  transform: translateX(-50%);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.arrow-track > span {
+  flex: 0 0 50%;
+  text-align: center;
+}
+/* Hover is claimed by the button, not the 1em arrow, so it fires from
+   anywhere on the control. :focus-visible included — a keyboard user
+   arriving on the link should see the same acknowledgement a pointer gets. */
+a:hover .arrow-track,
+button:hover .arrow-track,
+a:focus-visible .arrow-track,
+button:focus-visible .arrow-track,
+.next:hover .arrow-track {
+  transform: translateX(0);
+}
+
+/* ── work row preview ───────────────────────────────────────────────────
+   Positioned entirely by transform from JS (see WorkPreview.tsx); this only
+   owns how it looks and how it arrives. */
+
+.wprev {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9400;
+  width: 320px;
+  height: 170px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-divider);
+
+  /* Hidden by default and never shown at all until JS marks it on, so a
+     failed script leaves an empty box nowhere rather than parked at 0,0. */
+  opacity: 0;
+  scale: 0.92;
+  transition: opacity 0.24s ease, scale 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+
+  display: grid;
+  place-items: center;
+}
+.wprev.is-on {
+  opacity: 1;
+  scale: 1;
+}
+.wprev img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+}
+
+/* The fallback for a project with no screenshot. Not a placeholder saying
+   "no image" — a card that looks intentional, in the heading face. */
+.wprev-name {
+  font-family: var(--font-heading);
+  font-size: 26px;
+  line-height: 1.1;
+  text-align: center;
+  padding: var(--space-4);
+  color: var(--color-accent-800);
+  background: var(--color-accent-200);
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+}
+
+/* Touch and reduced motion never mount the component, but the element would
+   still be in the DOM on a resize into a coarse pointer. */
+@media (hover: none), (pointer: coarse) {
+  .wprev { display: none; }
+}
+
+/* ── copy-in-place ──────────────────────────────────────────────────────
+   Both faces occupy the same grid cell, so the button is as wide as the
+   wider of "Copy address" and "Copied ✓" and never resizes mid-swap. */
+
+.copy-stack {
+  display: inline-grid;
+  align-items: center;
+  justify-items: center;
+}
+.copy-face {
+  grid-area: 1 / 1;
+  transition: opacity 0.2s ease, transform 0.34s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.copy-done {
+  opacity: 0;
+  transform: translateY(60%);
+}
+.copy-email.is-copied .copy-idle {
+  opacity: 0;
+  transform: translateY(-60%);
+}
+.copy-email.is-copied .copy-done {
+  opacity: 1;
+  transform: none;
+}
+/* Confirmation is worth a colour change, not just a word change. */
+.copy-email.is-copied {
+  border-color: var(--color-accent);
+  color: var(--color-accent-800);
+}
+
+/* ── mobile menu stagger ────────────────────────────────────────────────
+   The sheet already fades in as a block (`nav-sheet-in` in site.css); this
+   walks its children in behind it. nth-child rather than a JS-written --i:
+   the sheet has a fixed six items and the markup is right there. */
+
+@media (max-width: 640px) {
+  .nav-sheet.is-open > * {
+    animation: sheet-item 0.42s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .nav-sheet.is-open > *:nth-child(1) { animation-delay: 0.04s; }
+  .nav-sheet.is-open > *:nth-child(2) { animation-delay: 0.08s; }
+  .nav-sheet.is-open > *:nth-child(3) { animation-delay: 0.12s; }
+  .nav-sheet.is-open > *:nth-child(4) { animation-delay: 0.16s; }
+  .nav-sheet.is-open > *:nth-child(5) { animation-delay: 0.2s; }
+  .nav-sheet.is-open > *:nth-child(6) { animation-delay: 0.24s; }
+}
+@keyframes sheet-item {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
 }
 
 /* ── reduced motion ─────────────────────────────────────────────────────
@@ -534,7 +772,21 @@ html.dev-mode .workdex { display: none; }
   /* The index is a scroll-linked indicator with nothing to say at rest, and
      the marquee offset is pure velocity. Both go. */
   .workdex { display: none; }
+  .works-head { position: static; background: none; }
   .mq-track { --mq-shift: 0px; }
+
+  /* The arrow keeps its glyph and stops travelling; the sheet items arrive
+     with the sheet instead of behind it; the preview never mounts, but the
+     rule is here so a preference change at runtime cannot leave one parked
+     on screen. The copy button still swaps — that is a state change and the
+     confirmation is the point — it just does it without the slide. */
+  .arrow-track,
+  a:hover .arrow-track,
+  button:hover .arrow-track,
+  .next:hover .arrow-track { transition: none; transform: translateX(-50%); }
+  .nav-sheet.is-open > * { animation: none; }
+  .wprev { display: none; }
+  .copy-face { transition: none; transform: none; }
   .swap .swap-layer .swap-char,
   .swap:hover .swap-layer .swap-char {
     transform: none;

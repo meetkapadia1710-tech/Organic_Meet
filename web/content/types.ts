@@ -56,6 +56,19 @@ export interface Project {
   /** An interactive demo rendered at the end of the case study. */
   demo?: 'news2' | { embed: string; label: string; note: string };
 
+  /**
+   * Thumbnail for the homepage row hover preview. Deliberately duplicated
+   * from the matching `heroImage` in cases.ts rather than read from it:
+   * cases.ts carries every case study's prose and is a 24.5 kB gzip chunk
+   * that only loads on a case page. Importing it into the homepage to reach
+   * two image paths would pull all of that into the first paint and undo the
+   * route-splitting pass.
+   *
+   * Point it at the -800 variant; the preview never renders above 300px.
+   * Projects with no screenshot omit this and get the typographic card.
+   */
+  preview?: string;
+
   links?: ProjectLinks;
 }
 

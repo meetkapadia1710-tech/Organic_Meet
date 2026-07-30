@@ -77,6 +77,9 @@ export const projects: Project[] = [
       "A GitHub tool that scores a repository and writes its README from the code that's actually there — Next.js app, browser extension, GitHub Action, Postgres/Drizzle, Gemini.",
     title: 'RepoGrade',
     desc: 'A GitHub tool that scores a repository and writes its README from the code that is actually there. Next.js, Postgres/Drizzle, a browser extension and a GitHub Action.',
+    // The landing page, not the analysis or history views — those carry
+    // third-party GitHub handles and private repository names.
+    preview: '/repoGrade/MainScreen-800.webp',
     links: { live: 'https://repo-grade-web.vercel.app/' },
   },
   {
@@ -114,6 +117,7 @@ export const projects: Project[] = [
     },
     title: 'AI Text Detector',
     desc: 'A fine-tuned DeBERTa-v3-base classifier detecting AI-generated text at 99.77% accuracy and a 0.49% false positive rate, benchmarked against the RoBERTa-OpenAI baseline and published with a live demo.',
+    preview: '/AI_TextDetector/MainScreen-800.webp',
     links: {
       live: 'https://huggingface.co/spaces/Meet-1710/AI_Detector',
       extra: [{ label: 'Model card', href: 'https://huggingface.co/Meet-1710/ai-text-detector' }],

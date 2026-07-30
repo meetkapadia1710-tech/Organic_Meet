@@ -46,6 +46,25 @@ function sourceSet(src: string): string | undefined {
   return `${base}-800.webp 800w, ${base}-1200.webp 1200w, ${src} 1600w`;
 }
 
+/* The blur-up placeholder, resolved by the same convention (see the LQIP pass
+   in scripts/images.mjs). ~71 bytes each, so it lands long before the real
+   file and replaces the grey box with the actual shape of the screenshot.
+
+   It is a background on the shell, not a second <img> that cross-fades out.
+   A fade needs the real image to start at opacity 0 and be revealed by an
+   onLoad that may have already fired before React attached — the failure mode
+   is an invisible figure, which is worse than the flash it was fixing. As a
+   background it is simply painted over when the image arrives, and a missing
+   placeholder file degrades to exactly the previous behaviour. */
+function placeholder(src: string | undefined): React.CSSProperties {
+  if (!src?.endsWith('.webp')) return {};
+  return {
+    backgroundImage: `url("${src.slice(0, -'.webp'.length)}-lqip.webp")`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+  };
+}
+
 export function Figure({
   caption,
   image,
@@ -62,7 +81,7 @@ export function Figure({
   sizes?: string;
 }) {
   return (
-    <figure data-reveal data-figure className="washed" style={{ ...SHELL, aspectRatio: ratio, margin: 0 }}>
+    <figure data-reveal data-figure className="washed" style={{ ...SHELL, ...placeholder(image?.src), aspectRatio: ratio, margin: 0 }}>
       {image ? (
         <img
           src={image.src}

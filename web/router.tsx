@@ -27,6 +27,8 @@ const loaders = {
   approach: () => import('./pages/Approach'),
   stats: () => import('./pages/Stats'),
   contact: () => import('./pages/Contact'),
+  about: () => import('./pages/About'),
+  uses: () => import('./pages/Uses'),
   case: () => import('./pages/CasePage'),
   notFound: () => import('./pages/NotFound'),
 };
@@ -46,6 +48,8 @@ const Projects = lazy(() => loaders.projects().then((m) => ({ default: m.Project
 const Approach = lazy(() => loaders.approach().then((m) => ({ default: m.Approach })));
 const Stats = lazy(() => loaders.stats().then((m) => ({ default: m.Stats })));
 const ContactPage = lazy(() => loaders.contact().then((m) => ({ default: m.Contact })));
+const About = lazy(() => loaders.about().then((m) => ({ default: m.About })));
+const Uses = lazy(() => loaders.uses().then((m) => ({ default: m.Uses })));
 const CasePage = lazy(() => loaders.case().then((m) => ({ default: m.CasePage })));
 const NotFound = lazy(() => loaders.notFound().then((m) => ({ default: m.NotFound })));
 
@@ -57,19 +61,19 @@ const NotFound = lazy(() => loaders.notFound().then((m) => ({ default: m.NotFoun
  *  run. */
 export function prefetchRoute(to: string): void {
   const path = to.split(/[?#]/)[0];
-  const loader =
-    path === '/projects'
-      ? loaders.projects
-      : path === '/approach'
-        ? loaders.approach
-        : path === '/stats'
-          ? loaders.stats
-          : path === '/contact'
-            ? loaders.contact
-            : path && path !== '/'
-              ? loaders.case
-              : null;
+  /* A lookup rather than the nested ternary this used to be: at four routes
+     that was readable, at seven it was not, and the fall-through to `case`
+     for anything unrecognised is the part that has to stay obvious. */
+  const fixed: Record<string, (() => Promise<unknown>) | undefined> = {
+    '/projects': loaders.projects,
+    '/approach': loaders.approach,
+    '/stats': loaders.stats,
+    '/contact': loaders.contact,
+    '/about': loaders.about,
+    '/uses': loaders.uses,
+  };
 
+  const loader = path ? (fixed[path] ?? (path !== '/' ? loaders.case : undefined)) : undefined;
   loader?.().catch(() => {});
 }
 
@@ -83,6 +87,8 @@ export const router = createBrowserRouter([
       { path: 'approach', element: <Approach /> },
       { path: 'stats', element: <Stats /> },
       { path: 'contact', element: <ContactPage /> },
+      { path: 'about', element: <About /> },
+      { path: 'uses', element: <Uses /> },
       { path: ':slug', element: <CasePage /> },
       { path: '*', element: <NotFound /> },
     ],

@@ -2,6 +2,7 @@ import { SplitText } from '../components/SplitText';
 import { Contact } from '../components/Contact';
 import { ScrambleText } from '../components/ScrambleText';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
+import { LEARNING } from '../content/now';
 
 const STEPS: Array<[string, string]> = [
   [
@@ -35,8 +36,6 @@ const FIT = [
   'Local-first or privacy-constrained systems',
   'Getting a stalled prototype to something shippable',
 ];
-
-const LEARNING = ['Distributed systems', 'Rust', 'Vector search at scale', 'On-device inference', 'Motion & interaction design'];
 
 export function Approach() {
   useDocumentMeta(

@@ -37,18 +37,43 @@ interface Form {
   spin: number;
 }
 
-/* Composed for the layout it sits behind: the headline is left-aligned and
-   about 15 characters wide, so the mass sits right of centre where the page
-   is empty, with two quiet forms far back on the left for depth behind the
-   text rather than on top of it. */
+/* Recomposed for a full-bleed hero. The previous arrangement pushed the whole
+   mass right of centre because the headline used to occupy the left half of
+   the same box; now the type sits at the edges of the frame and the middle
+   belongs to the scene, so the cluster is composed to fill it.
+
+   Three depth layers, and the depth is the point — the old field put every
+   form within four units of the camera, so nothing read as far away and the
+   cluster looked like flat circles on a plane:
+
+   - **Near** (z ≥ 0.8): small, sharp, near-opaque. Establishes scale.
+   - **Mid** (z -0.6 to -2.6): the readable bodies.
+   - **Far** (z ≤ -5): large and very faint. These are atmosphere, not
+     objects; the fog in HeroCanvas takes them most of the way to the page
+     ground, which is what puts air between the layers.
+
+   Ordered so a truncated slice is still a composition. `profile.forms` takes
+   the first n, so the first five carry one of each layer rather than five
+   near forms and no depth — that is the low tier's entire scene. */
+/* Opacity follows the layer, and only the far layer is translucent.
+
+   Several part-transparent bodies overlapping is how a cluster turns to mud:
+   each one lets the one behind through, no silhouette survives, and the whole
+   thing reads as a stain rather than as objects. The near and mid layers are
+   therefore effectively solid — they are what gives the scene its edges — and
+   transparency is reserved for the far layer, where it is doing a job
+   (distance) rather than happening by default. */
 const FORMS: Form[] = [
-  { position: [2.1, 0.35, 0], radius: 1.15, tone: 'warm', step: 1, opacity: 0.92, phase: 0, spin: 0.05 },
-  { position: [3.15, -1.15, -1.6], radius: 0.72, tone: 'green', step: 1, opacity: 0.85, phase: 1.9, spin: -0.07 },
-  { position: [1.15, 1.65, -1.1], radius: 0.5, tone: 'warm', step: 0, opacity: 0.8, phase: 3.4, spin: 0.09 },
-  { position: [3.6, 1.1, -2.9], radius: 0.9, tone: 'green', step: 2, opacity: 0.55, phase: 5.1, spin: -0.04 },
-  { position: [0.35, -1.6, -2.2], radius: 0.62, tone: 'warm', step: 2, opacity: 0.6, phase: 2.4, spin: 0.06 },
-  { position: [-2.4, 0.9, -4.2], radius: 1.05, tone: 'green', step: 0, opacity: 0.4, phase: 4.2, spin: 0.03 },
-  { position: [-1.5, -1.35, -3.6], radius: 0.55, tone: 'warm', step: 1, opacity: 0.35, phase: 0.8, spin: -0.05 },
+  { position: [1.9, 0.4, -0.6], radius: 1.05, tone: 'warm', step: 1, opacity: 1, phase: 0, spin: 0.05 },
+  { position: [-2.2, 1.6, -6.0], radius: 2.1, tone: 'green', step: 2, opacity: 0.32, phase: 4.2, spin: 0.03 },
+  { position: [-2.9, 1.35, 1.2], radius: 0.42, tone: 'warm', step: 0, opacity: 1, phase: 3.4, spin: 0.09 },
+  { position: [-1.6, -0.95, -1.4], radius: 0.8, tone: 'green', step: 1, opacity: 0.97, phase: 1.9, spin: -0.07 },
+  { position: [2.6, -0.8, -6.8], radius: 2.4, tone: 'warm', step: 2, opacity: 0.26, phase: 5.1, spin: -0.04 },
+  { position: [3.5, 1.4, -2.2], radius: 0.7, tone: 'warm', step: 0, opacity: 0.94, phase: 2.4, spin: 0.06 },
+  { position: [3.2, -1.5, 0.8], radius: 0.36, tone: 'green', step: 0, opacity: 1, phase: 0.8, spin: -0.05 },
+  { position: [-3.4, 0.6, -2.6], radius: 0.62, tone: 'green', step: 0, opacity: 0.92, phase: 2.9, spin: 0.04 },
+  { position: [0.4, -1.8, -1.9], radius: 0.55, tone: 'warm', step: 2, opacity: 0.94, phase: 1.2, spin: -0.06 },
+  { position: [0.2, 1.9, -5.2], radius: 1.5, tone: 'warm', step: 1, opacity: 0.22, phase: 5.8, spin: 0.02 },
 ];
 
 export function OrganicField({ palette, profile }: { palette: ScenePalette; profile: DeviceProfile }) {
@@ -113,18 +138,28 @@ export function OrganicField({ palette, profile }: { palette: ScenePalette; prof
             {profile.transmission ? (
               /* Real refraction: the scene behind is rendered into a buffer
                  and bent through the surface. It is the expensive option and
-                 the reason `transmission` is gated on device tier. */
+                 the reason `transmission` is gated on device tier.
+
+                 Transmission pulled back from 0.94 and roughness from 0.22.
+                 At 0.94 these were almost pure glass: near-invisible
+                 individually, and where two overlapped the result had no
+                 readable edge at all. Around 0.78 they keep the refraction
+                 that makes them feel like bodies rather than balloons while
+                 holding enough of their own colour to have a silhouette. The
+                 higher clearcoat is what draws that silhouette — a crisp
+                 specular rim is the cheapest edge definition available
+                 without a postprocessing pass. */
               <meshPhysicalMaterial
                 color={color}
-                transmission={0.94}
+                transmission={0.78}
                 thickness={form.radius * 1.6}
-                roughness={0.22}
+                roughness={0.16}
                 ior={1.35}
-                clearcoat={0.5}
-                clearcoatRoughness={0.35}
+                clearcoat={0.85}
+                clearcoatRoughness={0.22}
                 transparent
                 opacity={form.opacity}
-                envMapIntensity={1.1}
+                envMapIntensity={1.25}
               />
             ) : (
               /* The cheap read of the same idea: translucent, soft, lit the
@@ -136,7 +171,11 @@ export function OrganicField({ palette, profile }: { palette: ScenePalette; prof
                 roughness={0.45}
                 metalness={0}
                 transparent
-                opacity={form.opacity * 0.62}
+                /* Was 0.62, which washed the cheap path out to the point that
+                   the forms read as stains rather than bodies. The scene is
+                   the subject of the hero now, not a tint behind a headline,
+                   so it is allowed to be present. */
+                opacity={form.opacity * 0.82}
               />
             )}
           </mesh>

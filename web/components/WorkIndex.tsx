@@ -6,16 +6,23 @@
    same mask reveal as every other headline here, so the digit rides up out of
    a clip rather than swapping.
 
-   **Fixed, not `position: sticky` in a rail.** A sticky column is the more
-   obvious build, but it needs the works section to become a two-column grid —
-   and those rows already carry a tuned three-breakpoint layout
-   (`.g-work` at 720px and 1100px, plus a stacked mobile case). Restructuring
-   that to hang an indicator off the side risks the thing the indicator is
-   pointing at. Fixed positioning gets the same effect with zero layout
-   impact: nothing reflows, no breakpoint moves.
+   **It lives in the section's own sticky header (`.works-head`), not in a
+   rail and not in a fixed badge.** Both of those were built first and both
+   were wrong for the same reason: this is a full-width list, so anything
+   floating beside or over it eventually crosses a row title.
 
-   It only exists while the section is on screen, and only on viewports with
-   room to spare beside a 1400px column.
+   - A left rail wants ~225px of margin; a centred 1400px column leaves ~128px
+     at this viewport, and the indicator measured overlapping rows at x=257.
+   - A fixed bottom-left pill needs no margin, but being fixed it travels
+     straight across the rows as they scroll past — it landed on top of the
+     "AI Text Detector" title, which reads as a bug rather than as layering.
+
+   The sticky header has neither problem: it is already full-width and still
+   in the flow, so nothing can collide with it, and rows passing beneath are
+   masked by its own background. **If another indicator is ever added here,
+   start with the header.**
+
+   It only shows while the section is on screen.
    ───────────────────────────────────────────────────────────────────────── */
 
 import { useEffect, useRef, useState } from 'react';

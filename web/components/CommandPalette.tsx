@@ -49,6 +49,8 @@ function buildLinks(): Entry[] {
     { kind: 'link', title: 'Approach', subtitle: 'How I actually work', url: '/approach', group: 'Pages', keywords: 'process method about' },
     { kind: 'link', title: 'Stats', subtitle: 'Contribution activity and practice', url: '/stats', group: 'Pages', keywords: 'github leetcode codolio heatmap contributions numbers' },
     { kind: 'link', title: 'Contact', subtitle: 'Email, GitHub or LinkedIn', url: '/contact', group: 'Pages', keywords: 'email reach hire get in touch' },
+    { kind: 'link', title: 'About', subtitle: 'Background, education and the short version', url: '/about', group: 'Pages', keywords: 'bio biography who education experience cv resume timeline' },
+    { kind: 'link', title: 'Uses', subtitle: 'The editor, the machine and the tools', url: '/uses', group: 'Pages', keywords: 'setup gear hardware editor software stack desk tools' },
     ...caseStudies.map<Entry>((p) => ({
       kind: 'link', title: p.name, subtitle: trim(p.summary), url: `/${p.slug}`,
       group: 'Case studies', keywords: [...p.tags, p.category ?? '', p.year].join(' '),

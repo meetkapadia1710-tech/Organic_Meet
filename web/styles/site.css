@@ -186,10 +186,108 @@ h1, h2, h3 { overflow-wrap: break-word; }
    context, and fading up from nothing is what stops the scene appearing as
    a hard pop mid-read. */
 
+/* ── the full-bleed hero ────────────────────────────────────────────────
+   The scene owns the viewport; the type is pushed to its top and bottom
+   edges. `100svh` rather than `100vh` because a phone's `vh` includes the
+   browser chrome that is about to retract — at 100vh the scroll cue and the
+   actions start below the fold on exactly the devices least likely to go
+   looking for them. */
+
+.hero-full {
+  position: relative;
+  min-height: 100svh;
+  display: flex;
+  /* The canvas bleeds to the window edges; nothing here may cause the page
+     to scroll sideways. */
+  overflow: hidden;
+  /* Below the fixed nav pill, above the page. */
+  isolation: isolate;
+}
+
+/* The 1400px measure the rest of the page uses, reinstated *inside* the
+   full-bleed header so the headline lines up with every section below it. */
+.hero-frame {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  /* Top clears the fixed nav; bottom is generous because the scroll cue and
+     the action row live down there. */
+  padding: calc(var(--space-4) + 66px + var(--space-6)) var(--space-8) var(--space-8);
+}
+
+/* Top edge. */
+.hero-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.hero-meta-end {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.hero-place {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-neutral-700);
+}
+
+/* Bottom edge. `align-items: end` so the headline's baseline and the scroll
+   cue sit on the same line regardless of how many lines the title wraps to. */
+.hero-foot {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+.hero-foot-main {
+  min-width: 0;
+}
+.hero-foot-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-4);
+}
+
+/* Two linear washes rather than the radial blob this replaced. The type is
+   at the edges now, so that is where the guard belongs — and the middle of
+   the frame, the one place nothing is set over, stays completely clear. */
+.hero-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  /* Weaker and shorter than the first pass, which ran the bottom wash to 52%
+     of the frame at 70% strength and left the scene only properly visible in
+     a band across the middle. Two reasons to pull it back:
+
+     every piece of type over it measures 12:1 or better against the page
+     ground, so it was guarding contrast that was never at risk; and a long
+     ramp from a dark brown to transparent is exactly the gradient that bands
+     into visible steps on an 8-bit display. A shorter, shallower ramp has
+     fewer steps to show. */
+  background:
+    linear-gradient(to bottom, var(--color-bg) 0%, transparent 15%),
+    linear-gradient(to top, color-mix(in srgb, var(--color-bg) 92%, transparent) 0%, color-mix(in srgb, var(--color-bg) 48%, transparent) 22%, transparent 42%);
+}
+
 .hero3d {
   position: absolute;
-  inset: -6vh -10vw auto -10vw;
-  height: 92vh;
+  inset: 0;
+  height: 100%;
   z-index: 0;
   pointer-events: none;
   opacity: 0;
@@ -213,10 +311,12 @@ h1, h2, h3 { overflow-wrap: break-word; }
 
 .hero3d.is-ready ~ .hero-blob { opacity: 0; }
 
-/* The scene is atmosphere behind body copy, so it is held well back from
-   full strength — the text has to stay the most legible thing on screen. */
-.hero3d[data-tier='high'].is-ready { opacity: 0.85; }
-.hero3d[data-tier='low'].is-ready { opacity: 0.7; }
+/* The scene used to be atmosphere behind body copy and was held well back
+   from full strength for it. It is the subject of the hero now and nothing
+   is set over its middle, so it comes forward — the veil handles the two
+   edges where type actually sits. */
+.hero3d[data-tier='high'].is-ready { opacity: 1; }
+.hero3d[data-tier='low'].is-ready { opacity: 0.92; }
 
 /* The loading seed: one soft accent bloom, breathing, in the space the
    cluster is about to occupy. No spinner — the page is already usable, and
@@ -237,13 +337,314 @@ h1, h2, h3 { overflow-wrap: break-word; }
   50% { opacity: 0.9; transform: scale(1.02); }
 }
 
-/* The hero content has to win the stacking contest against the canvas. */
-.hero-content { position: relative; z-index: 1; }
+/* The block that follows the hero, carrying what used to be stacked inside
+   it. Same measure and rhythm as every other section. */
+.hero-after {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 12vh var(--space-8) 0;
+}
+.hero-lede {
+  max-width: 46ch;
+  margin: 0;
+  font-size: clamp(20px, 2.2vw, 26px);
+  line-height: 1.55;
+  color: var(--color-neutral-800);
+}
+
+.hero-avail {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Available is a live claim, so the dot behaves like a status light rather
+   than a bullet. The ring is a separate pseudo-element so the dot itself
+   stays a constant size — a pulsing dot changes the text baseline it sits on. */
+.avail-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--color-accent-2-700);
+  flex: none;
+}
+.avail-dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 999px;
+  border: 1.5px solid var(--color-accent-2-700);
+  animation: avail-pulse 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+@keyframes avail-pulse {
+  0% { transform: scale(0.6); opacity: 0.9; }
+  70%, 100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* ── currently building ─────────────────────────────────────────────────── */
+
+.now-building {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 13px;
+}
+.now-building-kicker {
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-size: 11px;
+  color: var(--color-neutral-700);
+}
+.now-building-name {
+  font-family: var(--font-heading);
+  font-size: 15px;
+  color: var(--color-accent-700);
+  animation: nb-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes nb-in {
+  from { opacity: 0; transform: translateY(6px); }
+}
+
+/* ── hero headline ──────────────────────────────────────────────────────
+   Two faces in one headline: the display cut on the first line, the body cut
+   set far heavier and tighter than anywhere else on the site for the second.
+   The size is shared so they read as one block despite the change of voice. */
+
+/* Smaller than it was as a centre-stage headline. It now sits on the bottom
+   edge of a fixed-height frame alongside the action row, and at the old
+   clamp's 150px ceiling two lines plus the buttons and the metadata strip
+   overran `100svh` on any laptop. This ceiling keeps the whole composition
+   inside one viewport down to about 620px tall. */
+.hero-title {
+  margin: 0;
+  font-size: clamp(40px, 7vw, 104px);
+  line-height: 0.94;
+  letter-spacing: -0.02em;
+  max-width: 15ch;
+}
+.hero-title-a,
+.hero-title-b {
+  display: block;
+}
+.hero-title-b {
+  font-family: var(--font-body);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  color: var(--color-accent-700);
+}
+
+/* ── hero actions ───────────────────────────────────────────────────────── */
+
+.hero-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-top: var(--space-6);
+}
+.hero-hint {
+  font-size: 14px;
+  color: var(--color-neutral-700);
+}
+.hero-hint kbd {
+  font-family: ui-monospace, monospace;
+  font-size: 12px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  border: 1px solid var(--color-divider);
+  background: var(--color-surface);
+}
+/* No key to press on a touch device — and no room for the suggestion on a
+   narrow one either, where it wraps the action row onto a third line. The
+   width query is not redundant with the pointer query: a resized desktop
+   window still reports a fine pointer while laying out as a phone. */
+@media (hover: none), (pointer: coarse), (max-width: 640px) {
+  .hero-hint { display: none; }
+}
+
+/* ── hero links ─────────────────────────────────────────────────────────
+   Icon at rest; the label grows in beside it on hover, so the row is compact
+   but never unlabelled. Width, not opacity — a label that only fades in still
+   reserves its space and leaves four gaps in the row. */
+
+.hero-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.hero-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  padding: 9px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--color-divider);
+  color: var(--color-neutral-800);
+  text-decoration: none;
+  transition: color 0.25s ease, border-color 0.25s ease, background-color 0.25s ease, gap 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hero-links svg { width: 19px; height: 19px; flex: none; }
+.hero-link-label {
+  display: inline-block;
+  max-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  transition: max-width 0.42s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.hero-links a:hover,
+.hero-links a:focus-visible {
+  color: var(--color-accent-800);
+  border-color: var(--color-accent);
+  background: var(--color-accent-100);
+  gap: 7px;
+}
+.hero-links a:hover .hero-link-label,
+.hero-links a:focus-visible .hero-link-label {
+  max-width: 90px;
+}
+
+/* ── hero facts ─────────────────────────────────────────────────────────── */
+
+.hero-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-8);
+}
+.hero-fact {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-6);
+  min-width: 150px;
+}
+.hero-fact.is-accent { background: var(--color-accent-2-200); }
+.hero-fact-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-neutral-700);
+  margin-bottom: 6px;
+}
+.hero-fact.is-accent .hero-fact-label { color: var(--color-accent-2-800); }
+.hero-fact-value {
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.hero-fact.is-accent .hero-fact-value { color: var(--color-accent-2-900); }
+.hero-fact-num {
+  font-family: var(--font-heading);
+  font-size: 30px;
+  line-height: 1;
+  color: var(--color-accent-700);
+  margin-right: 5px;
+}
+
+/* ── scroll cue ─────────────────────────────────────────────────────────
+   A rail with a dot travelling down it. Absolutely positioned against the
+   header, which is `position: relative`. */
+
+/* In the flow, in the hero's bottom-right corner — it used to be absolutely
+   positioned against the header because there was no corner to put it in. */
+.scroll-cue {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  pointer-events: none;
+  animation: cue-in 0.8s 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.scroll-cue-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-neutral-700);
+}
+.scroll-cue-rail {
+  position: relative;
+  width: 54px;
+  height: 1px;
+  background: var(--color-divider);
+  overflow: hidden;
+}
+.scroll-cue-dot {
+  position: absolute;
+  top: -1px;
+  left: 0;
+  width: 16px;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--color-accent);
+  animation: cue-travel 2.1s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+@keyframes cue-travel {
+  0% { transform: translateX(-18px); }
+  100% { transform: translateX(58px); }
+}
+@keyframes cue-in {
+  from { opacity: 0; transform: translateY(10px); }
+}
 
 @media (max-width: 719px) {
-  /* Tighter to the text block on a phone, where there is no empty right
-     margin for the cluster to live in. */
-  .hero3d { inset: -4vh -14vw auto -14vw; height: 78vh; }
+  /* The cue is desktop-only: nobody needs to be told a phone scrolls, and
+     the corner it lives in does not survive the stack below. */
+  .scroll-cue { display: none; }
+  .hero-title { max-width: none; }
+
+  /* The two-corner composition collapses to a single column. `align-items`
+     and `justify-content` both have to be reset — left as `flex-end` the
+     profile links would sit right-aligned under a left-aligned headline. */
+  .hero-foot {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-6);
+  }
+  .hero-foot-end {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+  }
+  .hero-links { justify-content: flex-start; }
+
+  .hero-meta {
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+  .hero-meta-end { gap: var(--space-3); }
+
+  /* A phone's viewport is mostly headline once the nav and the action row
+     have taken their share, so the frame is allowed to grow past one screen
+     rather than crushing the type to fit. */
+  .hero-full { min-height: auto; }
+  .hero-frame {
+    padding: calc(var(--space-4) + 66px + var(--space-4)) var(--space-6) var(--space-8);
+    gap: var(--space-8);
+    grid-template-rows: auto auto auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The cue and the rotating strip do not mount at all under this
+     preference; these cover the pieces that are pure ornament. */
+  .avail-dot::after { animation: none; opacity: 0; }
+  .now-building-name { animation: none; }
+  .hero-links a,
+  .hero-link-label { transition: none; }
+}
+
+@media (max-width: 719px) {
+  /* Full bleed at every width now — the cluster is the hero, not something
+     tucked into a right-hand margin that a phone does not have. */
+  .hero3d { inset: 0; height: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -291,6 +692,35 @@ h1, h2, h3 { overflow-wrap: break-word; }
 
 .step:hover { background: var(--color-accent-100); }
 .step:hover .step-n { background: var(--color-accent); color: var(--color-neutral-100); }
+
+/* ── the loop, as a timeline ────────────────────────────────────────────
+   The four steps were four separate cards, which read as a list of opinions
+   rather than as a sequence. A rail joining the numbered nodes is the whole
+   difference: it says these happen in this order.
+
+   Drawn as a ::before on each step rather than one line behind the group, so
+   the last step can drop its tail — a rail that continues past the final node
+   into empty space looks like a missing fifth step. */
+.step { position: relative; }
+.step::before {
+  content: '';
+  position: absolute;
+  /* Centred on the 52px node, running from just under it to the next one. */
+  left: calc(var(--space-6) + 26px);
+  top: calc(var(--space-6) + 52px + 8px);
+  bottom: calc(var(--space-3) * -1 - 8px);
+  width: 2px;
+  background: linear-gradient(to bottom, var(--color-accent), var(--color-divider));
+  border-radius: 2px;
+}
+.step:last-child::before { display: none; }
+
+/* Below the two-column breakpoint the number sits above the heading and the
+   rail's geometry no longer matches; the cards are stacked and adjacent, so
+   the sequence is legible without it. */
+@media (max-width: 719px) {
+  .step::before { display: none; }
+}
 
 .next:hover { background: var(--color-accent-100); }
 .next:hover .next-t { color: var(--color-accent-700); }
@@ -361,10 +791,39 @@ h1, h2, h3 { overflow-wrap: break-word; }
    approach hid Approach and then Stats to make room, which left two pages
    with no route to them on a phone at all. */
 
-.site-nav { transition: background .3s ease, box-shadow .3s ease; }
+/* Every in-page anchor on this site lands under the fixed nav pill without
+   this — including `#main` from the skip link, `#contact` from the nav, and
+   `#work` from the hero's primary CTA. Set on the scroll container so it
+   applies to the browser's own anchor handling, not just scripted jumps. */
+html { scroll-padding-top: calc(var(--space-4) + 66px + var(--space-4)); }
+
+/* Resting geometry. These two were inline on the component until the
+   condensed state below needed to override them — see the note in Nav.tsx. */
+.site-nav { padding: var(--space-2) var(--space-2) var(--space-2) var(--space-6); }
+.site-brand { font-size: 19px; }
+.nlink { padding: 9px 18px; }
+
+.site-nav {
+  transition: background .3s ease, box-shadow .3s ease, padding .32s cubic-bezier(.16, 1, .3, 1);
+}
+.site-brand { transition: font-size .32s cubic-bezier(.16, 1, .3, 1); }
+
+/* Past the hero the bar condenses: it opaques up, gains a shadow, and pulls
+   its own padding and wordmark in so it reads as chrome rather than as part
+   of the page. `is-scrolled` is set in useMotion's scroll handler at y > 24. */
 .site-nav.is-scrolled {
   background: color-mix(in srgb, var(--color-surface) 97%, transparent) !important;
   box-shadow: var(--shadow-md) !important;
+  padding: 5px 5px 5px var(--space-4);
+}
+.site-nav.is-scrolled .site-brand { font-size: 16px; }
+.site-nav.is-scrolled .nlink { padding: 7px 14px; }
+.nlink { transition: padding .32s cubic-bezier(.16, 1, .3, 1); }
+
+/* The condensed state is still correct without the easing — only the travel
+   between the two sizes is motion, so that is what goes. */
+@media (prefers-reduced-motion: reduce) {
+  .site-nav, .site-brand, .nlink { transition: none; }
 }
 
 .nav-burger { display: none; }
@@ -431,6 +890,7 @@ h1, h2, h3 { overflow-wrap: break-word; }
   .site-nav > a:first-child,
   .deck-switch button,
   .toc-list a,
+  .hero-links a,
   .case-back {
     min-height: 44px;
     display: inline-flex;

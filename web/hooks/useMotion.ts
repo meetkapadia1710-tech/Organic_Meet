@@ -293,9 +293,14 @@ export function useScrollEffects(): void {
       const nav = document.querySelector('.site-nav');
       if (nav) {
         nav.classList.toggle('is-scrolled', y > 24);
+        /* An open mobile sheet pins the bar. The sheet is a sibling of the
+           nav, not a child, so tucking the bar away would slide the burger
+           off screen and leave the menu hanging under nothing. */
+        const sheetOpen = !!document.querySelector('.nav-sheet.is-open');
         // Hysteresis, not a toggle: tuck on a decisive scroll down, return on
         // a decisive scroll up, hold position in between.
-        if (delta > 4 && y > 400) nav.classList.add('is-tucked');
+        if (sheetOpen) nav.classList.remove('is-tucked');
+        else if (delta > 4 && y > 400) nav.classList.add('is-tucked');
         else if (delta < -4 || y <= 400) nav.classList.remove('is-tucked');
       }
     };

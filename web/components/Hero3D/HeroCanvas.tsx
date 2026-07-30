@@ -126,7 +126,13 @@ export default function HeroCanvas({
       camera={{ position: [0, 0, 6], fov: 45, near: 0.1, far: 60 }}
       gl={{
         alpha: true,
-        antialias: profile.tier === 'high',
+        /* Antialiasing on both tiers. It was high-tier-only, which was
+           defensible while the scene was a dim blur in the margin — every
+           edge was soft anyway, so there was nothing for MSAA to fix. A
+           full-bleed scene at full opacity with crisp specular rims has hard
+           edges everywhere, and without this they stair-step. The low tier
+           also catches any window under 900px, so "low" is not only phones. */
+        antialias: true,
         powerPreference: 'high-performance',
       }}
       /* No tone mapping. ACES would quietly desaturate the palette, and
@@ -141,6 +147,32 @@ export default function HeroCanvas({
       }}
       style={{ pointerEvents: 'none' }}
     >
+      {/* Depth, and the numbers here are not free choices — they are read off
+          the camera and the form positions, because the first attempt got
+          them wrong and cost the scene its clarity.
+
+          The camera sits at z=6, so a form's distance is `6 - z`:
+
+            near   z  1.2  →  4.8
+            mid    z -0.6 .. -2.6  →  6.6 .. 8.6
+            far    z -5.2 .. -6.8  →  11.2 .. 12.8
+
+          Fog started at 5.5 the first time, which put the *entire mid layer*
+          inside it — the main form was already 10% washed toward the
+          background and the far side of the mid layer 27%. Those are the
+          bodies that are supposed to read sharply; fogging them is exactly
+          the haze this was meant to avoid.
+
+          Starting at 8.5 clears the whole near and mid layer and leaves the
+          fog doing only the job it was added for: the far layer lands at
+          roughly 40-65% toward the ground, which is atmosphere.
+
+          Fogged to `palette.bg` rather than a neutral: the canvas is alpha,
+          so a form fading toward the page ground fades into the actual page
+          behind it, reading as distance instead of as grey film over the
+          site. */}
+      <fog attach="fog" args={[palette.bg, 8.5, 15]} />
+
       <GradientEnvironment palette={palette} />
 
       {/* Soft and ambient by design — the brief asks for atmosphere, not a
