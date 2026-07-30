@@ -376,13 +376,26 @@ export function useVelocitySkew(): void {
     const root = document.documentElement;
     let raf = 0;
     let idle = 0;
+    /* Eased separately from the skew and much more slowly. The skew can snap
+       with the scroll because it is a shear; a positional nudge that tracked
+       velocity exactly would make the marquee stutter on every wheel tick. */
+    let shift = 0;
 
     const tick = () => {
       const velocity = Number(getComputedStyle(root).getPropertyValue('--scroll-velocity')) || 0;
       const skew = clamp(velocity * 0.05, -2.2, 2.2);
 
+      /* Scrolling down pushes the band along its travel; scrolling up drags
+         it back, which is what reads as the marquee briefly reversing. It is
+         an offset composed into the keyframe (see `--mq-shift` in site.css),
+         not a change of speed or direction — those restart the animation and
+         make it jump. */
+      const shiftTarget = clamp(velocity * -1.6, -70, 70);
+      shift = lerp(shift, shiftTarget, 0.06);
+
       targets.forEach((el) => {
         el.style.setProperty('--skew', `${skew.toFixed(3)}deg`);
+        el.style.setProperty('--mq-shift', `${shift.toFixed(2)}px`);
       });
 
       // Park after a second of stillness rather than running a frame loop for
@@ -402,7 +415,10 @@ export function useVelocitySkew(): void {
     return () => {
       window.removeEventListener('scroll', wake);
       if (raf) cancelAnimationFrame(raf);
-      targets.forEach((el) => el.style.removeProperty('--skew'));
+      targets.forEach((el) => {
+        el.style.removeProperty('--skew');
+        el.style.removeProperty('--mq-shift');
+      });
     };
   }, [pathname]);
 }

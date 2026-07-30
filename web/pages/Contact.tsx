@@ -1,4 +1,5 @@
 import { SplitText } from '../components/SplitText';
+import { ScrambleText } from '../components/ScrambleText';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 
 /* Three ways to reach him, in the order they're actually useful: email for
@@ -129,7 +130,7 @@ export function Contact() {
           page; here that means this block, since the page it's already on
           doesn't need a second jump target further down. */}
       <section id="contact" style={{ maxWidth: 1400, margin: '0 auto', padding: '14vh var(--space-8) 0' }}>
-        <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}>Ways to reach me</h6>
+        <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>Ways to reach me</ScrambleText></h6>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-4)' }}>
           {METHODS.map(({ icon: Icon, title, body, label, href, external }) => (
             <a
@@ -165,7 +166,7 @@ export function Contact() {
       </section>
 
       <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
-        <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}>Worth reaching out about</h6>
+        <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>Worth reaching out about</ScrambleText></h6>
         <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-3)' }}>
           {FIT.map((item) => (
             <li key={item} data-reveal style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'baseline', fontSize: 17, lineHeight: 1.6, background: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-5)' }}>

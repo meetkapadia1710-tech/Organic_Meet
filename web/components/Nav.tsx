@@ -3,6 +3,9 @@ import { Link, NavLink, useLocation } from 'react-router';
 import { toggleTheme, useTheme } from '../state/theme';
 import { usePalette } from './CommandPalette';
 import { prefetchRoute } from '../router';
+import { SwapText } from './SwapText';
+import { setDevMode, useDevMode } from '../state/devmode';
+import { useLogoTap } from '../hooks/useLogoTap';
 
 const NAV_STYLE: React.CSSProperties = {
   viewTransitionName: 'site-nav',
@@ -46,6 +49,8 @@ export function Nav() {
   const palette = usePalette();
   const { pathname, hash } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const devMode = useDevMode();
+  const logoTap = useLogoTap(() => setDevMode(true));
 
   // On the homepage "Index" is an in-page jump; anywhere else it's a route.
   const atHome = pathname === '/';
@@ -77,30 +82,41 @@ export function Nav() {
   const links = (
     <>
       {atHome ? (
-        <a className="nlink" href="#main" style={LINK_STYLE}>Index</a>
+        <a className="nlink" href="#main" style={LINK_STYLE}><SwapText>Index</SwapText></a>
       ) : (
-        <NavLink className="nlink" to="/" viewTransition style={LINK_STYLE}>Index</NavLink>
+        <NavLink className="nlink" to="/" viewTransition style={LINK_STYLE}><SwapText>Index</SwapText></NavLink>
       )}
       {/* These four are lazy-loaded routes (see router.tsx); warming the
           chunk on hover/focus is what makes the click land instantly instead
           of pausing on a Suspense fallback. */}
-      <NavLink className="nlink nlink-projects" to="/projects" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/projects')} onFocus={() => prefetchRoute('/projects')}>Projects</NavLink>
-      <NavLink className="nlink" to="/approach" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/approach')} onFocus={() => prefetchRoute('/approach')}>Approach</NavLink>
-      <NavLink className="nlink" to="/stats" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/stats')} onFocus={() => prefetchRoute('/stats')}>Stats</NavLink>
-      <NavLink className="nlink" to="/contact" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/contact')} onFocus={() => prefetchRoute('/contact')}>Contact</NavLink>
+      <NavLink className="nlink nlink-projects" to="/projects" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/projects')} onFocus={() => prefetchRoute('/projects')}><SwapText>Projects</SwapText></NavLink>
+      <NavLink className="nlink" to="/approach" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/approach')} onFocus={() => prefetchRoute('/approach')}><SwapText>Approach</SwapText></NavLink>
+      <NavLink className="nlink" to="/stats" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/stats')} onFocus={() => prefetchRoute('/stats')}><SwapText>Stats</SwapText></NavLink>
+      <NavLink className="nlink" to="/contact" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/contact')} onFocus={() => prefetchRoute('/contact')}><SwapText>Contact</SwapText></NavLink>
     </>
   );
 
   return (
     <>
       <nav className="site-nav" aria-label="Primary" style={NAV_STYLE}>
+        {/* The wordmark is also the mobile door into developer mode — seven
+            taps inside five seconds. Taps one to six do nothing, so it keeps
+            working as the way home; see useLogoTap. */}
         <Link
           to="/"
           viewTransition
+          className="site-brand"
           style={{ fontFamily: 'var(--font-heading)', fontSize: 19, color: 'var(--color-text)', textDecoration: 'none' }}
+          {...logoTap}
         >
-          Meet Kapadia
+          {devMode ? 'organic_meet.exe' : 'Meet Kapadia'}
         </Link>
+
+        {devMode && (
+          <span className="dev-badge" title="Esc to exit">
+            ● developer mode
+          </span>
+        )}
 
         <div style={{ display: 'flex', gap: 'var(--space-1)', fontSize: 14, fontWeight: 600, alignItems: 'center' }}>
           <div className="nav-links" style={{ display: 'flex', gap: 'var(--space-1)', alignItems: 'center' }}>

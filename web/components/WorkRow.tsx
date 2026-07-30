@@ -1,5 +1,7 @@
 import { TLink } from './TLink';
 import type { Project } from '../content/types';
+import { SwapText } from './SwapText';
+import { CascadeText } from './CascadeText';
 
 const ROW: React.CSSProperties = {
   display: 'grid',
@@ -41,7 +43,7 @@ export function WorkRow({ project, label }: { project: Project; label: string })
           className="work-t"
           style={{ viewTransitionName: `case-${project.slug}`, margin: '0 0 var(--space-2)', fontSize: 42 }}
         >
-          {project.name}
+          <CascadeText>{project.name}</CascadeText>
           {project.status && (
             <span className="tag tag-accent" style={{ borderRadius: 999, marginLeft: 'var(--space-3)', verticalAlign: 'middle' }}>
               {project.status}
@@ -58,7 +60,7 @@ export function WorkRow({ project, label }: { project: Project; label: string })
       <div style={{ textAlign: 'right' }}>
         <div style={{ fontWeight: 700, marginBottom: 6 }}>{project.year}</div>
         <span className="work-a" style={{ display: 'inline-block', color: 'var(--color-accent-700)', fontWeight: 600 }}>
-          Case study →
+          <SwapText>Case study</SwapText> →
         </span>
       </div>
     </TLink>

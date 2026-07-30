@@ -6,8 +6,11 @@ import { Deck } from '../components/Deck';
 import { Contact } from '../components/Contact';
 import { TechMarquee } from '../components/TechMarquee';
 import { Hero3D } from '../components/Hero3D';
+import { WorkIndex } from '../components/WorkIndex';
+import { useDevMode } from '../state/devmode';
 import { stack, stackCount, stackRows } from '../content/stack';
 import { setView, useWorkView } from '../state/view';
+import { ScrambleText } from '../components/ScrambleText';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 
 const NUMBERS = ['zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'];
@@ -58,6 +61,7 @@ export function Home() {
     'Full-stack web apps, AI tooling and local-first systems, shipped end to end — from the Postgres schema to the last hover state. Selected work and case studies.'
   );
   const view = useWorkView();
+  const devMode = useDevMode();
   const reduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 
@@ -90,11 +94,19 @@ export function Home() {
              forever. */
           style={{ position: 'absolute', top: '14vh', right: -120, width: 420, height: 420, borderRadius: 999, background: 'var(--color-accent-2-200)', animation: 'float 9s ease-in-out infinite' }}
         />
-        <div className="hero-content">
+        <div className="hero-content" data-cursor-lift>
           <span className="tag tag-accent" style={{ borderRadius: 999 }}>Open to internships &amp; freelance</span>
+          {/* Developer mode rewrites the headline. Because SplitText keys its
+              word-mask animation off `text`, changing it re-runs the reveal —
+              so the new line types itself in rather than swapping instantly,
+              which is the transition this wants anyway.
+
+              (The brief's "I build digital experiences." was not the actual
+              copy; the real headline is below.) */}
           <SplitText
             as="h1"
-            text="Software developer, systems builder."
+            lift
+            text={devMode ? 'I cultivate digital ecosystems.' : 'Software developer, systems builder.'}
             style={{ fontSize: 'clamp(52px, 9.5vw, 150px)', lineHeight: 0.95, letterSpacing: '-0.02em', margin: 'var(--space-4) 0 0', maxWidth: '15ch' }}
           />
           <p data-lines style={{ maxWidth: '46ch', fontSize: 20, lineHeight: 1.6, marginTop: 'var(--space-6)', color: 'var(--color-neutral-800)' }}>
@@ -136,7 +148,7 @@ export function Home() {
       </header>
 
       <section id="approach" style={{ maxWidth: 1400, margin: '0 auto', padding: '14vh var(--space-8) 0' }}>
-        <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}>Intro</h6>
+        <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>Intro</ScrambleText></h6>
         <div className="g-intro" style={{ display: 'grid', gap: 'var(--space-8)', alignItems: 'start' }}>
           <h2 style={{ margin: 0, fontSize: 'clamp(30px, 3.6vw, 52px)', lineHeight: 1.1 }}>
             I started by breaking things — scripts, side projects, half-finished repos. That habit became a method.
@@ -149,7 +161,7 @@ export function Home() {
 
       <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 'var(--space-4)', flexWrap: 'wrap', marginBottom: 'var(--space-4)' }}>
-          <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', margin: 0, flex: 1 }}>Stack</h6>
+          <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', margin: 0, flex: 1 }}><ScrambleText>Stack</ScrambleText></h6>
           <span className="tag tag-neutral" style={{ borderRadius: 999 }}>{stackCount} technologies</span>
         </div>
 
@@ -165,7 +177,7 @@ export function Home() {
 
       <section style={{ maxWidth: 1400, margin: '0 auto', padding: '14vh var(--space-8) 0' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 'var(--space-6)', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
-          <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', margin: 0 }}>Selected Works</h6>
+          <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', margin: 0 }}><ScrambleText>Selected Works</ScrambleText></h6>
           <span className="tag tag-neutral" style={{ borderRadius: 999 }}>
             {NUMBERS[featured.length]} of {(NUMBERS[caseStudies.length] ?? String(caseStudies.length)).toLowerCase()}
           </span>
@@ -177,6 +189,8 @@ export function Home() {
             <button type="button" data-view="deck" aria-pressed={view === 'deck'} onClick={() => setView('deck')}>Deck</button>
           </div>
         )}
+
+        {view === 'list' && !reduced && <WorkIndex projects={featured} />}
 
         {view === 'list' || reduced ? (
           <div className="work-list">

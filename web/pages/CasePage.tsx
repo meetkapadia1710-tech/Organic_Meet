@@ -9,6 +9,7 @@ import { News2Demo, EmbedDemo } from '../components/News2Demo';
 import { Figure } from '../components/Figure';
 import { StackChips } from '../components/TechIcon';
 import { NotFound } from './NotFound';
+import { ScrambleText } from '../components/ScrambleText';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -151,7 +152,7 @@ export function CasePage() {
       <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
         <div className="g-split" style={{ display: 'grid', gap: 'var(--space-8)', alignItems: 'start' }}>
           <div>
-            <h6 className="kicker-rule" id={sections[0]?.id} style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}>The problem</h6>
+            <h6 className="kicker-rule" id={sections[0]?.id} style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>The problem</ScrambleText></h6>
             <h2 style={{ margin: '0 0 var(--space-6)', fontSize: 'clamp(28px, 3.4vw, 48px)', lineHeight: 1.1, maxWidth: '22ch' }}>
               {content.problem.heading}
             </h2>
@@ -178,7 +179,7 @@ export function CasePage() {
       </section>
 
       <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
-        <h6 className="kicker-rule" id={sections[1]?.id} style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}>How it works</h6>
+        <h6 className="kicker-rule" id={sections[1]?.id} style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>How it works</ScrambleText></h6>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
           {content.how.map((card, i) => (
             <div key={card.title} className="card elev-sm" data-tilt data-reveal style={{ borderRadius: 'var(--radius-lg)' }}>
@@ -231,7 +232,7 @@ export function CasePage() {
       <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
         <div className="g-duo" style={{ display: 'grid', gap: 'var(--space-8)' }}>
           <div>
-            <h6 className="kicker-rule" id={sections[2]?.id} style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}>The hard part</h6>
+            <h6 className="kicker-rule" id={sections[2]?.id} style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>The hard part</ScrambleText></h6>
             {content.hard.map((para, i) => (
               <p key={i} style={{ fontSize: 17, lineHeight: 1.8, color: 'var(--color-neutral-800)' }}>{para}</p>
             ))}

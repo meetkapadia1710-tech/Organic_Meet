@@ -47,6 +47,7 @@ superseded work went to `_archive/` instead of being removed.
 | `web/content/types.ts` | `Project`, `ProjectLinks`. |
 | `web/pages/` | Home, Projects, Approach, Stats, Contact, CasePage, NotFound. All but Home are lazy-loaded — see `router.tsx`. |
 | `web/components/Hero3D/` | The WebGL hero scene. `index.tsx` is the gate and is the **only** file here in the main bundle; everything else is behind a lazy import. |
+| `web/components/EasterEgg/` | Hidden developer mode. Same shape: `index.tsx` is the door, everything else is lazy. |
 | `web/components/` | Layout, Nav, Deck, CommandPalette, Figure, SplitText, demos. |
 | `web/hooks/` | Motion, keyboard, document meta, transition navigation. |
 | `web/state/` | Shared stores: theme, work view, shortcuts sheet. |
@@ -230,6 +231,123 @@ superseded work went to `_archive/` instead of being removed.
   what the real screenshots show, replacing guesses written before any
   screenshot existed (e.g. LearnFlex's placeholder said "1v1 match", a
   screen that was never actually captured).
+- **Hidden developer mode** — the Konami code (↑↑↓↓←→←→BA) on desktop, or
+  seven taps on the nav wordmark inside five seconds on mobile. Turns the site
+  into a "Digital Garden": darker ground, thicker glass, paused marquees,
+  falling stack-word field, a glass stats card, a rotating quote, an
+  achievement toast, and a working shell on ⌘/Ctrl + `.
+
+  **Cost to a visitor who never finds it: +0.74 kB gzip of JS** (main bundle
+  81.00 → 81.74 kB — the two door hooks, the store and the gate) and +1.9 kB
+  gzip of CSS. The overlay itself is a **4.72 kB gzip lazy chunk**
+  (`DeveloperMode-*.js`), verified by grep to contain every internal
+  (`devterm`, `devrain`, `devstats`, `meet@organic`, `Curious Explorer`) and
+  the main bundle to contain none of them. Confirmed live: the chunk is *not*
+  fetched until the code is entered.
+
+  Deliberate departures from the brief, all for consistency with this codebase:
+  - **A shared store, not a Context.** `state/devmode.ts` follows `theme.ts` /
+    `sheet.ts` / `view.ts`, whose header comments record why (two copies of the
+    same state drift). A Provider would also have to wrap above `Layout`, so
+    the main bundle would carry it whether or not anyone finds the egg.
+  - **No new cursor system.** The site already has a three-element custom
+    cursor driven by `useMotion`; dev mode re-skins it through `html.dev-mode`
+    rather than mounting a second one on top of a working one. Pausing the
+    existing marquees and the hero "camera zoom" are CSS off the same class —
+    the R3F scene is untouched.
+  - **Terminal output is read from `content/`.** The brief's example listed
+    projects that mostly do not exist ("Portfolio CMS", "AI Assistant"); the
+    real list comes from `projects.ts`, the skills from `stack.ts`. A terminal
+    contradicting the visible site is worse than no terminal.
+  - **`resume` does not download anything**, because there is no resume PDF in
+    this repo. It says so and offers email/GitHub instead. **Drop a PDF in
+    `web/public/` and wire it up in `EasterEgg/commands.ts` to make it real.**
+  - **No boot sound.** The brief marked it optional; there is no audio asset
+    and inventing a binary was not on.
+  - **"Years Coding" and "GitHub Repositories" were dropped from the stats
+    card.** Neither exists anywhere in this repository, and inventing a
+    years-of-experience figure for a third-year undergraduate would be putting
+    a false claim in the one place a curious developer is most likely to check
+    it. Replaced with derived values. "Coffee ∞" stays — transparently a joke,
+    not a claim.
+- **Developer mode's presentation layer was rebuilt** after Meet said it did
+  not look good. He was right, and the cause was structural rather than
+  cosmetic: the atmosphere was being painted *over* the content (see the
+  gotcha on layering). Fixed by splitting the overlay into a behind-content
+  atmosphere layer and an above-content UI layer, dropping the veil entirely
+  (the body background darkens the page instead), removing the site-wide
+  saturate filter, and taking the ink to full contrast.
+
+  Four further problems found by measuring the rendered geometry rather than
+  eyeballing it:
+  - The stats card sat top-right and **overlapped the hero headline** —
+    measured x 572–858 / y 96–349 against a headline running to x 792 / y
+    179–339, which clipped "I cultivate digital ecosystems." mid-word. Moved
+    to bottom-right, and gated on `min-height: 720px` as well as width: at
+    900x620 a bottom-anchored card still reached into the type.
+  - The exit button moved out of bottom-right (now the card's) to under the nav.
+  - The rotating quote was on the wrong side of the screen entirely, from the
+    `--space-5` bug above. It no longer floats at all — three panels sharing
+    the bottom band *was* the crowding — and now lives as a persistent status
+    line in the terminal footer.
+  - That quote first went inside the terminal's scrolling body, where the first
+    command pushed it off the top after about four seconds. It is outside the
+    scroll container now.
+  - The word field went from 42 to 16 (8 on mobile). Behind the content it
+    reads as texture; at 42 it was noise.
+
+  **This was the first feature verified visually** — screenshots and rAF both
+  started working in this environment partway through, so it was iterated
+  against real captures rather than measurements alone.
+- **`SwapText` — the typeface-swap hover.** `components/SwapText.tsx` +
+  the `.swap` block in `motion-plus.css`. Two copies of a label stacked in a
+  clipping mask: the body-face copy rides out upward, a **display-face**
+  (Caprasimo) copy rides in behind it, cascading per character at 18ms,
+  capped at 11 steps. Uses the existing `--dur-2` / `--ease-out-expo` tokens,
+  so it reads as the same system as every other hover here.
+
+  Applied to the five nav links and the work-row "Case study" CTA. **Short
+  labels only** — it doubles the text, so body copy would be wasteful and the
+  mask would clip descenders across wrapped lines.
+
+  Accessibility, which this pattern usually gets wrong because the same words
+  are on the page twice: both visible layers are `aria-hidden` *and*
+  `user-select: none`, with the real string in an `.sr-only` span. Verified a
+  copy yields `"Index"`, not `"IndexIndexIndex"`. Also fires on
+  `:focus-visible`, so it is not pointer-only.
+- **Three more text primitives**, all additive, all verified against real
+  captures:
+  - **`ScrambleText`** — section kickers decode themselves on scroll-in,
+    left to right. On all 15 kickers across six pages. Latin uppercase, not
+    katakana: matrix glyphs are the cliché this effect usually arrives in,
+    and would be the only non-Latin thing on the site. **Width is locked by a
+    hidden sizing copy** — `.kicker-rule` is a flex row whose hairline starts
+    where the label ends, so glyph-advance jitter would wobble the rule for
+    the whole animation. Measured stable at 143px through the decode.
+    4-second safety net, same as every other reveal here.
+  - **`CascadeText`** — work-row titles lift letter by letter, 22ms apart,
+    6px, driven by `.work:hover` so the whole row is the target rather than
+    the glyphs. Exit runs without the stagger, because an exit that mirrors
+    the entrance reads as slow.
+  - **`useCursorLift` + `SplitText lift`** — hero headline characters rise as
+    the pointer passes, cosine falloff over a 170px radius, max 11px, eased
+    at 0.14/frame so the line settles behind the cursor rather than tracking
+    it. Rects cached and re-measured only on resize/scroll — never per frame —
+    and the loop parks when everything is at rest.
+
+  **The view-transition question was the real risk and it checked out.** The
+  work-row `h2` carries `view-transition-name`, and the split spans could have
+  disturbed the morph into the case headline. Verified: the name survives
+  (`case-repograde` on both ends), and the h2's box is **identical at rest and
+  hovered (595x47)** — inline-block children with a 2px transform do not
+  change the snapshot geometry. Navigation tested end to end, no console
+  errors.
+
+  **`SplitText` was not rewritten.** `lift` is an opt-in prop used only by the
+  hero; every other headline emits exactly the markup it did before. The
+  characters nest *inside* the word span, so the reveal keeps animating
+  `.split > span` while the lift writes to `.lift-char` one level deeper —
+  two elements, so the transforms compose instead of overwriting.
 
 ---
 
@@ -507,6 +625,68 @@ top of `OrganicField.tsx`, which is the whole composition in seven lines.
 ---
 
 ## Gotchas — read before touching these
+
+**Any effect that puts text on the page twice must set `user-select: none` on
+the painted copy.** `SwapText`, `CascadeText` and `ScrambleText` all render a
+duplicate — one for layout/assistive tech, one that animates. Without the
+rule, selecting a work-row title copies "RepoGradeRepoGrade". The `.sr-only`
+span is the copy that should carry the text, for both the clipboard and the
+element's accessible name; the animated copy is `aria-hidden` *and*
+unselectable. This was missed on `CascadeText` first time round and caught by
+reading `textContent` back.
+
+**Stacking two copies of text? Use a grid cell, not absolute positioning.**
+`SwapText` first put the second copy in `position: absolute`, which sizes the
+container to the *first* copy — and Caprasimo is wider than Figtree at the
+same size, so `overflow: hidden` ate the end of every label on hover
+(measured: Index −4.5px, Approach −7.2px, all five affected). Both layers now
+share one `grid-area`, so the box is as wide as the wider face and neither can
+be clipped. The same trap applies to any crossfade between two strings of
+different widths.
+
+**The spacing scale has no `--space-5`.** It is 1, 2, 3, 4, 6, 8 — there is no
+5 and no 7. `var(--space-5)` is not an error: it resolves to nothing, the
+declaration is dropped, and the property silently falls back. This cost real
+debugging time in developer mode, where `bottom: var(--space-5)` on the
+rotating quote became `bottom: auto` and threw the element to `top: 0`, on the
+opposite side of the screen from where it was written. **If a position or a
+padding is ignored for no visible reason, check the token exists first.**
+
+**Developer mode's overlay is two layers, and the order is the whole design.**
+`.devmode-atmos` at `z-index: 0` sits *behind* the content; `.devmode-ui` at
+`600` sits above it; `html.dev-mode .site-main` gets `z-index: 1` to be the
+filling. The first build put everything at 600 — a 55%-opacity veil, a colour
+bloom and 42 falling words all composited over the type, plus
+`filter: saturate(0.82)` on the whole site. The page came out muddy and dim
+rather than transformed, which is exactly what it looked like. **Do not put
+decoration in the UI layer.**
+
+**Styling anything for this site: the ramps reverse in dark mode.** This bit
+developer mode immediately. `--color-accent-2-900` is the *darkest* green in
+the light theme and the *lightest* in the dark one, so a mode that wanted "a
+dark ground with light ink" got exactly the opposite for half of visitors.
+No single ramp step can express "always dark". `devmode.css` therefore aliases
+the non-flipping colours once at the top (`--dev-ground`, `--dev-ink`,
+`--dev-mint`, `--dev-warm`…) with a `html[data-theme='dark']` block that picks
+whichever step actually holds the dark value in that theme, and **nothing past
+that block uses a raw ramp step**. Verified: ground luminance 43 and ink 246
+in *both* themes. Mid steps (400/500/600) are safe to use directly.
+
+**A count-up must not zero the value it is animating toward.** `DeveloperStats`
+originally did `setValue(0)` and then filled it back in from
+`requestAnimationFrame` — which never fires in a background tab, so the card
+sat showing `0` for every stat. It now skips the animation entirely when
+`document.hidden`, and backs the loop with a timeout net that sets the true
+value regardless. Same failure and same fix shape as the reveal safety nets.
+`/stats` avoids this differently: the final number is in the markup and the
+animation only ever counts toward what is already rendered.
+
+**Escape is owned in exactly one place.** `DeveloperMode` has the only
+`Escape` handler for the egg: terminal first if open, garden second, never
+both on one press. The terminal deliberately does *not* handle it — having it
+in both meant reasoning about whether React's synthetic event reached the
+document listener before or after, and getting that wrong dismissed both
+layers at once.
 
 **@react-three/fiber augments the global JSX namespace, and it broke a file
 that has nothing to do with 3D.** Installing R3F adds every Three.js object

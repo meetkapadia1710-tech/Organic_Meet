@@ -25,12 +25,24 @@ export function SplitText({
   text,
   className,
   style,
+  lift = false,
   ...rest
 }: {
   as?: SplitTag;
   text: string;
   className?: string;
   style?: React.CSSProperties;
+  /**
+   * Split each word into characters as well, so `useCursorLift` has something
+   * per-letter to move. Opt-in and used only by the hero — every other
+   * headline keeps the exact word-level markup it already had.
+   *
+   * Per-character spans make some screen readers spell the line out, so this
+   * also puts the string on `aria-label` and hides the split from the
+   * accessibility tree. Selection and copy still yield clean text, because
+   * the characters are ordinary inline spans.
+   */
+  lift?: boolean;
 } & Record<string, unknown>) {
   /* Pinned to one concrete tag for typing only; the runtime value is
      whatever `as` was. Every tag in SplitTag takes the same className/style/
@@ -64,6 +76,9 @@ export function SplitText({
   return (
     <Tag
       ref={ref}
+      // Only when split to characters — at word level the markup already
+      // reads correctly, and an aria-label there would be redundant.
+      {...(lift ? { 'aria-label': text } : {})}
       className={[className, lit ? 'is-lit' : null].filter(Boolean).join(' ')}
       style={style}
       {...rest}
@@ -73,7 +88,21 @@ export function SplitText({
         // overflow:hidden, and a trailing space in there collapses the gap.
         <Fragment key={`${word}-${i}`}>
           <span className="split">
-            <span style={{ '--i': i } as React.CSSProperties}>{word}</span>
+            <span style={{ '--i': i } as React.CSSProperties}>
+              {/* `lift` nests a per-character layer *inside* the word span
+                  rather than replacing it. The reveal keeps animating the
+                  word (this span); useCursorLift writes `--lift` to the
+                  characters one level down. Two different elements, so the
+                  transforms compose instead of overwriting each other, and
+                  the reveal is untouched. */}
+              {lift
+                ? Array.from(word).map((char, c) => (
+                    <span key={c} className="lift-char">
+                      {char}
+                    </span>
+                  ))
+                : word}
+            </span>
           </span>
           {i < words.length - 1 ? ' ' : null}
         </Fragment>

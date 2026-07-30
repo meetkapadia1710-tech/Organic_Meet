@@ -1,5 +1,6 @@
 import { SplitText } from '../components/SplitText';
 import { Contact } from '../components/Contact';
+import { ScrambleText } from '../components/ScrambleText';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 
 const STEPS: Array<[string, string]> = [
@@ -64,7 +65,7 @@ export function Approach() {
       </header>
 
       <section style={{ maxWidth: 1400, margin: '0 auto', padding: '14vh var(--space-8) 0' }}>
-        <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}>The loop</h6>
+        <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>The loop</ScrambleText></h6>
         <div style={{ display: 'grid', gap: 'var(--space-3)' }}>
           {STEPS.map(([title, body], i) => (
             <div key={title} className="step g-step" data-reveal style={{ display: 'grid', gap: 'var(--space-6)', alignItems: 'start', padding: 'var(--space-6)', borderRadius: 'var(--radius-lg)' }}>
@@ -79,7 +80,7 @@ export function Approach() {
       </section>
 
       <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
-        <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}>What I believe</h6>
+        <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>What I believe</ScrambleText></h6>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-4)' }}>
           {BELIEFS.map(([title, body]) => (
             <div key={title} className="card elev-sm" data-tilt data-reveal style={{ borderRadius: 'var(--radius-lg)' }}>
@@ -93,7 +94,7 @@ export function Approach() {
       <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
         <div className="g-duo" style={{ display: 'grid', gap: 'var(--space-8)', alignItems: 'start' }}>
           <div>
-            <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}>Best fit</h6>
+            <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>Best fit</ScrambleText></h6>
             <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 'var(--space-3)' }}>
               {FIT.map((item) => (
                 <li key={item} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'baseline', fontSize: 17, lineHeight: 1.6 }}>
@@ -104,7 +105,7 @@ export function Approach() {
             </ul>
           </div>
           <div>
-            <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}>Currently learning</h6>
+            <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>Currently learning</ScrambleText></h6>
             <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
               {LEARNING.map((tag) => (
                 <span key={tag} className="tag tag-outline" style={{ borderRadius: 999 }}>{tag}</span>

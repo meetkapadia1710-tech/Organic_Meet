@@ -6,8 +6,10 @@ import { Preloader } from './Preloader';
 import { PaletteProvider } from './CommandPalette';
 import { ShortcutsSheet } from './ShortcutsSheet';
 import { RouteFallback } from './RouteFallback';
+import { EasterEgg } from './EasterEgg';
 import { useSiteMotion } from '../hooks/useMotion';
 import { useMotionPlus } from '../hooks/useMotionPlus';
+import { useCursorLift } from '../hooks/useCursorLift';
 import { useKeyboard } from '../hooks/useKeyboard';
 
 /* The persistent shell. Chrome that must survive a navigation — cursor,
@@ -18,6 +20,7 @@ function Shell() {
 
   useSiteMotion();
   useMotionPlus();
+  useCursorLift();
   useKeyboard();
 
   /* Scroll handling has two jobs that a naive "always scroll to top" gets
@@ -94,6 +97,10 @@ function Shell() {
 
       <Preloader />
       <ShortcutsSheet />
+
+      {/* Above the outlet, so unlocking the egg on the homepage and then
+          opening a case study does not silently close it. */}
+      <EasterEgg />
 
       <div className="site-main">
         <Nav />

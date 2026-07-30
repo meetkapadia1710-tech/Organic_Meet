@@ -8,3 +8,6 @@
 @import './deck.css';
 /* Second motion layer. Strictly additive — see the header in that file. */
 @import './motion-plus.css';
+/* Hidden developer mode. Every selector is either a `.dev*` class or scoped
+   to `html.dev-mode`, so none of it can affect the normal site. */
+@import './devmode.css';

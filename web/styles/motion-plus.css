@@ -115,10 +115,9 @@
   clip-path: inset(0 0 0 0);
 }
 
-/* The reveal owns `transform`; the scroll parallax owns `object-position`.
-   Keeping them on separate properties is the whole reason the parallax works
-   — two rules writing `transform` means the last one wins, and the parallax
-   would silently delete the reveal. */
+/* The fallback: a reveal-triggered scale, for browsers with no scroll
+   timelines. Overridden below where they exist — an animation beats a
+   transition on the same property, so the two never both drive it. */
 .js [data-figure][data-reveal] img {
   transform: scale(1.08);
   transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
@@ -126,6 +125,42 @@
 
 .js [data-figure][data-reveal].is-in img {
   transform: none;
+}
+
+/* Scroll-linked scale: the image eases from 1.12 to rest as the figure
+   crosses the viewport, inside the clip-path wipe above. Perceived quality
+   per line of CSS, this is the best effect on the site.
+
+   **The timeline has to be named.** A bare `view()` on the image resolves
+   against its nearest scroll container — and `<figure>` is `overflow: hidden`,
+   which makes it one. Measured against a box that never scrolls, progress
+   never changes and the animation silently does nothing. Declaring the
+   timeline on the figure measures the figure against the page, which is what
+   was meant.
+
+   `animation-duration: auto` is equally load-bearing: the `animation`
+   shorthand resets duration to `0s`, and a progress-based animation with zero
+   duration is finished before it starts. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    [data-figure] {
+      view-timeline: --fig block;
+    }
+
+    .js [data-figure] img {
+      animation: fig-scale linear both;
+      animation-duration: auto;
+      animation-timeline: --fig;
+      animation-range: entry 0% cover 55%;
+      /* The transition would otherwise fight the animation on first paint. */
+      transition: none;
+    }
+  }
+}
+
+@keyframes fig-scale {
+  from { transform: scale(1.12); }
+  to { transform: scale(1); }
 }
 
 /* ── link underline sweep ───────────────────────────────────────────────
@@ -198,6 +233,251 @@
   }
 }
 
+/* ── swap text ───────────────────────────────────────────────────────────
+   The hover where the word changes typeface. Two stacked copies in a mask:
+   the body-face copy rides out upward, the display-face copy rides in behind
+   it, cascading left to right.
+
+   Durations and easing come from the existing motion tokens in motion.css —
+   `--dur-2` and `--ease-out-expo` are what every other hover on this site
+   already uses, so this reads as part of the same system rather than a new
+   one bolted on. */
+
+/* A one-cell grid, not a positioned overlay.
+
+   The first version made `.swap` an inline-block and absolutely positioned
+   the second copy on top. That sizes the box to the *body* face — and
+   Caprasimo is wider than Figtree at the same size, so every label lost its
+   last few pixels to `overflow: hidden` on hover. Measured: Index clipped by
+   4.5px, Approach by 7.2px.
+
+   Stacking both copies in the same grid cell makes the box as wide as the
+   widest of the two, so neither can be cut. The cost is a few pixels of extra
+   width per label at rest, which `justify-items: center` keeps symmetrical
+   inside the padding. */
+.swap {
+  position: relative;
+  display: inline-grid;
+  grid-template-areas: 'swap';
+  justify-items: center;
+  overflow: hidden;
+  /* Mask the ascender/descender box, not the line box, or the clip cuts the
+     tails off letters like g and y. */
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+  vertical-align: bottom;
+  white-space: nowrap;
+}
+
+.swap-layer {
+  grid-area: swap;
+  /* Neither copy is ever read out or copied — the .sr-only span inside
+     `.swap` is what carries the real string. */
+  user-select: none;
+}
+
+.swap-alt {
+  /* The change of voice: the incoming copy is set in the display face. */
+  font-family: var(--font-heading);
+  letter-spacing: -0.01em;
+}
+
+.swap-char {
+  display: inline-block;
+  transition:
+    transform var(--dur-2) var(--ease-out-expo),
+    opacity var(--dur-2) var(--ease-out-expo);
+  transition-delay: calc(var(--i, 0) * 18ms);
+}
+
+/* Resting: the body face is in place, the display face waits below. */
+.swap .swap-layer .swap-char { transform: translateY(0); }
+.swap .swap-alt .swap-char { transform: translateY(110%); opacity: 0; }
+
+/* Hovering the *link*, not the span — so the whole target triggers it, not
+   just the glyphs. `:focus-visible` gets the same treatment, or the effect
+   would exist only for pointer users. */
+a:hover .swap .swap-layer:not(.swap-alt) .swap-char,
+button:hover .swap .swap-layer:not(.swap-alt) .swap-char,
+a:focus-visible .swap .swap-layer:not(.swap-alt) .swap-char,
+button:focus-visible .swap .swap-layer:not(.swap-alt) .swap-char,
+.swap:hover .swap-layer:not(.swap-alt) .swap-char {
+  transform: translateY(-110%);
+  opacity: 0;
+}
+
+a:hover .swap .swap-alt .swap-char,
+button:hover .swap .swap-alt .swap-char,
+a:focus-visible .swap .swap-alt .swap-char,
+button:focus-visible .swap .swap-alt .swap-char,
+.swap:hover .swap-alt .swap-char {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* ── scramble ────────────────────────────────────────────────────────────
+   Two copies in one grid cell again: the sizing copy holds the final width so
+   the label cannot twitch while glyphs of different advances cycle through
+   it, and the live copy paints over the top. `.kicker-rule` is a flex row
+   whose hairline begins where the label ends, so any width jitter here would
+   wobble the rule across the whole section. */
+
+.scramble {
+  display: inline-grid;
+  grid-template-areas: 'scramble';
+}
+
+.scramble-size,
+.scramble-live {
+  grid-area: scramble;
+}
+
+/* Present for layout and for assistive tech, never painted. `visibility`
+   rather than `opacity`, so it is not a paint layer at all. */
+.scramble-size {
+  visibility: hidden;
+}
+
+/* ── cascade ─────────────────────────────────────────────────────────────
+   Letters lift in sequence while the *row* is hovered — the hook is on
+   `.work`, not on the glyphs, so the whole row is the target. */
+
+.casc,
+.casc > span[aria-hidden] {
+  display: inline;
+}
+
+/* Same rule as SwapText, and for the same reason: the title is on the page
+   twice, so the painted copy must be unselectable or a copy yields
+   "RepoGradeRepoGrade". The `.sr-only` span is the one that carries the
+   text — for the clipboard and for the heading's accessible name. */
+.casc > span[aria-hidden] {
+  user-select: none;
+}
+
+.casc-char {
+  display: inline-block;
+  transition: transform var(--dur-3) var(--ease-out-expo);
+  transition-delay: calc(var(--i, 0) * 22ms);
+}
+
+.casc-space {
+  display: inline-block;
+  /* An inline-block containing only a space collapses to zero width. */
+  white-space: pre;
+}
+
+.work:hover .casc-char,
+.work:focus-visible .casc-char {
+  transform: translateY(-6px);
+}
+
+/* Leaving runs without the stagger, so the row settles at once rather than
+   unwinding letter by letter — an exit that mirrors the entrance reads as
+   slow. */
+.work:not(:hover) .casc-char {
+  transition-delay: 0ms;
+}
+
+/* ── cursor lift ─────────────────────────────────────────────────────────
+   `--lift` is written per character by useCursorLift. The default keeps the
+   line flat if the hook never runs. */
+
+.lift-char {
+  display: inline-block;
+  transform: translateY(var(--lift, 0px));
+  will-change: transform;
+}
+
+/* ── works index ─────────────────────────────────────────────────────────
+   Fixed to the left edge, vertically centred, only while the Selected Works
+   section is on screen. See the header of WorkIndex.tsx for why this is fixed
+   rather than a sticky rail. */
+
+/* Bottom-left, not a vertically-centred rail.
+
+   The rail was the first attempt and it collided: at 1600px the content
+   column is 1400px centred, leaving ~128px of margin, and the indicator is
+   ~225px wide — measured overlapping the rows at x=257 against a row edge of
+   x=128. Widening the breakpoint until it fit would have meant showing it
+   only above ~1900px, which is almost nobody.
+
+   The bottom edge is outside the content column at every width, so it clears
+   the rows without needing any margin at all. */
+.workdex {
+  position: fixed;
+  left: var(--space-6);
+  bottom: var(--space-6);
+  z-index: 400; /* under the nav (500), over the page */
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 10px var(--space-4);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-surface) 88%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-sm);
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.6s var(--ease-out-expo), transform 0.6s var(--ease-out-expo);
+}
+
+.workdex.is-on {
+  opacity: 1;
+  transform: none;
+}
+
+/* Developer mode owns the bottom-left corner for its message, and has its own
+   interface language. */
+html.dev-mode .workdex { display: none; }
+
+.workdex-num,
+.workdex-name {
+  /* Each is remounted on change, so this plays fresh every time. */
+  display: inline-block;
+  animation: workdex-in 0.55s var(--ease-out-expo) both;
+}
+
+.workdex-num {
+  font-family: var(--font-heading);
+  font-size: 34px;
+  line-height: 1;
+  color: var(--color-accent-700);
+  font-variant-numeric: tabular-nums;
+}
+
+.workdex-rule {
+  width: 28px;
+  height: 1px;
+  background: var(--color-divider);
+}
+
+.workdex-name {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--color-neutral-800);
+  max-width: 16ch;
+}
+
+.workdex-total {
+  font-size: 11px;
+  color: var(--color-neutral-600);
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes workdex-in {
+  from { opacity: 0; transform: translateY(9px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Below ~1500px the 1400px content column leaves no clear margin for this to
+   sit in without overlapping a row. */
+@media (max-width: 1500px) {
+  .workdex { display: none; }
+}
+
 /* ── reduced motion ─────────────────────────────────────────────────────
    Everything above resolves to its finished state, immediately. */
 
@@ -231,5 +511,33 @@
   }
   .ul-sweep::after {
     transition: none;
+  }
+
+  /* The swap keeps its two faces but stops travelling: the display copy is
+     simply hidden and the body copy stays put. A typeface change on hover is
+     motion, and this preference is asking for less of it. */
+  .swap-char { transition: none; }
+  .swap-alt { display: none; }
+
+  /* The cascade and the cursor lift are pure movement — there is no resting
+     state worth keeping, so both simply stop. Scramble is handled in the
+     component, which renders the final string and never starts. */
+  .casc-char {
+    transition: none;
+    transform: none;
+  }
+  .lift-char {
+    transform: none;
+    will-change: auto;
+  }
+
+  /* The index is a scroll-linked indicator with nothing to say at rest, and
+     the marquee offset is pure velocity. Both go. */
+  .workdex { display: none; }
+  .mq-track { --mq-shift: 0px; }
+  .swap .swap-layer .swap-char,
+  .swap:hover .swap-layer .swap-char {
+    transform: none;
+    opacity: 1;
   }
 }

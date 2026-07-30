@@ -33,7 +33,18 @@ html { scrollbar-gutter: stable; }
    sideways on a narrow screen. */
 h1, h2, h3 { overflow-wrap: break-word; }
 
-@keyframes mq { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+/* `--mq-shift` lets scroll velocity nudge the marquee without touching the
+   animation itself. Changing `animation-duration` or `animation-direction`
+   mid-flight makes the track jump; a custom property inside the keyframe is
+   re-resolved at computed-value time, so the offset composes with the loop
+   smoothly and the loop never restarts.
+
+   Defaults to 0px, so `.tech-track` — which shares this keyframe — is
+   completely unaffected unless something sets the variable. */
+@keyframes mq {
+  from { transform: translateX(var(--mq-shift, 0px)); }
+  to { transform: translateX(calc(-50% + var(--mq-shift, 0px))); }
+}
 @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-18px); } }
 
 .mq-track { display: flex; width: max-content; animation: mq 34s linear infinite; }

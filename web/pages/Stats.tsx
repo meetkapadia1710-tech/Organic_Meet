@@ -1,5 +1,6 @@
 import { SplitText } from '../components/SplitText';
 import { Contact } from '../components/Contact';
+import { ScrambleText } from '../components/ScrambleText';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import { stats } from '../content/stats';
 import { archive, caseStudies } from '../content/projects';
@@ -89,7 +90,7 @@ export function Stats() {
 
       {/* Counted from the project data rather than typed in, so it cannot drift. */}
       <section style={{ maxWidth: 1400, margin: '0 auto', padding: '10vh var(--space-8) 0' }}>
-        <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}>Shipping record</h6>
+        <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>Shipping record</ScrambleText></h6>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
           {[
             ['Projects', String(shipped)],
@@ -112,7 +113,7 @@ export function Stats() {
 
       {github && (
         <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
-          <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}>GitHub</h6>
+          <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>GitHub</ScrambleText></h6>
 
           <div className="card elev-sm" data-reveal style={{ borderRadius: 'var(--radius-lg)' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
@@ -149,7 +150,7 @@ export function Stats() {
 
       {(leetcode || codolio || hackerrank) && (
         <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
-          <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}>Problem solving</h6>
+          <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>Problem solving</ScrambleText></h6>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--space-4)' }}>
             {leetcode && (
               <div className="card elev-sm" data-tilt data-reveal style={{ borderRadius: 'var(--radius-lg)' }}>
