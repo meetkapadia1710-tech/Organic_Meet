@@ -403,9 +403,17 @@ button:focus-visible .swap .swap-alt .swap-char,
    `--lift` is written per character by useCursorLift. The default keeps the
    line flat if the hook never runs. */
 
+/* Order matters: the lift is applied first, then the letter is skewed and
+   stretched *about its own box*. Skewing before translating would shear the
+   displacement itself, so a lifted letter would also drift sideways.
+
+   All three are one `transform`, which means all three stay on the
+   compositor — the per-letter style variation costs no more than the lift
+   already did. `--slant` and `--stretch` default to no-ops, so nothing
+   changes anywhere the hook is not running. */
 .lift-char {
   display: inline-block;
-  transform: translateY(var(--lift, 0px));
+  transform: translateY(var(--lift, 0px)) skewX(var(--slant, 0deg)) scaleX(var(--stretch, 1));
   will-change: transform;
 }
 
