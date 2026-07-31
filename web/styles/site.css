@@ -13,7 +13,14 @@
 /* ── base ───────────────────────────────────────────────────────────────── */
 
 html { scroll-behavior: smooth; }
-body { margin: 0; overflow-x: hidden; }
+/* `clip`, not `hidden`. Both stop sideways overflow identically, but
+   `overflow-x: hidden` makes the body a scroll container — the used value of
+   `overflow-y` becomes `auto` the moment one axis stops being `visible` —
+   and every scroll-driven animation on the site resolves its timeline
+   against the nearest scroll container ancestor. `clip` creates no scroll
+   container, so the document stays the scroller and those timelines resolve
+   against the thing that actually scrolls. */
+body { margin: 0; overflow-x: clip; }
 
 /* Reserve the scrollbar's space permanently. Opening the command palette
    locks scrolling with overflow:hidden, which removes the scrollbar and
@@ -536,6 +543,118 @@ html[data-theme='dark'] .hero-min-grain {
   .hero-min-grain { display: none; }
 }
 
+/* ── hero climbers ──────────────────────────────────────────────────────
+   The layer filling the hero's right-hand third. Geometry and rationale are
+   in components/HeroVines.tsx; this is placement, growth and weather. */
+
+.hero-vines {
+  position: absolute;
+  top: 0;
+  right: 0;
+  /* Bottom-bounded rather than full height: the strands stop above the fact
+     strip, so the hairline and the three numbers stay the clean close the
+     hero was rebuilt around. */
+  bottom: 22%;
+  /* Narrow enough that it never reaches the headline's measure at any
+     window size — the type is the subject and this is the ground it stands
+     in, not a second column competing for the eye. */
+  width: min(38%, 520px);
+  z-index: 0;
+  pointer-events: none;
+  /* Fades into the page on the inner edge instead of ending at a vertical
+     line. The strands are the only thing here with a hard silhouette; a
+     rectangle of foliage with a straight left edge would read as a cropped
+     image, which is what this exists instead of. */
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 42%);
+  mask-image: linear-gradient(to right, transparent, #000 42%);
+}
+
+.hero-vines svg { width: 100%; height: 100%; overflow: visible; }
+
+/* Held back deliberately. At full strength the olive competes with the
+   accent in the standfirst and the eye goes to the corner first; at this
+   weight it is the thing you notice second, which is the correct order. */
+.hero-vines .vine { opacity: 0.85; }
+
+html[data-theme='dark'] .hero-vines { opacity: 0.72; }
+
+/* ── growth ──────────────────────────────────────────────────────────────
+   The strand draws from its grip downwards, and each leaf opens just after
+   the stem has passed it — one continuous growth rather than a line that
+   arrives and then sprouts. `pathLength: 1` in the markup is what lets a
+   single dash rule drive strands of four different lengths. */
+
+.vine-stem {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: vine-grow 2.6s cubic-bezier(.22, 1, .36, 1) forwards;
+  animation-delay: var(--delay, 0s);
+}
+
+@keyframes vine-grow { to { stroke-dashoffset: 0; } }
+
+.vine-leaf {
+  /* Unfurls from where it meets the stem. `fill-box` puts the origin on the
+     leaf's own geometry rather than on the whole SVG canvas, without which
+     every leaf would scale from the top-right corner of the hero. */
+  transform-box: fill-box;
+  transform-origin: 0% 50%;
+  opacity: 0;
+  animation: vine-leaf-in .7s cubic-bezier(.22, 1, .36, 1) forwards;
+  /* Its own position along the strand *is* its cue: `--at` runs 0→1 down the
+     vine, so the timing follows the drawing head without anything having to
+     measure it. The 2.2 tracks the stem's own duration; the `--delay` term
+     keeps a leaf in step with the strand it belongs to. */
+  animation-delay: calc(var(--delay, 0s) + var(--at, 0) * 2.2s + .15s);
+}
+
+@keyframes vine-leaf-in {
+  from { opacity: 0; transform: scale(.2) rotate(-14deg); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ── weather ─────────────────────────────────────────────────────────────
+   Once grown, each strand swings from its grip. Different periods per vine,
+   and a rotation about the anchor point rather than the layer's centre, so
+   the group never resolves into one pendulum or one flapping sheet. */
+
+.vine {
+  animation: vine-sway var(--period, 12s) ease-in-out infinite alternate;
+  animation-delay: calc(var(--delay, 0s) * -3);
+
+  /* Scroll gives them a lean. `--scroll-velocity` is the same signal that
+     nudges the marquee — see motion.css — so a flick of the wheel moves the
+     whole page's moving parts together instead of each one having its own
+     idea of what the scroll is doing.
+
+     This is the `rotate` property, not a transform: it composes with the
+     sway animation above instead of overwriting it, which is why the swing
+     survives the lean. */
+  rotate: calc(var(--scroll-velocity, 0) * 0.04deg);
+  transition: rotate .5s var(--ease-out-expo, cubic-bezier(.16, 1, .3, 1));
+}
+
+@keyframes vine-sway {
+  from { transform: rotate(-1.6deg); }
+  to   { transform: rotate(1.6deg); }
+}
+
+/* Below this the headline takes the full measure and there is no empty third
+   left to fill — the strands would be behind the type rather than beside it,
+   which is the one place decoration must not be. Hidden outright rather than
+   faded: it is `aria-hidden` ornament, so nothing is lost by its absence. */
+@media (max-width: 900px) {
+  .hero-vines { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Grown, still, and fully present. The end state of every animation above
+     is the correct picture; only the growing and the swinging are motion. */
+  .vine-stem { animation: none; stroke-dashoffset: 0; }
+  .vine-leaf { animation: none; opacity: 1; }
+  .vine { animation: none; rotate: none; }
+}
+
 /* ── hero 3D layer ──────────────────────────────────────────────────────
    The WebGL canvas sits behind the hero's own content, inside the header's
    existing positioning context. Three rules matter and all three are load
@@ -981,7 +1100,6 @@ html { scroll-padding-top: calc(var(--space-4) + 66px + var(--space-4)); }
   .contact-links a,
   .site-nav > a:first-child,
   .deck-switch button,
-  .toc-list a,
   .hero-links a,
   .case-back {
     min-height: 44px;

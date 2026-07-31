@@ -61,13 +61,23 @@ export function About() {
       <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '10vh var(--gutter) 0' }}>
         <div className="about-grid">
           <div>
-            {BIO.map((para) => (
-              <p key={para.slice(0, 24)} style={{ fontSize: 18, lineHeight: 1.75, color: 'var(--color-neutral-800)', maxWidth: '58ch' }}>
+            {/* Only the opening paragraph gets the word-by-word treatment.
+                It is the page's lede in everything but markup, and it is
+                the one the reader arrives on — running it over all three
+                would turn the biography into a performance and, at this
+                length, would have the reader waiting on the animation to
+                catch up with their eye. The rest reveal as blocks. */}
+            {BIO.map((para, i) => (
+              <p
+                key={para.slice(0, 24)}
+                {...(i === 0 ? { 'data-lines': true } : { 'data-reveal': true })}
+                style={{ fontSize: 18, lineHeight: 1.75, color: 'var(--color-neutral-800)', maxWidth: '58ch' }}
+              >
                 {para}
               </p>
             ))}
 
-            <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', marginTop: 'var(--space-6)' }}>
+            <div data-reveal style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', marginTop: 'var(--space-6)' }}>
               <TLink className="btn btn-primary" data-magnetic to="/projects" style={{ borderRadius: 999 }}>
                 See the work<Arrow />
               </TLink>
@@ -100,7 +110,7 @@ export function About() {
             ['Based in', 'Bharuch', 'Gujarat, India'],
             ['Studying', 'B.Tech CSE', 'IIIT Vadodara'],
           ] as const).map(([label, value, note]) => (
-            <div key={label} className="hero-fact">
+            <div key={label} className="hero-fact" data-reveal>
               <div className="hero-fact-label">{label}</div>
               <div className="hero-fact-value">
                 {/^\d+$/.test(value) ? <span className="hero-fact-num" data-countup>{value}</span> : value}

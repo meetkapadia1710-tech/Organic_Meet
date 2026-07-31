@@ -1,6 +1,5 @@
 /* ─────────────────────────────────────────────────────────────────────────
-   ui.css — the interface layer: command palette, shortcuts sheet, and the
-   case-study table of contents.
+   ui.css — the interface layer: command palette and shortcuts sheet.
 
    Like motion.*, this is an enhancement: none of it exists until ui.js runs,
    and the site is complete without it.
@@ -93,148 +92,41 @@ kbd {
   border-radius: var(--radius-lg);
 }
 
-/* ── case-study table of contents ───────────────────────────────────────
-   A sticky rail on wide screens; a plain list above the content otherwise,
-   since a sticky element on a phone is just lost height. */
-
-.toc { font-size: 14px; }
-.toc-meta {
-  font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--color-neutral-700); margin-bottom: var(--space-3);
-}
-.toc-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
-.toc-list a {
-  display: block; padding: 7px var(--space-3);
-  color: var(--color-neutral-700); text-decoration: none;
-  border-left: 2px solid var(--color-divider);
-  transition: color .25s ease, border-color .25s ease, background-color .25s ease;
-}
-.toc-list a:hover { color: var(--color-text); background: var(--color-accent-100); }
-.toc-list a.is-active {
-  color: var(--color-accent-700); border-left-color: var(--color-accent); font-weight: 600;
-}
-
-/* The contents sit as a full-width bar under the hero rather than a sidebar
-   rail, so the list runs horizontally at every width and scrolls if it has
-   to. Underline marks the active section instead of a left edge. */
-.toc-list {
-  grid-auto-flow: column; grid-auto-columns: max-content;
-  overflow-x: auto; gap: var(--space-1); padding-bottom: var(--space-2);
-  scrollbar-width: thin;
-}
-.toc-list a { border-left: 0; border-bottom: 2px solid var(--color-divider); white-space: nowrap; }
-.toc-list a.is-active { border-bottom-color: var(--color-accent); }
-
-/* ── the contents bar, stuck ────────────────────────────────────────────
-   The section is the sticky element, not the nav inside it: sticky is bounded
-   by its containing block, and the section wrapping the contents is exactly
-   as tall as the contents — sticking the nav would unstick it a pixel later.
-   The section's containing block is the page, so it can travel the article.
-
-   Padding lives here rather than inline on the component because the stuck
-   state has to shrink it, and an inline style outranks a class. */
-/* ⚠️ Three things were wrong with this bar and they compounded.
-
-   It was `max-width: 1400px`, so its background only covered the measure and
-   the case study's hero figure — a bright screenshot — was visible either
-   side of it on any window wider than that. It was 93% opaque with a blur,
-   so the same figure showed faintly *through* it. And it stuck at
-   `space-4 + 66px`, about 9px below the nav pill's bottom edge, so a sliver
-   of that figure ran between the two. Scrolling a white screenshot behind
-   all three at once looked broken, because it was.
-
-   Now: sticky at the very top, spanning the full window, fully opaque. The
-   nav clearance moved into the top padding, so the band starts at the
-   viewport edge and the pill floats on it — nothing can pass above or beside
-   it. The 1400px measure moved inward to `.toc`, which is where the content
-   wanted it anyway. */
-.toc-wrap {
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  /* Clears the nav pill — its --space-4 offset, its height, and a gap. */
-  padding: calc(var(--space-4) + 66px + var(--space-3)) 0 var(--space-2);
-  background: var(--color-bg);
-}
-
-.toc {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 0 var(--space-8);
-}
-
-/* Reading progress — the article's own span, not the document's. `#progress`
-   at the top of the window already measures the document; what is useful on
-   a long read is how much of the piece is left.
-
-   Sits on the band's *bottom* edge now rather than its top: the top edge is
-   the viewport edge, where `#progress` already draws, and two progress bars
-   stacked on the same pixel is one too many. On the bottom it reads as the
-   contents bar underlining itself. scaleX on a pseudo-element, so it never
-   triggers layout. */
-.toc-wrap::before {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, var(--color-accent-2), var(--color-accent));
-  transform: scaleX(var(--read, 0));
-  transform-origin: 0 50%;
-}
-
-/* The sliding marker. Only active once JS has measured a position — until
-   then `.toc-list` has no `.has-marker` and the original per-item accent
-   border is what shows, which is also the reduced-motion fallback. */
-.toc-list { position: relative; }
-.toc-marker {
-  position: absolute;
-  bottom: var(--space-2);
-  left: 0;
-  height: 2px;
-  width: var(--toc-w, 0);
-  background: var(--color-accent);
-  border-radius: 2px;
-  transform: translateX(var(--toc-x, 0));
-  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-  opacity: 0;
-  pointer-events: none;
-}
-.toc-list.has-marker .toc-marker { opacity: 1; }
-/* With the marker doing the work, the item's own border goes back to being
-   the rail it sits on — otherwise two accent bars mark the active section. */
-.toc-list.has-marker a.is-active { border-bottom-color: var(--color-divider); }
-
 /* ── sticky section headings ────────────────────────────────────────────
-   Pinned just under the contents bar, so the kicker for the section you are
-   in stays with you. Gated on viewport height: three stacked sticky layers
-   (nav, contents, kicker) is a lot of vertical furniture on a short laptop
-   screen, and the kicker is the one that can be given up. */
+   Pinned under the nav, so the kicker for the section you are in stays with
+   you. Gated on viewport height: two stacked sticky layers is already a lot
+   of vertical furniture on a short laptop screen, and the kicker is the one
+   that can be given up. */
 @media (min-height: 760px) {
   .case-sticky-kicker {
     position: sticky;
-    /* `--toc-h` is measured and published by CaseToc; the fallback only
-       applies for the instant before it mounts.
-
-       It is the whole offset now, not an addition to it: the contents bar
-       sticks at top 0 and carries the nav clearance inside its own padding,
-       so its height already spans from the viewport edge. Adding the nav
-       clearance again here would push every kicker a nav's height too low. */
-    top: var(--toc-h, 170px);
+    /* The nav's own clearance, measured the same way the hero measures it:
+       the pill's offset, its height, and a gap. This used to be `--toc-h`,
+       published by the contents bar that sat above it — with the bar gone
+       the kicker pins directly under the nav instead of under a strip that
+       no longer exists. */
+    top: calc(var(--space-4) + 66px + var(--space-3));
     z-index: 20;
     padding: var(--space-2) 0;
-    background: color-mix(in srgb, var(--color-bg) 93%, transparent);
-    backdrop-filter: blur(6px);
+
+    /* ⚠️ Opaque, and no `backdrop-filter`.
+
+       This was `--color-bg` at 93% with `blur(6px)`, which is what made a
+       case study scroll worse than the rest of the site. A backdrop filter
+       forces the compositor to re-sample and re-blur everything behind the
+       element on every frame it moves over new content — and a *sticky*
+       element moves over new content for the entire length of the article.
+       There are four kickers on this page plus the nav's own blur, so five
+       of those layers were being rebuilt per frame for the whole scroll.
+
+       Nothing is lost visually: the 7% of page showing through was carrying
+       no detail, and at full opacity the text underneath is properly
+       covered rather than ghosting through the frost. */
+    background: var(--color-bg);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  /* Position is fine to keep; the travel is what goes. The marker is never
-     mounted under this preference, so the per-item border is the indicator
-     and the progress line has nothing driving it. */
-  .toc-marker { transition: none; display: none; }
-  .toc-wrap::before { display: none; }
   .case-sticky-kicker { position: static; background: none; }
 }
 

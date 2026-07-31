@@ -10,7 +10,6 @@ import { Figure } from '../components/Figure';
 import { StackChips } from '../components/TechIcon';
 import { NotFound } from './NotFound';
 import { ScrambleText } from '../components/ScrambleText';
-import { CaseToc } from '../components/CaseToc';
 import { Arrow } from '../components/Arrow';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 
@@ -41,20 +40,6 @@ export function CasePage() {
         : [],
     [content]
   );
-  const readingMinutes = useMemo(() => {
-    if (!content) return 1;
-    const words = [
-      content.problem.heading,
-      ...content.problem.paras,
-      ...content.how.flatMap((c) => [c.title, c.body]),
-      ...content.hard,
-      ...content.next,
-    ]
-      .join(' ')
-      .split(/\s+/).length;
-    return Math.max(1, Math.round(words / 225));
-  }, [content]);
-
   if (!project || !content) return <NotFound />;
 
   const links = [
@@ -105,8 +90,6 @@ export function CasePage() {
           )}
         </div>
       </header>
-
-      <CaseToc sections={sections} readingMinutes={readingMinutes} />
 
       <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: 'var(--space-8) var(--gutter) 0' }}>
         <Figure caption={content.heroFigure} image={content.heroImage} ratio="16/8" priority />

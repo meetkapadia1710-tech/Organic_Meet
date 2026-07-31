@@ -18,6 +18,7 @@ import { ScrambleText } from '../components/ScrambleText';
 import { useLogoTap } from '../hooks/useLogoTap';
 import { setDevMode } from '../state/devmode';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
+import { HeroVines } from '../components/HeroVines';
 
 const NUMBERS = ['zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'];
 
@@ -118,6 +119,12 @@ export function Home() {
             is not the decorative backdrop layer that was reverted, it is one
             texture on one surface. */}
         <div className="hero-min-grain" aria-hidden="true" />
+
+        {/* Climbers into the right-hand third. See the file header for why
+            this is here rather than an image or the 3D field. It sits above
+            the grain and below the type — the headline is still the subject
+            of the hero, and this is what the subject is standing in. */}
+        <HeroVines />
 
         <div className="hero-min-body">
           {/* Each child declares its own beat in the entrance sequence. A

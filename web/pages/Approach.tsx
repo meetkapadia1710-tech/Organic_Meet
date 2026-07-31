@@ -57,7 +57,12 @@ export function Approach() {
             text="How I actually work."
             style={{ fontSize: 'clamp(56px, 10vw, 160px)', lineHeight: 0.95, letterSpacing: '-0.02em', margin: 'var(--space-4) 0 0', maxWidth: '13ch' }}
           />
-          <p style={{ maxWidth: '52ch', fontSize: 20, lineHeight: 1.6, marginTop: 'var(--space-6)', color: 'var(--color-neutral-800)' }}>
+          {/* `data-lines` splits this into words that rise out of their own
+              clipping mask, staggered by word index — the treatment the
+              Contact page's lede already uses. The two ledes on this site
+              were arriving by different means, which is the kind of
+              inconsistency you feel without being able to name. */}
+          <p data-lines style={{ maxWidth: '52ch', fontSize: 20, lineHeight: 1.6, marginTop: 'var(--space-6)', color: 'var(--color-neutral-800)' }}>
             No process theatre. I&apos;m one person who builds the whole thing, so my method is mostly about deciding fast, cutting scope honestly, and getting something running early enough that the hard problems show up while there&apos;s still time to fix them.
           </p>
         </div>
@@ -95,8 +100,14 @@ export function Approach() {
           <div>
             <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>Best fit</ScrambleText></h6>
             <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: 'var(--space-3)' }}>
+              {/* The last section of the page was the only one arriving with
+                  no motion at all — the steps and the belief cards both
+                  reveal, then the page simply stopped doing it. Each item
+                  reveals in turn rather than the list as one block, because
+                  a bulleted list read one line at a time is what the
+                  stagger is describing. */}
               {FIT.map((item) => (
-                <li key={item} style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'baseline', fontSize: 17, lineHeight: 1.6 }}>
+                <li key={item} data-reveal style={{ display: 'flex', gap: 'var(--space-3)', alignItems: 'baseline', fontSize: 17, lineHeight: 1.6 }}>
                   <span style={{ color: 'var(--color-accent-2-700)', fontWeight: 700 }}>✦</span>
                   {item}
                 </li>
@@ -105,12 +116,12 @@ export function Approach() {
           </div>
           <div>
             <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>Currently learning</ScrambleText></h6>
-            <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
+            <div data-reveal style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap' }}>
               {LEARNING.map((tag) => (
                 <span key={tag} className="tag tag-outline" style={{ borderRadius: 999 }}>{tag}</span>
               ))}
             </div>
-            <p style={{ marginTop: 'var(--space-4)', fontSize: 16, lineHeight: 1.75, color: 'var(--color-neutral-800)' }}>
+            <p data-reveal style={{ marginTop: 'var(--space-4)', fontSize: 16, lineHeight: 1.75, color: 'var(--color-neutral-800)' }}>
               I&apos;m a student, so this list changes every few months — which is the point. The projects are how I learn; the portfolio is just the receipt.
             </p>
           </div>

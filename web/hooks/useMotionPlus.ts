@@ -36,10 +36,10 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v
    - `behavior: 'instant'` on every write. The stylesheet sets
      `scroll-behavior: smooth`, so a plain scrollTo would animate each frame
      toward a target that is itself animating — the page would crawl.
-   - Nested scrollers keep their own wheel: the command palette list, the
-     table of contents, the heatmap strip. */
+   - Nested scrollers keep their own wheel: the command palette list and the
+     heatmap strip. */
 
-const NESTED = '.cmdk, .cmdk-list, .toc-list, .hm-scroll, .deck-viewport, [data-native-scroll]';
+const NESTED = '.cmdk, .cmdk-list, .hm-scroll, .deck-viewport, [data-native-scroll]';
 
 export function useSmoothScroll(): void {
   useEffect(() => {
