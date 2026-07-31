@@ -240,7 +240,12 @@ export function Home() {
               Set as an indented column instead: a hairline on the leading
               edge marks it as the aside to the heading beside it, which is
               the job the box was doing badly. */}
-          <p className="intro-aside">
+          {/* Reveals as a block, not word by word. The paragraph carries two
+              `.hl` highlight spans that `useHighlights` sweeps on their own
+              timeline; splitting it into per-word spans would put the word
+              splitter and the highlight sweep on the same text, and the
+              highlight is the better effect of the two here. */}
+          <p className="intro-aside" data-reveal>
             {/* No counts written into this sentence on purpose — the fact
                 strip above already derives them, and a number typed into
                 prose is the one that goes stale first. */}
@@ -261,7 +266,7 @@ export function Home() {
         {/* --space-5 does not exist on this scale (1, 2, 3, 4, 6, 8), so this
             margin was resolving to nothing and the category line sat flush
             against the rows below it. */}
-        <p style={{ margin: '0 0 var(--space-6)', fontSize: 15, color: 'var(--color-neutral-700)' }}>
+        <p data-reveal style={{ margin: '0 0 var(--space-6)', fontSize: 15, color: 'var(--color-neutral-700)' }}>
           {stack.map((group) => group.name).join(' · ')}
         </p>
 

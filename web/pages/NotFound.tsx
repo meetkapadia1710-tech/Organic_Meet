@@ -23,10 +23,10 @@ export function NotFound() {
         text="This page went missing."
         style={{ fontSize: 'clamp(52px, 9.5vw, 150px)', lineHeight: 0.95, letterSpacing: '-0.02em', margin: 'var(--space-4) 0 0', maxWidth: '14ch' }}
       />
-      <p style={{ maxWidth: '46ch', fontSize: 20, lineHeight: 1.6, marginTop: 'var(--space-6)', color: 'var(--color-neutral-800)' }}>
+      <p data-lines style={{ maxWidth: '46ch', fontSize: 20, lineHeight: 1.6, marginTop: 'var(--space-6)', color: 'var(--color-neutral-800)' }}>
         The link is broken or the page has moved. The work is all still one click away.
       </p>
-      <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', marginTop: 'var(--space-6)' }}>
+      <div data-reveal style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', marginTop: 'var(--space-6)' }}>
         <TLink className="btn btn-primary" data-magnetic to="/" style={{ borderRadius: 999 }}>
           Back to the index<Arrow />
         </TLink>

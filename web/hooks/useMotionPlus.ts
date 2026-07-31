@@ -174,15 +174,19 @@ export function useSmoothScroll(): void {
    `data-lines` on a paragraph. Each word is wrapped in a clipping span so it
    rises out of its own mask rather than fading in place.
 
-   The wrapping is done once per element and marked, because the observer
-   re-sweeps on every mutation and re-splitting would destroy the spans it
-   just animated. Only plain text nodes are split — an element child (a link,
-   an <em>) is left exactly as it is, so no markup is ever discarded. */
+   Only plain text nodes are split — an element child (a link, an <em>) is
+   left exactly as it is, so no markup is ever discarded.
+
+   ⚠️ No "already done" flag in here. There was one, written to
+   `dataset.split`, and it was the second half of the bug described on
+   `claim()` below: an attribute survives React replacing an element's text
+   children, so a paragraph reused for a different route arrived stripped of
+   its spans but still marked as split, and every later attempt to fix it
+   returned at the first line. Two guards that can disagree about the same
+   fact are worse than one — the single guard now lives in `claim()`, and it
+   asks the DOM rather than a flag kept beside it. */
 
 function splitWords(el: HTMLElement) {
-  if (el.dataset['split'] === 'done') return;
-  el.dataset['split'] = 'done';
-
   const nodes = Array.from(el.childNodes);
   let index = 0;
 
@@ -227,14 +231,34 @@ export function useTextReveal(): void {
       { threshold: 0.2, rootMargin: '0px 0px -8% 0px' }
     );
 
-    const seen = new WeakSet<Element>();
     const timers: number[] = [];
 
+    /* ⚠️ The guard is "does this element still hold split words", not "have I
+       seen this element before".
+
+       It was a WeakSet, and that quietly broke every case study after the
+       first one visited. React reuses the same `<p data-lines>` node between
+       two routes that render the same shape — navigating from one case study
+       to another replaces the paragraph's *text*, which throws away the word
+       spans this function injected, while the element itself, and therefore
+       its membership in the set, survives. The result was a lede carrying
+       `is-split` with nothing inside it to reveal: no crash, no warning, the
+       effect simply stopped happening on seven of the eight case studies.
+
+       Asking the DOM what it currently contains cannot fall out of step with
+       the DOM the way a set held alongside it can. It is also naturally
+       idempotent — re-entry after a genuine split is a single failed query —
+       which matters because the observer below now calls this in response to
+       the very mutations that splitting causes. */
     const claim = (el: HTMLElement) => {
-      if (seen.has(el)) return;
-      seen.add(el);
+      if (el.querySelector('.wi')) return;
+
       splitWords(el);
       el.classList.add('is-split');
+      /* Cleared on a re-split: the class survives from the previous route,
+         and leaving it would put the new words in their finished state
+         immediately — the reveal would be skipped rather than replayed. */
+      el.classList.remove('is-in');
       io.observe(el);
       // Same promise the base reveal makes: text is never left hidden
       // because an observer did not fire.
@@ -249,9 +273,18 @@ export function useTextReveal(): void {
     const mo = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         mutation.addedNodes.forEach((node) => {
-          if (!(node instanceof HTMLElement)) return;
-          if (node.matches('[data-lines]')) claim(node);
-          node.querySelectorAll<HTMLElement>('[data-lines]').forEach(claim);
+          if (node instanceof HTMLElement) {
+            if (node.matches('[data-lines]')) claim(node);
+            node.querySelectorAll<HTMLElement>('[data-lines]').forEach(claim);
+            return;
+          }
+          /* A bare text node arriving inside a paragraph that is already on
+             the page — React writing a different route's copy into an
+             element it decided to keep. That is not an "added [data-lines]"
+             from this observer's point of view, which is exactly why the
+             previous version never noticed it happening. */
+          const host = node.parentElement?.closest<HTMLElement>('[data-lines]');
+          if (host) claim(host);
         });
       }
     });

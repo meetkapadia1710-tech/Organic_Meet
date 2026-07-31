@@ -68,7 +68,9 @@ export function CasePage() {
           <h1 style={{ viewTransitionName: `case-${project.slug}`, fontSize: 'clamp(44px, 9vw, 150px)', lineHeight: 0.92, letterSpacing: '-0.02em', margin: 'var(--space-4) 0 0', maxWidth: '12ch' }}>
             {project.name}
           </h1>
-          <p style={{ maxWidth: '54ch', fontSize: 21, lineHeight: 1.6, marginTop: 'var(--space-6)', color: 'var(--color-neutral-800)' }}>
+          {/* The case study's own lede, on the same treatment as every other
+              page's. */}
+          <p data-lines style={{ maxWidth: '54ch', fontSize: 21, lineHeight: 1.6, marginTop: 'var(--space-6)', color: 'var(--color-neutral-800)' }}>
             {project.summary}
           </p>
 
@@ -103,7 +105,11 @@ export function CasePage() {
               {content.problem.heading}
             </h2>
             {content.problem.paras.map((para, i) => (
-              <p key={i} style={{ fontSize: 17, lineHeight: 1.8, color: 'var(--color-neutral-800)', maxWidth: '62ch' }}>{para}</p>
+              /* Prose reveals as blocks rather than word by word. A case
+                 study is here to be read; running the mask over every
+                 paragraph of a long article makes the reader wait on the
+                 animation instead of the argument. */
+              <p key={i} data-reveal style={{ fontSize: 17, lineHeight: 1.8, color: 'var(--color-neutral-800)', maxWidth: '62ch' }}>{para}</p>
             ))}
           </div>
           <div style={{ background: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-6)', display: 'grid', gap: 'var(--space-4)' }}>
@@ -180,13 +186,13 @@ export function CasePage() {
           <div>
             <h6 className="kicker-rule case-sticky-kicker" id={sections[2]?.id} style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>The hard part</ScrambleText></h6>
             {content.hard.map((para, i) => (
-              <p key={i} style={{ fontSize: 17, lineHeight: 1.8, color: 'var(--color-neutral-800)' }}>{para}</p>
+              <p key={i} data-reveal style={{ fontSize: 17, lineHeight: 1.8, color: 'var(--color-neutral-800)' }}>{para}</p>
             ))}
           </div>
           <div>
             <h6 className="kicker-rule case-sticky-kicker" id={sections[3]?.id} style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}>{content.nextKicker}</h6>
             {content.next.map((para, i) => (
-              <p key={i} style={{ fontSize: 17, lineHeight: 1.8, color: 'var(--color-neutral-800)' }}>{para}</p>
+              <p key={i} data-reveal style={{ fontSize: 17, lineHeight: 1.8, color: 'var(--color-neutral-800)' }}>{para}</p>
             ))}
           </div>
         </div>

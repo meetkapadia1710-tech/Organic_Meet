@@ -1,5 +1,6 @@
 import { archive, caseStudies, CATEGORIES } from '../content/projects';
 import { SplitText } from '../components/SplitText';
+import { ScrambleText } from '../components/ScrambleText';
 import { WorkRow, PlainRow } from '../components/WorkRow';
 import { Contact } from '../components/Contact';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
@@ -43,7 +44,11 @@ export function Projects() {
             text="All projects."
             style={{ fontSize: 'clamp(56px, 10vw, 160px)', lineHeight: 0.95, letterSpacing: '-0.02em', margin: 'var(--space-4) 0 0', maxWidth: '13ch' }}
           />
-          <p style={{ maxWidth: '52ch', fontSize: 20, lineHeight: 1.6, marginTop: 'var(--space-6)', color: 'var(--color-neutral-800)' }}>
+          {/* Every page's lede now arrives the same way — word by word out
+              of its own mask. This was the last one still appearing all at
+              once, which made the index feel like a different site to the
+              pages either side of it. */}
+          <p data-lines style={{ maxWidth: '52ch', fontSize: 20, lineHeight: 1.6, marginTop: 'var(--space-6)', color: 'var(--color-neutral-800)' }}>
             {total} projects, grouped by what they are. {caseStudies.length} have a case study behind them; the rest
             link straight to the thing itself.
           </p>
@@ -56,8 +61,10 @@ export function Projects() {
           if (!group.length) return null;
           return (
             <div key={category}>
+              {/* The category headings were the only kickers on the site
+                  not scrambling into place. */}
               <h6 className="kicker-rule" style={{ color: 'var(--color-accent-2-700)', margin: 'var(--space-8) 0 var(--space-3)' }}>
-                {category}
+                <ScrambleText>{category}</ScrambleText>
               </h6>
               {group.map((project) =>
                 project.tier === 'case' ? (

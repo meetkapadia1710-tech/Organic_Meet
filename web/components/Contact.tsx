@@ -18,7 +18,7 @@ export function Contact({ withBlurb = true }: { withBlurb?: boolean }) {
             Let&apos;s build something.
           </h2>
           {withBlurb && (
-            <p style={{ maxWidth: '46ch', fontSize: 18, color: 'var(--color-accent-900)', marginBottom: 'var(--space-6)' }}>
+            <p data-reveal style={{ maxWidth: '46ch', fontSize: 18, color: 'var(--color-accent-900)', marginBottom: 'var(--space-6)' }}>
               For collaborations, internships or anything you think I&apos;d find interesting — my inbox is open and I answer quickly.
             </p>
           )}
