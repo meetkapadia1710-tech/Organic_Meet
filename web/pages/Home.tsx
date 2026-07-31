@@ -5,13 +5,9 @@ import { WorkRow } from '../components/WorkRow';
 import { Deck } from '../components/Deck';
 import { Contact } from '../components/Contact';
 import { TechMarquee } from '../components/TechMarquee';
-import { Hero3D } from '../components/Hero3D';
 import { WorkIndex } from '../components/WorkIndex';
 import { WorkPreview } from '../components/WorkPreview';
 import { Arrow } from '../components/Arrow';
-import { HeroLinks } from '../components/HeroLinks';
-import { NowBuilding } from '../components/NowBuilding';
-import { ScrollCue } from '../components/ScrollCue';
 import { Testimonials } from '../components/Testimonials';
 import { LEARNING } from '../content/now';
 import { prefetchRoute } from '../router';
@@ -28,21 +24,6 @@ const NUMBERS = ['zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 
    the two halves are styled independently, not just wrapped. */
 const TITLE = ['Software developer,', 'systems builder.'] as const;
 const DEV_TITLE = ['I cultivate', 'digital ecosystems.'] as const;
-
-/* A ticking clock was a second thing saying "Bharuch, Gujarat", and it re-rendered
-   this whole page once a second to say it. Shipped-project count is a fact
-   worth the space, and it comes straight from the data — add a project and
-   this number moves on its own. */
-/** Pulls a leading integer off a fact so it can be set large and counted up.
- *  "18 projects" splits; "Bharuch, Gujarat" does not match and stays whole. */
-const LEAD = /^(\d+)(\s.*)$/;
-
-const FACTS: Array<readonly [string, string, boolean]> = [
-  ['Based in', 'Bharuch, Gujarat', false],
-  ['Shipped', `${caseStudies.length + archive.length} projects`, false],
-  ['Studying', 'B.Tech CSE, IIIT Vadodara', false],
-  ['Status', 'Available now', true],
-];
 
 /* Each term gets its own step of the palette rather than all four sharing one
    accent. Nothing here is a literal colour: the ramps reverse wholesale in
@@ -84,115 +65,99 @@ export function Home() {
   /* The same flag the work rows badge with, so "Building" and the "In
      progress" tags can never disagree. */
   const inProgress = caseStudies.filter((p) => p.status === 'In progress');
+  const live = [...caseStudies, ...archive].filter((p) => p.links?.live).length;
 
 
 
   return (
     <>
-      {/* ── the hero ────────────────────────────────────────────────────
-          Full-bleed: the scene owns the viewport and the type is pushed to
-          the edges of it — a metadata strip under the nav, the headline and
-          actions along the bottom. Nothing sits in the middle, which is the
-          whole idea; the previous version put a text column over the cluster
-          and the two fought each other for the same space.
+      {/* ── the hero, minimal ───────────────────────────────────────────
+          Rebuilt from nothing after three versions that were all, in the end,
+          the same mistake: adding things. The WebGL cluster, the drifting
+          blob, the two legibility veils, the scroll cue, the profile icons,
+          the rotating "currently building" strip and the pulsing dot are all
+          gone from this page.
 
-          Consequently this header is *not* width-constrained — the canvas
-          has to reach the edges of the window. The 1400px measure moved in
-          to `.hero-frame`, so the type still lines up with every section
-          below it. */}
-      <header id="main" className="hero-full">
-        <Hero3D />
+          What is left is a line of metadata, a headline, a sentence, two
+          links and a rule. Nothing loops, nothing floats, nothing needs a
+          scrim to stay readable — because there is nothing behind the type
+          to read it against.
 
-        {/* The original static blob, always rendered, never conditional.
+          Note that <Hero3D /> is no longer imported here at all, which is the
+          point rather than a side effect: the three.js chunk was 897 kB (242
+          kB gzip) and it is now simply not in the graph for this page. The
+          component and its files still exist, unreferenced, if the scene is
+          ever wanted back. */}
+      {/* `data-cursor-lift` is what lets useCursorLift find the headline's
+          per-character spans. It is the one interaction kept from the old
+          hero, because it costs nothing at rest: the letters sit exactly
+          where they would anyway until a pointer comes near them. */}
+      <header id="main" className="hero-min" data-cursor-lift>
+        {/* Grain. A single inline SVG turbulence tile, so it costs no request
+            and no image file — the whole thing is a data URI in the
+            stylesheet. Flat cream reads cheap at this scale; cream with a
+            fine tooth reads like paper. Kept to the hero, deliberately: this
+            is not the decorative backdrop layer that was reverted, it is one
+            texture on one surface. */}
+        <div className="hero-min-grain" aria-hidden="true" />
 
-            It fades out only once the 3D scene has actually confirmed it is
-            live — `.hero3d.is-ready ~ .hero-blob` in site.css, a forward
-            sibling selector, which is why this element must stay *after*
-            <Hero3D /> in the DOM.
+        <div className="hero-min-body">
+          {/* Each child declares its own beat in the entrance sequence. A
+              single index rather than five hand-written delays, so reordering
+              the block reorders the choreography with it. */}
+          <p className="hero-min-meta" style={{ '--beat': 0 } as React.CSSProperties}>
+            <span className="hero-min-rule" aria-hidden="true" />
+            <span>Available for work</span>
+            <span aria-hidden="true">·</span>
+            <span>Bharuch, Gujarat</span>
+          </p>
 
-            Gating it on the capability check instead was wrong: the check
-            says the device *could* run WebGL, not that it did. Anything that
-            fails after that point — a lost context, a chunk that never
-            arrives, a renderer that never initialises — would have left the
-            hero with neither the scene nor the blob, emptier than before the
-            3D was added. Now the failure mode is simply the old hero. */}
-        <div
-          aria-hidden="true"
-          data-parallax
-          className="hero-blob"
-          /* `opacity` lives in the stylesheet, not here: an inline value
-             would outrank the `.hero3d.is-ready ~ .hero-blob` rule that
-             fades it out, and the blob would sit on top of the scene
-             forever. */
-          style={{ position: 'absolute', top: '14vh', right: -120, width: 420, height: 420, borderRadius: 999, background: 'var(--color-accent-2-200)', animation: 'float 9s ease-in-out infinite' }}
-        />
-        {/* A legibility guard, not decoration. The 3D cluster drifts across
-            the same space the headline occupies, and where a sphere passed
-            behind the type the contrast collapsed. This is a soft radial wash
-            of the page ground, sitting between the canvas and the copy, so
-            the scene can be as busy as it likes without the headline ever
-            having to compete with it. */}
-        {/* Edge legibility only. The type now sits at the top and bottom of
-            the frame rather than through its middle, so the guard is two
-            linear washes at those edges instead of the radial blob that used
-            to sit over the centre — the middle of the scene is the one place
-            nothing is set over it, and it should stay clear. */}
-        <div className="hero-veil" aria-hidden="true" />
+          {/* Set in the display cut, not the site's serif — see --font-display
+              for why. `lift` splits it to characters as well as words; the
+              note on SplitText explains why that composes with the word
+              reveal instead of fighting it. */}
+          <SplitText
+            as="h1"
+            lift
+            className="hero-min-title"
+            text={devMode ? DEV_TITLE.join(' ') : TITLE.join(' ')}
+          />
 
-        <div className="hero-frame">
-          {/* Top edge: status, live work, place. Small type, wide tracking,
-              pushed to the two corners. */}
-          <div className="hero-meta">
-            <span className="tag tag-accent hero-avail" style={{ borderRadius: 999 }}>
-              <span className="avail-dot" aria-hidden="true" />
-              Open to internships &amp; freelance
-            </span>
-            <span className="hero-meta-end">
-              <NowBuilding />
-              <span className="hero-place">Bharuch, Gujarat</span>
-            </span>
+          <p className="hero-min-lede" style={{ '--beat': 2 } as React.CSSProperties}>
+            I build full-stack web apps, AI tooling and local-first systems — and I ship them end to end, from the
+            Postgres schema to the last hover state.
+          </p>
+
+          <div className="hero-min-actions" style={{ '--beat': 3 } as React.CSSProperties}>
+            <a className="hero-min-link" href="#work">
+              See the work<Arrow />
+            </a>
+            <TLink className="hero-min-link" to="/contact" onPointerEnter={() => prefetchRoute('/contact')}>
+              Get in touch<Arrow />
+            </TLink>
           </div>
+        </div>
 
-          {/* Bottom edge: the headline and the two things anyone arriving
-              here wants to do, with the profile links and the scroll cue
-              pushed out to the opposite corner. */}
-          <div className="hero-foot" data-cursor-lift>
-            <div className="hero-foot-main">
-              {/* Two lines, two faces. The display cut carries the role and
-                  the body cut — heavier and tighter than it is set anywhere
-                  else on the site — carries the second half, so the headline
-                  has typographic contrast inside itself rather than being one
-                  long slab.
+        {/* No proof panel here. A full-page screenshot scaled into a 528px
+            column renders every control inside it at two or three pixels —
+            it reads as a blurry thumbnail rather than as evidence, which is
+            the opposite of what putting work above the fold is for.
 
-                  Developer mode rewrites both. Because SplitText keys its
-                  word-mask animation off `text`, changing it re-runs the
-                  reveal, so the new line types itself in rather than swapping
-                  instantly. */}
-              <h1 className="hero-title" aria-label={devMode ? DEV_TITLE.join(' ') : TITLE.join(' ')}>
-                <SplitText as="span" lift className="hero-title-a" text={(devMode ? DEV_TITLE : TITLE)[0] ?? ''} />
-                <SplitText as="span" lift className="hero-title-b" text={(devMode ? DEV_TITLE : TITLE)[1] ?? ''} />
-              </h1>
+            If this comes back it needs a *detail* crop, not a whole page:
+            one screen region at close to 1:1, or a purpose-shot image. The
+            work rows further down already show these at a size that works. */}
 
-              <div className="hero-actions">
-                <a className="btn btn-primary" data-magnetic href="#work" style={{ borderRadius: 999 }}>
-                  See the work<Arrow />
-                </a>
-                <TLink className="btn btn-secondary" data-magnetic to="/contact" style={{ borderRadius: 999 }} onPointerEnter={() => prefetchRoute('/contact')}>
-                  Get in touch<Arrow />
-                </TLink>
-                {/* The palette is the fastest route through this site and
-                    nothing on the page said so. */}
-                <span className="hero-hint">
-                  or press <kbd>⌘K</kbd>
-                </span>
-              </div>
-            </div>
+        {/* The only ornament: a hairline, and the three facts worth stating
+            without a card around each one.
 
-            <div className="hero-foot-end">
-              <HeroLinks />
-              <ScrollCue />
-            </div>
-          </div>
+            Three genuinely different numbers — "written up" was here and
+            resolved to the same 18 as "shipped", because `archive` is empty,
+            and two figures showing an identical value makes the reader
+            distrust both. */}
+        <div className="hero-min-facts" style={{ '--beat': 4 } as React.CSSProperties}>
+          <span><b data-countup>{caseStudies.length + archive.length}</b> projects shipped</span>
+          <span><b data-countup>{live}</b> live to click</span>
+          <span><b data-countup>{inProgress.length}</b> in progress</span>
         </div>
       </header>
 
@@ -201,10 +166,6 @@ export function Home() {
           it gets to be the first thing you scroll *to* rather than the
           bottom half of what you landed on. */}
       <section className="hero-after">
-        <p data-lines className="hero-lede">
-          I build full-stack web apps, AI tooling and local-first systems — and I ship them end to end, from the Postgres schema to the last hover state.
-        </p>
-
         {/* The band repeats what the paragraph above already says, so it is
             hidden from assistive tech rather than read out four times. */}
         <div
@@ -216,34 +177,6 @@ export function Home() {
             <MarqueeHalf />
             <MarqueeHalf />
           </div>
-        </div>
-
-        {/* The facts row was four equal cards of small text. The numbers in it
-            are the part worth reading, so they are now set large in the
-            display face and the shipped count counts itself up — it is the
-            one value here derived from the data rather than typed. */}
-        <div className="hero-facts">
-          {FACTS.map(([label, value, accent]) => {
-            const lead = LEAD.exec(value);
-            return (
-              <div key={label} className={`hero-fact${accent ? ' is-accent' : ''}`}>
-                <div className="hero-fact-label">{label}</div>
-                <div className="hero-fact-value">
-                  {lead ? (
-                    <>
-                      {/* useCountUp reads the element's own text, so the
-                          number needs its own box — otherwise it would try to
-                          animate "18 projects" as a single figure. */}
-                      <span className="hero-fact-num" data-countup>{lead[1]}</span>
-                      <span className="hero-fact-rest">{lead[2]}</span>
-                    </>
-                  ) : (
-                    value
-                  )}
-                </div>
-              </div>
-            );
-          })}
         </div>
 
         <div data-reveal className="washed" style={{ margin: 'var(--space-8) 0 0', aspectRatio: '16/7', borderRadius: 'var(--radius-lg)', overflow: 'hidden', background: 'repeating-linear-gradient(135deg, var(--color-neutral-200) 0 14px, var(--color-neutral-300) 14px 28px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

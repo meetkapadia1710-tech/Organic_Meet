@@ -35,7 +35,38 @@ interface Form {
   /** Desynchronises every sine so nothing pulses in unison. */
   phase: number;
   spin: number;
+  /**
+   * How far this form is allowed to wander from `position`, per axis, in
+   * world units. Kept per-form rather than global because the budget is not
+   * the same everywhere: the near forms are small and have room, the far ones
+   * are enormous and a wide drift would swing them across the whole frame.
+   */
+  drift: [number, number, number];
 }
+
+/* ── the wander ─────────────────────────────────────────────────────────
+   Three sines summed, with weights adding to exactly 1 so the result is
+   always within [-1, 1] and the drift can never exceed the budget above.
+
+   Why not actual randomness: a random walk drifts (nothing returns, forms
+   eventually pile up in a corner), and per-frame noise is not frame-rate
+   independent unless it is integrated properly. Simplex noise would work and
+   costs a dependency this scene has deliberately avoided.
+
+   The frequencies are the whole trick. 0.127 / 0.0713 / 0.0389 are close to
+   mutually irrational, so the combined path does not visibly repeat for
+   hours — the eye never finds the loop, which is what "random" actually
+   means here. Multiples of each other would produce an obvious figure-eight
+   within a few seconds.
+
+   Deterministic, so it is identical on every machine and every reload, and
+   it is a pure function of elapsed time — a dropped frame changes nothing,
+   and a tab restored after an hour resumes in the right place rather than
+   jumping. */
+const wander = (t: number, phase: number, seed: number): number =>
+  Math.sin(t * 0.127 + phase) * 0.6 +
+  Math.sin(t * 0.0713 + phase * 2.3 + seed) * 0.28 +
+  Math.sin(t * 0.0389 + phase * 3.7 + seed * 1.9) * 0.12;
 
 /* Recomposed for a full-bleed hero. The previous arrangement pushed the whole
    mass right of centre because the headline used to occupy the left half of
@@ -64,16 +95,16 @@ interface Form {
    transparency is reserved for the far layer, where it is doing a job
    (distance) rather than happening by default. */
 const FORMS: Form[] = [
-  { position: [1.9, 0.4, -0.6], radius: 1.05, tone: 'warm', step: 1, opacity: 1, phase: 0, spin: 0.05 },
-  { position: [-2.2, 1.6, -6.0], radius: 2.1, tone: 'green', step: 2, opacity: 0.32, phase: 4.2, spin: 0.03 },
-  { position: [-2.9, 1.35, 1.2], radius: 0.42, tone: 'warm', step: 0, opacity: 1, phase: 3.4, spin: 0.09 },
-  { position: [-1.6, -0.95, -1.4], radius: 0.8, tone: 'green', step: 1, opacity: 0.97, phase: 1.9, spin: -0.07 },
-  { position: [2.6, -0.8, -6.8], radius: 2.4, tone: 'warm', step: 2, opacity: 0.26, phase: 5.1, spin: -0.04 },
-  { position: [3.5, 1.4, -2.2], radius: 0.7, tone: 'warm', step: 0, opacity: 0.94, phase: 2.4, spin: 0.06 },
-  { position: [3.2, -1.5, 0.8], radius: 0.36, tone: 'green', step: 0, opacity: 1, phase: 0.8, spin: -0.05 },
-  { position: [-3.4, 0.6, -2.6], radius: 0.62, tone: 'green', step: 0, opacity: 0.92, phase: 2.9, spin: 0.04 },
-  { position: [0.4, -1.8, -1.9], radius: 0.55, tone: 'warm', step: 2, opacity: 0.94, phase: 1.2, spin: -0.06 },
-  { position: [0.2, 1.9, -5.2], radius: 1.5, tone: 'warm', step: 1, opacity: 0.22, phase: 5.8, spin: 0.02 },
+  { position: [1.9, 0.4, -0.6], radius: 1.05, tone: 'warm', step: 1, opacity: 1, phase: 0, spin: 0.05, drift: [0.85, 0.6, 0.4] },
+  { position: [-2.2, 1.6, -6.0], radius: 2.1, tone: 'green', step: 2, opacity: 0.32, phase: 4.2, spin: 0.03, drift: [0.5, 0.35, 0.3] },
+  { position: [-2.9, 1.35, 1.2], radius: 0.42, tone: 'warm', step: 0, opacity: 1, phase: 3.4, spin: 0.09, drift: [1.1, 0.8, 0.5] },
+  { position: [-1.6, -0.95, -1.4], radius: 0.8, tone: 'green', step: 1, opacity: 0.97, phase: 1.9, spin: -0.07, drift: [0.9, 0.65, 0.45] },
+  { position: [2.6, -0.8, -6.8], radius: 2.4, tone: 'warm', step: 2, opacity: 0.26, phase: 5.1, spin: -0.04, drift: [0.45, 0.3, 0.25] },
+  { position: [3.5, 1.4, -2.2], radius: 0.7, tone: 'warm', step: 0, opacity: 0.94, phase: 2.4, spin: 0.06, drift: [0.7, 0.6, 0.4] },
+  { position: [3.2, -1.5, 0.8], radius: 0.36, tone: 'green', step: 0, opacity: 1, phase: 0.8, spin: -0.05, drift: [1.15, 0.85, 0.5] },
+  { position: [-3.4, 0.6, -2.6], radius: 0.62, tone: 'green', step: 0, opacity: 0.92, phase: 2.9, spin: 0.04, drift: [0.75, 0.7, 0.4] },
+  { position: [0.4, -1.8, -1.9], radius: 0.55, tone: 'warm', step: 2, opacity: 0.94, phase: 1.2, spin: -0.06, drift: [0.95, 0.55, 0.45] },
+  { position: [0.2, 1.9, -5.2], radius: 1.5, tone: 'warm', step: 1, opacity: 0.22, phase: 5.8, spin: 0.02, drift: [0.6, 0.4, 0.3] },
 ];
 
 export function OrganicField({ palette, profile }: { palette: ScenePalette; profile: DeviceProfile }) {
@@ -98,7 +129,7 @@ export function OrganicField({ palette, profile }: { palette: ScenePalette; prof
       const form = forms[i];
       if (!mesh || !form) continue;
 
-      const { phase, radius, spin } = form;
+      const { phase, radius, spin, drift, position } = form;
 
       // Three rates, deliberately not multiples of each other, so the shape
       // never returns to the same silhouette on a countable loop.
@@ -111,8 +142,14 @@ export function OrganicField({ palette, profile }: { palette: ScenePalette; prof
       mesh.rotation.x = t * spin * 0.6 + phase;
       mesh.rotation.y = t * spin + phase * 0.5;
 
-      // A slow rise and fall, offset per form.
-      mesh.position.y = form.position[1] + Math.sin(t * 0.19 + phase) * 0.16;
+      /* The wander, one axis at a time. Each axis gets a different phase
+         offset and seed — without that all three would move in step and the
+         form would slide along a straight diagonal instead of meandering.
+         The offsets are irregular for the same reason the frequencies are:
+         evenly spaced ones (0, 2π/3, 4π/3) trace a neat circle. */
+      mesh.position.x = position[0] + wander(t, phase, 0) * drift[0];
+      mesh.position.y = position[1] + wander(t, phase + 2.1, 1.7) * drift[1];
+      mesh.position.z = position[2] + wander(t, phase + 4.7, 3.4) * drift[2];
     }
 
     // The cluster itself turns, very slowly — enough that a returning glance

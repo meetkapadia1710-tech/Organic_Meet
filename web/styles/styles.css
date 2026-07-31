@@ -43,6 +43,19 @@
   --font-heading-weight: 400;
   --font-body: "Figtree", system-ui, sans-serif;
 
+  /* The display cut — the hero headline, and nothing else.
+
+     Caprasimo is a chunky retro serif: full of character, and exactly why the
+     hero read indie rather than considered once it was set at 120px. This is
+     the body face at its heaviest weight instead — near-neutral, and it takes
+     tracking far tighter than a serif will tolerate.
+
+     It costs no extra network: Figtree was already being requested for body
+     copy, so only the weight list in that one URL changed. Caprasimo is
+     untouched everywhere else and is still the site's voice. */
+  --font-display: "Figtree", system-ui, sans-serif;
+  --font-display-weight: 800;
+
   --space-1: 4.4px;
   --space-2: 8.8px;
   --space-3: 13.2px;
@@ -98,8 +111,46 @@ figcaption {
   color: color-mix(in srgb, var(--color-text) 55%, transparent);
 }
 .text-muted { color: color-mix(in srgb, var(--color-text) 55%, transparent); }
+/* Focus rings. `:focus-visible` only, so a mouse click never draws one, but
+   a keyboard user always gets one — and it is drawn in the accent with a
+   real offset and a matching radius rather than the browser's default, which
+   on a pill-shaped button is a rectangle around a rounded thing.
+
+   The ring transitions on offset alone. Animating the outline itself makes
+   tabbing feel laggy at exactly the moment a keyboard user needs to know
+   where they are; a 2px breath is enough to register the arrival. */
 :focus { outline: none; }
-:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+  transition: outline-offset 0.12s ease;
+}
+/* Anything already round keeps its own shape. */
+.btn:focus-visible,
+.tag:focus-visible,
+[style*='border-radius: 999px']:focus-visible { border-radius: 999px; }
+
+/* The scrollbar is chrome the browser draws in its own colours; on a cream
+   or near-black page that is the one surface that never got the palette.
+   `scrollbar-color` is the standard property and covers Firefox; the WebKit
+   pseudo-elements cover the rest. Width is deliberately slim but not hidden
+   — a scrollbar nobody can grab is a worse trade than a wide one. */
+html {
+  scrollbar-color: var(--color-neutral-400) transparent;
+  scrollbar-width: thin;
+}
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-neutral-400);
+  border-radius: 999px;
+  /* The border is transparent and the background clipped to the padding box,
+     which is how you inset a thumb without it touching the track edges. */
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--color-accent); background-clip: padding-box; }
 /* Selection is the accent at full strength with the page ground as the ink.
    Both halves come from ramps that reverse wholesale in dark mode, so the
    pairing stays legible without a second rule: light is cream on rust, dark

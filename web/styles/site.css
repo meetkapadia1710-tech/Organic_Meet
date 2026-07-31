@@ -169,6 +169,313 @@ h1, h2, h3 { overflow-wrap: break-word; }
   .route-fallback-dot { animation: none; opacity: 0.7; }
 }
 
+/* ── the hero, minimal ──────────────────────────────────────────────────
+   Five elements in one column: a metadata line, the headline, a sentence,
+   two links, a rule with three figures under it. No canvas, no blob, no
+   veil, no loop.
+
+   Everything here is in normal flow. The previous hero needed absolute
+   positioning, a stacking context, two gradient overlays and a `100svh`
+   frame to hold a composition together; this one needs none of that, which
+   is most of what "minimal" is actually buying. */
+
+.hero-min {
+  position: relative;
+  max-width: 1400px;
+  margin: 0 auto;
+  /* Clears the fixed nav pill, then breathes. The space above the headline
+     is doing real work — it is the only thing separating the hero from the
+     chrome now that nothing is drawn behind it.
+
+     The vh values are deliberately modest. At 12vh top plus 14vh before the
+     rule the block measured 1042px against a 900px laptop viewport, which
+     put the closing rule below the fold — and a rule that closes a hero
+     nobody has scrolled to is not closing anything. These land it at about
+     840px on the same screen. */
+  padding: calc(var(--space-4) + 66px + 6vh) var(--space-8) 10vh;
+
+  /* ── the asymmetry ──────────────────────────────────────────────────
+     Two columns rather than one stack. Everything used to sit on a single
+     left axis at a single rhythm, which is the difference between a layout
+     that was designed and one that was defaulted to.
+
+     The text column is `minmax(0, …)` so a long unbroken headline shrinks it
+     instead of blowing the grid out — the default `auto` minimum on a grid
+     track is its content, and a 120px word is very wide content. */
+  /* One column again. The two-column split existed to seat the proof panel
+     beside the text; with that gone the second track held nothing, and the
+     hairline that divided them had nothing left to divide.
+
+     The asymmetry survives in the figures row, which stays anchored to the
+     right edge while the headline pulls left — that was always the stronger
+     half of it. */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+}
+
+.hero-min-body { position: relative; }
+
+/* ── grain ──────────────────────────────────────────────────────────────
+   One inline SVG turbulence tile as a data URI: no request, no file, and it
+   tiles at 200px so the pattern never reads as a repeat. Blend rather than
+   overlay so it darkens the paper slightly instead of laying grey film over
+   it, and low enough that it is texture rather than noise. */
+.hero-min-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.4;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.32'/%3E%3C/svg%3E");
+}
+/* Multiply over a dark ground would do nothing; screen is its counterpart. */
+html[data-theme='dark'] .hero-min-grain {
+  mix-blend-mode: screen;
+  opacity: 0.22;
+}
+/* Everything else in the hero sits above the texture. */
+.hero-min-body,
+.hero-min-facts { position: relative; z-index: 1; }
+
+.hero-min-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin: 0 0 var(--space-6);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-neutral-700);
+}
+/* The separator is the only decoration in the whole block. */
+.hero-min-meta span[aria-hidden] { color: var(--color-accent); }
+
+/* A masthead stroke: one short accent rule that draws itself in ahead of the
+   line it belongs to. The single deliberate use of colour above the fold,
+   and the reason the metadata line reads as a masthead rather than as a
+   stray caption. */
+.hero-min-rule {
+  display: block;
+  width: 34px;
+  height: 2px;
+  background: var(--color-accent);
+  border-radius: 2px;
+  transform-origin: 0 50%;
+}
+
+.hero-min-title {
+  margin: 0;
+  /* The display cut. See --font-display: this is the body face at 800, not
+     the site's serif, and the change of face is what lets the tracking below
+     go as tight as it does. */
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: clamp(46px, 8vw, 116px);
+  line-height: 0.92;
+  /* -0.045em, not the -0.03 this had. Display type wants to be set far
+     tighter than body copy — the space that reads as generous at 17px reads
+     as gappy at 116px — and a heavy sans will take it where a serif's
+     serifs would start colliding. */
+  letter-spacing: -0.045em;
+  max-width: 13ch;
+  /* Optical alignment. A capital's left side bearing means the glyph's stem
+     sits a fraction right of the box edge, so at this size the headline
+     visibly fails to line up with the 12px metadata line above it and the
+     lede below. Pulling it back by a fraction of its own size makes the
+     three left edges read as one — and because the unit is `em`, it scales
+     with the clamp instead of needing a value per breakpoint. */
+  margin-left: -0.045em;
+}
+
+.hero-min-lede {
+  max-width: 52ch;
+  margin: var(--space-6) 0 0;
+  font-size: clamp(17px, 1.6vw, 21px);
+  line-height: 1.65;
+  color: var(--color-neutral-800);
+}
+
+/* Text links, not filled pills. Two buttons side by side is a landing page;
+   two underlined links is a portfolio. The underline is drawn rather than
+   `text-decoration`, so it can grow from the left on hover instead of
+   switching on. */
+.hero-min-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  margin-top: var(--space-8);
+}
+.hero-min-link {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: var(--font-heading);
+  font-size: 19px;
+  color: var(--color-text);
+  text-decoration: none;
+  padding-bottom: 4px;
+  background-image: linear-gradient(var(--color-accent), var(--color-accent));
+  background-size: 100% 1.5px;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  transition: background-size 0.42s cubic-bezier(0.16, 1, 0.3, 1), color 0.25s ease;
+}
+.hero-min-link:hover,
+.hero-min-link:focus-visible {
+  color: var(--color-accent-700);
+  background-size: 0% 1.5px;
+  background-position: 100% 100%;
+}
+
+/* Anchored to the right edge, under both columns. Right-aligning the row is
+   the second half of the asymmetry: the headline pulls left, the figures
+   answer it from the far side, and the rule spans between them. */
+.hero-min-facts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: baseline;
+  gap: var(--space-8);
+  /* Tightened from 9vh / --space-6. Setting the figures at display size cost
+     roughly 30px of height, which put this row 37px below the fold on a
+     900px laptop — and the rule exists to close the hero, which it cannot do
+     from below it. */
+  margin-top: 5.5vh;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-divider);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--color-neutral-700);
+}
+.hero-min-facts span {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+/* At 19px these were a footnote. At display size they are the claim, with
+   the label staying small so the number is unmistakably the thing being
+   said. */
+.hero-min-facts b {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: clamp(34px, 3.4vw, 52px);
+  line-height: 1;
+  letter-spacing: -0.04em;
+  color: var(--color-text);
+  /* A counting number that changes width mid-animation shifts the words
+     after it; tabular figures hold the column. */
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── entrance ───────────────────────────────────────────────────────────
+   The block arrives in five beats: masthead, headline, sentence, links,
+   rule. The headline is beat 1 and is not listed here — SplitText already
+   runs its own word-by-word reveal, and layering a second animation on the
+   same element would fight it.
+
+   `--beat` is set per element in the markup rather than hardcoded here, so
+   reordering the hero reorders the choreography with it.
+
+   Everything is `.js`-gated and keyed to the *finished* state: the resting
+   style is the visible one, and the animation only plays it in from an
+   offset. A stylesheet that loads without its script can never leave this
+   hero blank. */
+
+@media (prefers-reduced-motion: no-preference) {
+  .js .hero-min-meta,
+  .js .hero-min-lede,
+  .js .hero-min-actions,
+  .js .hero-min-facts {
+    animation: hero-min-in 0.85s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: calc(var(--beat, 0) * 90ms + 60ms);
+  }
+
+  /* ── the signature moment ────────────────────────────────────────────
+     The rule is the one element whose arrival is worth watching, so it does
+     two things rather than one.
+
+     On load it overshoots: it draws out to nearly four times its resting
+     length ahead of the headline, then retracts to 34px as the words unmask
+     behind it. That retraction against the incoming type is the moment —
+     one gesture, under a second, and nothing else on the page competes with
+     it.
+
+     Then it stays useful: `width` is handed to a scroll timeline so the rule
+     extends again as the page moves, turning the masthead stroke into a
+     progress indicator. Two animations, two timelines, listed in parallel —
+     and deliberately on two *different* properties, because `transform` and
+     `width` cannot both be driven by separate animations on one element. */
+  .js .hero-min-rule {
+    animation-name: hero-min-draw, hero-min-track;
+    animation-duration: 0.95s, auto;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1), linear;
+    animation-fill-mode: both, both;
+    animation-delay: 0.15s, 0s;
+    animation-timeline: auto, scroll(root block);
+  }
+}
+
+@keyframes hero-min-track {
+  to { width: 132px; }
+}
+
+@keyframes hero-min-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+/* Out past its resting length, then back — the retract is the gesture. */
+@keyframes hero-min-draw {
+  0% { transform: scaleX(0); }
+  55% { transform: scaleX(3.8); }
+  100% { transform: scaleX(1); }
+}
+
+/* ── the settle ─────────────────────────────────────────────────────────
+   The hero eases up and dims very slightly as it leaves, so scrolling away
+   from it feels like leaving a page rather than pushing a block off the top.
+
+   Fails safe: an inactive timeline holds the *start* of the range, which is
+   the untouched resting state — the opposite of `.fill-scroll`, whose start
+   state is the ghosted one. The floor is 0.55, not 0, because this is real
+   text and a headline faded to nothing mid-scroll is a headline somebody is
+   still trying to read. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .js .hero-min {
+      animation: hero-min-settle linear both;
+      animation-duration: auto;
+      animation-timeline: view(block);
+      animation-range: exit 0% exit 100%;
+    }
+  }
+}
+@keyframes hero-min-settle {
+  to {
+    opacity: 0.55;
+    transform: translateY(-40px);
+  }
+}
+
+@media (max-width: 719px) {
+  .hero-min {
+    padding: calc(var(--space-4) + 66px + 6vh) var(--space-6) 10vh;
+  }
+  .hero-min-title { max-width: none; }
+  .hero-min-facts { margin-top: 5vh; gap: var(--space-6); }
+  .hero-min-actions { gap: var(--space-4); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* The overshoot is the one thing here that is pure spectacle. */
+  .hero-min-rule { animation: none !important; }
+  .hero-min-grain { display: none; }
+}
+
 /* ── hero 3D layer ──────────────────────────────────────────────────────
    The WebGL canvas sits behind the hero's own content, inside the header's
    existing positioning context. Three rules matter and all three are load
@@ -185,104 +492,6 @@ h1, h2, h3 { overflow-wrap: break-word; }
    Starting at `opacity: 0` — the canvas is transparent until WebGL has a
    context, and fading up from nothing is what stops the scene appearing as
    a hard pop mid-read. */
-
-/* ── the full-bleed hero ────────────────────────────────────────────────
-   The scene owns the viewport; the type is pushed to its top and bottom
-   edges. `100svh` rather than `100vh` because a phone's `vh` includes the
-   browser chrome that is about to retract — at 100vh the scroll cue and the
-   actions start below the fold on exactly the devices least likely to go
-   looking for them. */
-
-.hero-full {
-  position: relative;
-  min-height: 100svh;
-  display: flex;
-  /* The canvas bleeds to the window edges; nothing here may cause the page
-     to scroll sideways. */
-  overflow: hidden;
-  /* Below the fixed nav pill, above the page. */
-  isolation: isolate;
-}
-
-/* The 1400px measure the rest of the page uses, reinstated *inside* the
-   full-bleed header so the headline lines up with every section below it. */
-.hero-frame {
-  position: relative;
-  z-index: 1;
-  flex: 1;
-  display: grid;
-  grid-template-rows: auto 1fr auto;
-  gap: var(--space-6);
-  width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
-  /* Top clears the fixed nav; bottom is generous because the scroll cue and
-     the action row live down there. */
-  padding: calc(var(--space-4) + 66px + var(--space-6)) var(--space-8) var(--space-8);
-}
-
-/* Top edge. */
-.hero-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-}
-.hero-meta-end {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-}
-.hero-place {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--color-neutral-700);
-}
-
-/* Bottom edge. `align-items: end` so the headline's baseline and the scroll
-   cue sit on the same line regardless of how many lines the title wraps to. */
-.hero-foot {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: var(--space-6);
-  flex-wrap: wrap;
-}
-.hero-foot-main {
-  min-width: 0;
-}
-.hero-foot-end {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: var(--space-4);
-}
-
-/* Two linear washes rather than the radial blob this replaced. The type is
-   at the edges now, so that is where the guard belongs — and the middle of
-   the frame, the one place nothing is set over, stays completely clear. */
-.hero-veil {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  /* Weaker and shorter than the first pass, which ran the bottom wash to 52%
-     of the frame at 70% strength and left the scene only properly visible in
-     a band across the middle. Two reasons to pull it back:
-
-     every piece of type over it measures 12:1 or better against the page
-     ground, so it was guarding contrast that was never at risk; and a long
-     ramp from a dark brown to transparent is exactly the gradient that bands
-     into visible steps on an 8-bit display. A shorter, shallower ramp has
-     fewer steps to show. */
-  background:
-    linear-gradient(to bottom, var(--color-bg) 0%, transparent 15%),
-    linear-gradient(to top, color-mix(in srgb, var(--color-bg) 92%, transparent) 0%, color-mix(in srgb, var(--color-bg) 48%, transparent) 22%, transparent 42%);
-}
 
 .hero3d {
   position: absolute;
@@ -358,159 +567,6 @@ h1, h2, h3 { overflow-wrap: break-word; }
   gap: 8px;
 }
 
-/* Available is a live claim, so the dot behaves like a status light rather
-   than a bullet. The ring is a separate pseudo-element so the dot itself
-   stays a constant size — a pulsing dot changes the text baseline it sits on. */
-.avail-dot {
-  position: relative;
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: var(--color-accent-2-700);
-  flex: none;
-}
-.avail-dot::after {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 999px;
-  border: 1.5px solid var(--color-accent-2-700);
-  animation: avail-pulse 2.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-}
-@keyframes avail-pulse {
-  0% { transform: scale(0.6); opacity: 0.9; }
-  70%, 100% { transform: scale(1.5); opacity: 0; }
-}
-
-/* ── currently building ─────────────────────────────────────────────────── */
-
-.now-building {
-  display: inline-flex;
-  align-items: baseline;
-  gap: 8px;
-  font-size: 13px;
-}
-.now-building-kicker {
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  font-size: 11px;
-  color: var(--color-neutral-700);
-}
-.now-building-name {
-  font-family: var(--font-heading);
-  font-size: 15px;
-  color: var(--color-accent-700);
-  animation: nb-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-@keyframes nb-in {
-  from { opacity: 0; transform: translateY(6px); }
-}
-
-/* ── hero headline ──────────────────────────────────────────────────────
-   Two faces in one headline: the display cut on the first line, the body cut
-   set far heavier and tighter than anywhere else on the site for the second.
-   The size is shared so they read as one block despite the change of voice. */
-
-/* Smaller than it was as a centre-stage headline. It now sits on the bottom
-   edge of a fixed-height frame alongside the action row, and at the old
-   clamp's 150px ceiling two lines plus the buttons and the metadata strip
-   overran `100svh` on any laptop. This ceiling keeps the whole composition
-   inside one viewport down to about 620px tall. */
-.hero-title {
-  margin: 0;
-  font-size: clamp(40px, 7vw, 104px);
-  line-height: 0.94;
-  letter-spacing: -0.02em;
-  max-width: 15ch;
-}
-.hero-title-a,
-.hero-title-b {
-  display: block;
-}
-.hero-title-b {
-  font-family: var(--font-body);
-  font-weight: 800;
-  letter-spacing: -0.045em;
-  color: var(--color-accent-700);
-}
-
-/* ── hero actions ───────────────────────────────────────────────────────── */
-
-.hero-actions {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-wrap: wrap;
-  margin-top: var(--space-6);
-}
-.hero-hint {
-  font-size: 14px;
-  color: var(--color-neutral-700);
-}
-.hero-hint kbd {
-  font-family: ui-monospace, monospace;
-  font-size: 12px;
-  padding: 3px 7px;
-  border-radius: 6px;
-  border: 1px solid var(--color-divider);
-  background: var(--color-surface);
-}
-/* No key to press on a touch device — and no room for the suggestion on a
-   narrow one either, where it wraps the action row onto a third line. The
-   width query is not redundant with the pointer query: a resized desktop
-   window still reports a fine pointer while laying out as a phone. */
-@media (hover: none), (pointer: coarse), (max-width: 640px) {
-  .hero-hint { display: none; }
-}
-
-/* ── hero links ─────────────────────────────────────────────────────────
-   Icon at rest; the label grows in beside it on hover, so the row is compact
-   but never unlabelled. Width, not opacity — a label that only fades in still
-   reserves its space and leaves four gaps in the row. */
-
-.hero-links {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-.hero-links a {
-  display: inline-flex;
-  align-items: center;
-  gap: 0;
-  padding: 9px 11px;
-  border-radius: 999px;
-  border: 1px solid var(--color-divider);
-  color: var(--color-neutral-800);
-  text-decoration: none;
-  transition: color 0.25s ease, border-color 0.25s ease, background-color 0.25s ease, gap 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.hero-links svg { width: 19px; height: 19px; flex: none; }
-.hero-link-label {
-  display: inline-block;
-  max-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  font-size: 13px;
-  font-weight: 600;
-  transition: max-width 0.42s cubic-bezier(0.16, 1, 0.3, 1);
-}
-.hero-links a:hover,
-.hero-links a:focus-visible {
-  color: var(--color-accent-800);
-  border-color: var(--color-accent);
-  background: var(--color-accent-100);
-  gap: 7px;
-}
-.hero-links a:hover .hero-link-label,
-.hero-links a:focus-visible .hero-link-label {
-  max-width: 90px;
-}
-
 /* ── hero facts ─────────────────────────────────────────────────────────── */
 
 .hero-facts {
@@ -547,104 +603,6 @@ h1, h2, h3 { overflow-wrap: break-word; }
   line-height: 1;
   color: var(--color-accent-700);
   margin-right: 5px;
-}
-
-/* ── scroll cue ─────────────────────────────────────────────────────────
-   A rail with a dot travelling down it. Absolutely positioned against the
-   header, which is `position: relative`. */
-
-/* In the flow, in the hero's bottom-right corner — it used to be absolutely
-   positioned against the header because there was no corner to put it in. */
-.scroll-cue {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  pointer-events: none;
-  animation: cue-in 0.8s 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-.scroll-cue-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--color-neutral-700);
-}
-.scroll-cue-rail {
-  position: relative;
-  width: 54px;
-  height: 1px;
-  background: var(--color-divider);
-  overflow: hidden;
-}
-.scroll-cue-dot {
-  position: absolute;
-  top: -1px;
-  left: 0;
-  width: 16px;
-  height: 3px;
-  border-radius: 2px;
-  background: var(--color-accent);
-  animation: cue-travel 2.1s cubic-bezier(0.65, 0, 0.35, 1) infinite;
-}
-@keyframes cue-travel {
-  0% { transform: translateX(-18px); }
-  100% { transform: translateX(58px); }
-}
-@keyframes cue-in {
-  from { opacity: 0; transform: translateY(10px); }
-}
-
-@media (max-width: 719px) {
-  /* The cue is desktop-only: nobody needs to be told a phone scrolls, and
-     the corner it lives in does not survive the stack below. */
-  .scroll-cue { display: none; }
-  .hero-title { max-width: none; }
-
-  /* The two-corner composition collapses to a single column. `align-items`
-     and `justify-content` both have to be reset — left as `flex-end` the
-     profile links would sit right-aligned under a left-aligned headline. */
-  .hero-foot {
-    flex-direction: column;
-    align-items: stretch;
-    gap: var(--space-6);
-  }
-  .hero-foot-end {
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-start;
-  }
-  .hero-links { justify-content: flex-start; }
-
-  .hero-meta {
-    align-items: flex-start;
-    gap: var(--space-2);
-  }
-  .hero-meta-end { gap: var(--space-3); }
-
-  /* A phone's viewport is mostly headline once the nav and the action row
-     have taken their share, so the frame is allowed to grow past one screen
-     rather than crushing the type to fit. */
-  .hero-full { min-height: auto; }
-  .hero-frame {
-    padding: calc(var(--space-4) + 66px + var(--space-4)) var(--space-6) var(--space-8);
-    gap: var(--space-8);
-    grid-template-rows: auto auto auto;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  /* The cue and the rotating strip do not mount at all under this
-     preference; these cover the pieces that are pure ornament. */
-  .avail-dot::after { animation: none; opacity: 0; }
-  .now-building-name { animation: none; }
-  .hero-links a,
-  .hero-link-label { transition: none; }
-}
-
-@media (max-width: 719px) {
-  /* Full bleed at every width now — the cluster is the hero, not something
-     tucked into a right-hand margin that a phone does not have. */
-  .hero3d { inset: 0; height: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {

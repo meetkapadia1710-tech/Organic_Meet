@@ -627,6 +627,45 @@ superseded work went to `_archive/` instead of being removed.
   but it is Meet's call which provider and whether the trade is acceptable.
 - **WakaTime.** Needs an account and an API key.
 - **Resume PDF.** The button and the flag exist; the file does not.
+- **Hero upgraded from the minimal base — nine changes.** The minimal rebuild
+  is the foundation; this is craft on top of it, not a return to decoration.
+
+  - **New display cut.** The headline is `--font-display` — Figtree at 800 —
+    not Caprasimo. The serif read indie at 116px; a heavy near-neutral sans
+    does not, and it takes the tracking a serif would not. **No extra network
+    cost**: Figtree was already requested for body copy, so only the weight
+    list in that one Google Fonts URL changed. **Caprasimo is untouched
+    everywhere else** and is still the site's voice.
+  - **Tracking −0.045em** on the headline, up from −0.03. Display type wants
+    to be far tighter than body copy.
+  - **Asymmetric grid.** Two columns (1.45fr / 1fr) with a vertical hairline
+    on the body column's trailing edge, the figures anchored to the right.
+    Collapses to one column below 1024px, where the hairline is hidden — it
+    was a column divider and there is nothing left to divide.
+  - **Proof above the fold.** `featured.find(p => p.preview)` — the first
+    featured project that actually has a thumbnail, because three of the five
+    have no screenshot at all and `featured[0]` would render an empty panel.
+    It bleeds past the measure and is a real link into the case study.
+  - **Grain.** One inline SVG turbulence tile as a data URI: no request, no
+    file. `multiply` on cream, `screen` on the dark ground — multiply over a
+    dark ground does nothing.
+  - **Figures at display size** — 49px against the old 19px, labels still
+    small.
+  - **The rule is live.** Two animations on two timelines: it overshoots to
+    3.8x on load and retracts as the headline unmasks (the signature moment),
+    then `width` is handed to a scroll timeline so it extends again as the
+    page moves. Two *different* properties on purpose — `transform` and
+    `width` — because one element cannot have two animations driving the same
+    property.
+  - **Focus rings and scrollbar.** `:focus-visible` only, accent, offset, and
+    pill radius preserved on round controls. Scrollbar takes the palette via
+    `scrollbar-color` plus the WebKit pseudo-elements.
+
+  Measured at 1440x900: closes 12px above the fold. Setting the figures at
+  display size cost ~30px and initially pushed the closing rule 37px *below*
+  it — the top padding and the row's margin were tightened to reclaim that.
+  At 375px: one column, hairline gone, figures left-aligned, proof still
+  bleeding to the edge, no horizontal overflow.
 
 ---
 
