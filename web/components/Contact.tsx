@@ -5,7 +5,7 @@ const EMAIL = 'kapadiameet07@gmail.com';
 /* The closing block, identical on every page that carries it. */
 export function Contact({ withBlurb = true }: { withBlurb?: boolean }) {
   return (
-    <section id="contact" style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 10vh' }}>
+    <section id="contact" style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 10vh' }}>
       <div style={{ background: 'var(--color-accent-200)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-8)', position: 'relative', overflow: 'hidden' }}>
         <div
           aria-hidden="true"

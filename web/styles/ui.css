@@ -133,33 +133,55 @@ kbd {
 
    Padding lives here rather than inline on the component because the stuck
    state has to shrink it, and an inline style outranks a class. */
+/* ⚠️ Three things were wrong with this bar and they compounded.
+
+   It was `max-width: 1400px`, so its background only covered the measure and
+   the case study's hero figure — a bright screenshot — was visible either
+   side of it on any window wider than that. It was 93% opaque with a blur,
+   so the same figure showed faintly *through* it. And it stuck at
+   `space-4 + 66px`, about 9px below the nav pill's bottom edge, so a sliver
+   of that figure ran between the two. Scrolling a white screenshot behind
+   all three at once looked broken, because it was.
+
+   Now: sticky at the very top, spanning the full window, fully opaque. The
+   nav clearance moved into the top padding, so the band starts at the
+   viewport edge and the pill floats on it — nothing can pass above or beside
+   it. The 1400px measure moved inward to `.toc`, which is where the content
+   wanted it anyway. */
 .toc-wrap {
   position: sticky;
-  /* Clears the nav pill: --space-4 top offset plus its own height. */
-  top: calc(var(--space-4) + 66px);
+  top: 0;
   z-index: 30;
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: var(--space-4) var(--space-8) var(--space-2);
-  background: color-mix(in srgb, var(--color-bg) 93%, transparent);
-  backdrop-filter: blur(8px);
+  /* Clears the nav pill — its --space-4 offset, its height, and a gap. */
+  padding: calc(var(--space-4) + 66px + var(--space-3)) 0 var(--space-2);
+  background: var(--color-bg);
 }
 
-/* Reading progress across the top edge — the article's own span, not the
-   document's. `#progress` at the top of the window already measures the
-   document; what is useful on a long read is how much of the piece is left.
-   scaleX on a pseudo-element, so it never triggers layout. */
+.toc {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 var(--space-8);
+}
+
+/* Reading progress — the article's own span, not the document's. `#progress`
+   at the top of the window already measures the document; what is useful on
+   a long read is how much of the piece is left.
+
+   Sits on the band's *bottom* edge now rather than its top: the top edge is
+   the viewport edge, where `#progress` already draws, and two progress bars
+   stacked on the same pixel is one too many. On the bottom it reads as the
+   contents bar underlining itself. scaleX on a pseudo-element, so it never
+   triggers layout. */
 .toc-wrap::before {
   content: '';
   position: absolute;
-  top: 0;
-  left: var(--space-8);
-  right: var(--space-8);
+  bottom: 0;
+  left: 0;
+  right: 0;
   height: 2px;
   background: linear-gradient(90deg, var(--color-accent-2), var(--color-accent));
   transform: scaleX(var(--read, 0));
   transform-origin: 0 50%;
-  border-radius: 2px;
 }
 
 /* The sliding marker. Only active once JS has measured a position — until
@@ -192,9 +214,14 @@ kbd {
 @media (min-height: 760px) {
   .case-sticky-kicker {
     position: sticky;
-    /* --toc-h is measured and published by CaseToc; the fallback only
-       applies for the instant before it mounts. */
-    top: calc(var(--space-4) + 66px + var(--toc-h, 104px));
+    /* `--toc-h` is measured and published by CaseToc; the fallback only
+       applies for the instant before it mounts.
+
+       It is the whole offset now, not an addition to it: the contents bar
+       sticks at top 0 and carries the nav clearance inside its own padding,
+       so its height already spans from the viewport edge. Adding the nav
+       clearance again here would push every kicker a nav's height too low. */
+    top: var(--toc-h, 170px);
     z-index: 20;
     padding: var(--space-2) 0;
     background: color-mix(in srgb, var(--color-bg) 93%, transparent);

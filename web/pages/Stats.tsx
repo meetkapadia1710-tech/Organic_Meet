@@ -69,7 +69,7 @@ export function Stats() {
 
   return (
     <>
-      <header id="main" style={{ padding: '22vh var(--space-8) 0', maxWidth: 1400, margin: '0 auto', position: 'relative' }}>
+      <header id="main" style={{ padding: '22vh var(--gutter) 0', maxWidth: 'var(--page-max)', margin: '0 auto', position: 'relative' }}>
         <div
           aria-hidden="true"
           data-parallax
@@ -90,7 +90,7 @@ export function Stats() {
       </header>
 
       {/* Counted from the project data rather than typed in, so it cannot drift. */}
-      <section style={{ maxWidth: 1400, margin: '0 auto', padding: '10vh var(--space-8) 0' }}>
+      <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '10vh var(--gutter) 0' }}>
         <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>Shipping record</ScrambleText></h6>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--space-3)' }}>
           {[
@@ -113,7 +113,7 @@ export function Stats() {
       </section>
 
       {github && (
-        <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
+        <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
           <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>GitHub</ScrambleText></h6>
 
           <div className="card elev-sm" data-reveal style={{ borderRadius: 'var(--radius-lg)' }}>
@@ -154,7 +154,7 @@ export function Stats() {
       )}
 
       {(leetcode || codolio || hackerrank) && (
-        <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
+        <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
           <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>Problem solving</ScrambleText></h6>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--space-4)' }}>
             {leetcode && (

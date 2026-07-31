@@ -24,7 +24,7 @@ export function Uses() {
 
   return (
     <>
-      <header id="main" style={{ padding: '22vh var(--space-8) 0', maxWidth: 1400, margin: '0 auto', position: 'relative' }}>
+      <header id="main" style={{ padding: '22vh var(--gutter) 0', maxWidth: 'var(--page-max)', margin: '0 auto', position: 'relative' }}>
         <div
           aria-hidden="true"
           data-parallax
@@ -44,7 +44,7 @@ export function Uses() {
         </div>
       </header>
 
-      <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
+      <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
         <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-6)' }}><ScrambleText>Software</ScrambleText></h6>
         <div className="uses-grid">
           {groups.map((group) => (
@@ -68,7 +68,7 @@ export function Uses() {
           repo knows what machine it was written on, and a /uses page is read
           by people who will notice an invented one. */}
       {hardware.length > 0 && (
-        <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
+        <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
           <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-6)' }}><ScrambleText>Desk</ScrambleText></h6>
           <div className="uses-grid">
             {hardware.map((group) => (

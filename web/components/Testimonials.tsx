@@ -16,7 +16,7 @@ export function Testimonials() {
   if (!TESTIMONIALS.length) return null;
 
   return (
-    <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
+    <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
       <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-6)' }}>
         <ScrambleText>What clients said</ScrambleText>
       </h6>

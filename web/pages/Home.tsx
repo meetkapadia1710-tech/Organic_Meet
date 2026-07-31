@@ -15,6 +15,8 @@ import { useDevMode } from '../state/devmode';
 import { stack, stackCount, stackRows } from '../content/stack';
 import { setView, useWorkView } from '../state/view';
 import { ScrambleText } from '../components/ScrambleText';
+import { useLogoTap } from '../hooks/useLogoTap';
+import { setDevMode } from '../state/devmode';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 
 const NUMBERS = ['zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve'];
@@ -24,6 +26,11 @@ const NUMBERS = ['zero', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 
    the two halves are styled independently, not just wrapped. */
 const TITLE = ['Software developer,', 'systems builder.'] as const;
 const DEV_TITLE = ['I cultivate', 'digital ecosystems.'] as const;
+
+/* The display line under the standfirst. Dev mode swaps the standfirst above,
+   not the name — the person is the same either way. */
+const NAME = 'Meet Kapadia';
+const DEV_NAME = NAME;
 
 /* Each term gets its own step of the palette rather than all four sharing one
    accent. Nothing here is a literal colour: the ramps reverse wholesale in
@@ -37,12 +44,20 @@ const MARQUEE_TERMS: ReadonlyArray<readonly [string, string]> = [
 ];
 
 /* The track translates by -50%, so it has to hold two identical halves for the
-   loop to be seamless — each half repeats the four terms twice to stay wider
-   than the viewport. */
+   loop to be seamless: at the moment the animation wraps, half two is sitting
+   exactly where half one started, and nothing on screen moves.
+
+   That only holds while a single half is at least as wide as the box it runs
+   inside — a shorter half runs out and leaves a gap crossing the pill before
+   the wrap comes round. Three passes of the four terms is ~2280px against a
+   pill that cannot exceed `--page-max` minus its gutters (1632px), so there
+   is headroom at the widest the layout ever gets. */
+const MARQUEE_PASSES = [0, 1, 2];
+
 function MarqueeHalf() {
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', whiteSpace: 'nowrap' }}>
-      {[0, 1].flatMap((pass) =>
+      {MARQUEE_PASSES.flatMap((pass) =>
         MARQUEE_TERMS.map(([term, color]) => (
           <span key={`${pass}-${term}`} style={{ display: 'inline-flex', alignItems: 'center' }}>
             <span style={{ fontFamily: 'var(--font-heading)', fontSize: 26, color }}>{term}</span>
@@ -61,6 +76,9 @@ export function Home() {
   );
   const view = useWorkView();
   const devMode = useDevMode();
+  /* Seven taps on the name opens developer mode — the wordmark's old job,
+     moved with it out of the nav. */
+  const logoTap = useLogoTap(() => setDevMode(true));
   const reduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   /* The same flag the work rows badge with, so "Building" and the "In
      progress" tags can never disagree. */
@@ -112,21 +130,36 @@ export function Home() {
             <span>Bharuch, Gujarat</span>
           </p>
 
-          {/* Set in the display cut, not the site's serif — see --font-display
-              for why. `lift` splits it to characters as well as words; the
-              note on SplitText explains why that composes with the word
-              reveal instead of fighting it. */}
+          {/* The role, as a standfirst over the name. It was the headline and
+              the name was this line; they are the other way round now, which
+              is the right way round for a personal site — the name is the
+              thing being introduced and the role is what qualifies it. */}
+          <p className="hero-min-name" style={{ '--beat': 1 } as React.CSSProperties}>
+            {devMode ? DEV_TITLE.join(' ') : TITLE.join(' ')}
+          </p>
+
+          {/* The name, at full display size. Set in the display cut — see
+              --font-display for why — and `lift` splits it to characters as
+              well as words; the note on SplitText explains why that composes
+              with the word reveal instead of fighting it.
+
+              It also carries the wordmark's second job, inherited when the
+              wordmark left the nav: seven taps inside five seconds opens
+              developer mode. That is the only door in on a phone, the Konami
+              code being a desktop keyboard affair. Taps one to six do
+              nothing, so it stays inert under ordinary use. */}
           <SplitText
             as="h1"
             lift
             className="hero-min-title"
-            text={devMode ? DEV_TITLE.join(' ') : TITLE.join(' ')}
+            text={devMode ? DEV_NAME : NAME}
+            {...logoTap}
           />
 
-          <p className="hero-min-lede" style={{ '--beat': 2 } as React.CSSProperties}>
-            I build full-stack web apps, AI tooling and local-first systems — and I ship them end to end, from the
-            Postgres schema to the last hover state.
-          </p>
+          {/* The lede has gone. The headline already says what he does, and a
+              sentence restating it in smaller type underneath was the hero
+              explaining itself twice. The same paragraph still opens the
+              Intro section, where it has room to be read. */}
 
           <div className="hero-min-actions" style={{ '--beat': 3 } as React.CSSProperties}>
             <a className="hero-min-link" href="#work">
@@ -161,38 +194,46 @@ export function Home() {
         </div>
       </header>
 
-      {/* Everything that used to be stacked inside the hero. It was pushing
-          the fold down past the scene and competing with it; as its own block
-          it gets to be the first thing you scroll *to* rather than the
-          bottom half of what you landed on. */}
-      <section className="hero-after">
-        {/* The band repeats what the paragraph above already says, so it is
-            hidden from assistive tech rather than read out four times. */}
-        <div
-          aria-hidden="true"
-          data-velocity
-          style={{ overflow: 'hidden', margin: 'var(--space-8) 0 0', padding: 'var(--space-4) 0', background: 'var(--color-accent-100)', borderRadius: 'var(--radius-lg)' }}
-        >
-          <div className="mq-track">
-            <MarqueeHalf />
-            <MarqueeHalf />
-          </div>
-        </div>
+      {/* The band that carries you out of the hero.
 
-        <div data-reveal className="washed" style={{ margin: 'var(--space-8) 0 0', aspectRatio: '16/7', borderRadius: 'var(--radius-lg)', overflow: 'hidden', background: 'repeating-linear-gradient(135deg, var(--color-neutral-200) 0 14px, var(--color-neutral-300) 14px 28px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--color-neutral-700)' }}>
-            portrait / workspace photograph
-          </span>
+          This section used to hold the lede, the four fact cards and a
+          portrait placeholder as well. The first two moved into the hero and
+          were removed here as duplicates, which left the band floating in
+          whitespace above a large grey striped box — an empty asset slot
+          directly under a finished hero, which is what made the transition
+          read as broken rather than as quiet.
+
+          The placeholder is gone from this page. It is a slot for a photograph
+          that does not exist, and the homepage is the worst place on the site
+          to advertise that; the About page already carries one portrait slot,
+          which is enough. Drop a real image in and it belongs here — as a
+          picture, not as a box saying a picture goes here.
+
+          Full-bleed rather than a rounded card in a padded section: it is a
+          rule between two parts of the page now, so it should read as a band
+          crossing it, not as an element sitting on it. */}
+      <section className="hero-band" aria-hidden="true" data-velocity>
+        <div className="mq-track">
+          <MarqueeHalf />
+          <MarqueeHalf />
         </div>
       </section>
 
-      <section id="approach" style={{ maxWidth: 1400, margin: '0 auto', padding: '14vh var(--space-8) 0' }}>
+      <section id="approach" style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '14vh var(--gutter) 0' }}>
         <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>Intro</ScrambleText></h6>
         <div className="g-intro" style={{ display: 'grid', gap: 'var(--space-8)', alignItems: 'start' }}>
           <h2 className="fill-scroll" style={{ margin: 0, fontSize: 'clamp(30px, 3.6vw, 52px)', lineHeight: 1.1 }}>
             I started by breaking things — scripts, side projects, half-finished repos. That habit became a method.
           </h2>
-          <p style={{ margin: 0, fontSize: 17, lineHeight: 1.8, color: 'var(--color-neutral-800)', background: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-6)' }}>
+          {/* No card. This was a rounded surface panel with 26px of padding
+              around 17px type — the last of the "put it in a box" styling the
+              rest of the page has moved away from, and next to a hero that is
+              type on bare ground it read as a grey slab.
+
+              Set as an indented column instead: a hairline on the leading
+              edge marks it as the aside to the heading beside it, which is
+              the job the box was doing badly. */}
+          <p className="intro-aside">
             {/* No counts written into this sentence on purpose — the fact
                 strip above already derives them, and a number typed into
                 prose is the one that goes stale first. */}
@@ -201,7 +242,7 @@ export function Home() {
         </div>
       </section>
 
-      <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
+      <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 'var(--space-4)', flexWrap: 'wrap', marginBottom: 'var(--space-4)' }}>
           <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', margin: 0, flex: 1 }}><ScrambleText>Stack</ScrambleText></h6>
           <span className="tag tag-neutral" style={{ borderRadius: 999 }}>{stackCount} technologies</span>
@@ -210,7 +251,10 @@ export function Home() {
         {/* The categories are worth keeping visible even though the rows
             themselves are mixed — it is the difference between a list of
             logos and a claim about what he actually does. */}
-        <p style={{ margin: '0 0 var(--space-5)', fontSize: 15, color: 'var(--color-neutral-700)' }}>
+        {/* --space-5 does not exist on this scale (1, 2, 3, 4, 6, 8), so this
+            margin was resolving to nothing and the category line sat flush
+            against the rows below it. */}
+        <p style={{ margin: '0 0 var(--space-6)', fontSize: 15, color: 'var(--color-neutral-700)' }}>
           {stack.map((group) => group.name).join(' · ')}
         </p>
 
@@ -218,7 +262,7 @@ export function Home() {
       </section>
 
       {/* The hero's primary CTA points here. */}
-      <section id="work" style={{ maxWidth: 1400, margin: '0 auto', padding: '14vh var(--space-8) 0' }}>
+      <section id="work" style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '14vh var(--gutter) 0' }}>
         {/* Sticky, so the index stays with you through the rows. It is the
             section's own header rather than a floating badge — a fixed pill
             was tried first and passed straight over the row titles, which
@@ -268,7 +312,7 @@ export function Home() {
           already exists — in-progress projects from projects.ts, the learning
           list from the same array the Approach page renders — so this cannot
           quietly become a claim from last year. */}
-      <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
+      <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
         <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-6)' }}><ScrambleText>Right now</ScrambleText></h6>
         <div className="now-grid">
           <div className="card elev-sm" data-reveal style={{ borderRadius: 'var(--radius-lg)' }}>

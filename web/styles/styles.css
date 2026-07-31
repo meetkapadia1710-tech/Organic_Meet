@@ -63,6 +63,27 @@
   --space-6: 26.4px;
   --space-8: 35.2px;
 
+  /* The page's horizontal margin, and the column it encloses.
+
+     These were not tokens: every section carried `maxWidth: 1400` and
+     `padding-inline: var(--space-8)` inline, the hero repeated the same pair
+     in CSS, and the nav pill used --space-6. Three different left edges on
+     one page — visible as the nav wordmark sitting ~9px left of the headline
+     under it, and as the phone layout spending 70px of a 375px screen on
+     margin because a desktop-tuned fixed value does not shrink.
+
+     One fluid value instead, so the gutter grows with the viewport and every
+     element that opts in shares an edge. Floor is 18px — enough to clear a
+     rounded phone screen without eating the line length. */
+  --gutter: clamp(18px, 4.4vw, 64px);
+
+  /* The measure. A flat 1400px was a laptop-era number: on a 2000px display
+     it left 351px of dead ground down each side and the page used 64% of the
+     screen, which reads as a narrow strip floating in the dark rather than as
+     a composition. It grows with the viewport now, with a ceiling so the work
+     rows and the intro column never stretch past a readable line length. */
+  --page-max: clamp(1400px, 86vw, 1760px);
+
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 28px;

@@ -1,11 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, useLocation } from 'react-router';
+import { NavLink, useLocation } from 'react-router';
 import { toggleTheme, useTheme } from '../state/theme';
 import { usePalette } from './CommandPalette';
 import { prefetchRoute } from '../router';
 import { SwapText } from './SwapText';
 import { setDevMode, useDevMode } from '../state/devmode';
-import { useLogoTap } from '../hooks/useLogoTap';
 
 /* Padding and the wordmark size live in site.css rather than here, because
    the condensed state past the hero has to override them — and an inline
@@ -15,12 +14,30 @@ const NAV_STYLE: React.CSSProperties = {
   viewTransitionName: 'site-nav',
   position: 'fixed',
   top: 'var(--space-4)',
-  left: 'var(--space-6)',
-  right: 'var(--space-6)',
+  /* The pill tracks the content column, offset outward by its own inner
+     padding so that what aligns with the headline below is the *link row*,
+     not the pill's rounded edge. Without the --space-2 correction the bar
+     reads as sitting a notch left of everything under it.
+
+     `max()` keeps it off the window edge on narrow screens, where the
+     gutter binds instead of the measure. Both terms are now written in the
+     shared tokens, so the bar cannot drift from the sections again. */
+  left: 'calc(var(--gutter) - var(--space-2))',
+  right: 'calc(var(--gutter) - var(--space-2))',
+  /* Centred the same way the sections are — max-width plus auto margins
+     inside the insets above — rather than by arithmetic on 50%. The measure
+     is a `vw` clamp and `50%` resolves against the body, so the two disagree
+     by exactly the scrollbar's width; letting the same box model do the
+     centring for both makes the drift impossible instead of small. */
+  maxWidth: 'calc(var(--page-max) - 2 * var(--gutter) + 2 * var(--space-2))',
+  marginInline: 'auto',
   zIndex: 500,
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'space-between',
+  /* Was `space-between`, which balanced the wordmark against the links.
+     With the wordmark gone that just leaves a hole on the left, so the
+     remaining items group to the trailing edge. */
+  justifyContent: 'flex-end',
   borderRadius: 999,
   background: 'color-mix(in srgb, var(--color-surface) 88%, transparent)',
   backdropFilter: 'blur(10px)',
@@ -55,7 +72,6 @@ export function Nav() {
   const { pathname, hash } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const devMode = useDevMode();
-  const logoTap = useLogoTap(() => setDevMode(true));
 
   // On the homepage "Index" is an in-page jump; anywhere else it's a route.
   const atHome = pathname === '/';
@@ -105,19 +121,14 @@ export function Nav() {
   return (
     <>
       <nav className="site-nav" aria-label="Primary" style={NAV_STYLE}>
-        {/* The wordmark is also the mobile door into developer mode — seven
-            taps inside five seconds. Taps one to six do nothing, so it keeps
-            working as the way home; see useLogoTap. */}
-        <Link
-          to="/"
-          viewTransition
-          className="site-brand"
-          style={{ fontFamily: 'var(--font-heading)', color: 'var(--color-text)', textDecoration: 'none' }}
-          {...logoTap}
-        >
-          {devMode ? 'organic_meet.exe' : 'Meet Kapadia'}
-        </Link>
+        {/* The wordmark has moved into the hero, where it reads as the name
+            above the headline rather than as a logo in a bar. "Index" is
+            still the route home, so nothing became unreachable.
 
+            The seven-tap developer-mode door went with it — see the note on
+            `.hero-min-name` in Home.tsx. It could not simply be dropped: on a
+            phone that tap sequence is the *only* way in, the Konami code
+            being a desktop keyboard affair. */}
         {devMode && (
           <span className="dev-badge" title="Esc to exit">
             ● developer mode

@@ -34,8 +34,8 @@ export function Footer() {
     <footer
       className="site-footer"
       style={{
-        maxWidth: 1400, margin: '0 auto',
-        padding: '0 var(--space-8) var(--space-8)',
+        maxWidth: 'var(--page-max)', margin: '0 auto',
+        padding: '0 var(--gutter) var(--space-8)',
         display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap',
         gap: 'var(--space-3)', fontSize: 13, color: 'var(--color-neutral-700)',
       }}

@@ -666,6 +666,108 @@ superseded work went to `_archive/` instead of being removed.
   it — the top padding and the row's margin were tightened to reclaim that.
   At 375px: one column, hairline gone, figures left-aligned, proof still
   bleeding to the edge, no horizontal overflow.
+- **Variable-weight headline.** Figtree is now requested as a variable font
+  (`wght@300..900` — one URL change, still one font), and `useCursorLift`
+  writes a weight per character alongside the lift it already wrote. The line
+  thickens in a wave under the pointer, 600 → 900.
+
+  **The static CSS weight stays 800 and is the fallback.** `--wght` only
+  exists while the hook runs — fine pointers, motion allowed — so touch,
+  reduced-motion and no-JS visitors get exactly the 800 the hero is designed
+  at. The variation is additive to something already correct.
+
+  ⚠️ **A weight axis changes glyph advance widths, so animating it reflows
+  text.** Measured here: ~1.2px per character between 600 and 900, which
+  across 33 characters pushed a word onto a new line — the title went from
+  212px tall to 318px, i.e. the headline *gained a line* as the pointer
+  crossed it. Every character's box is therefore pinned to its width at the
+  static 800, and the glyph varies inside a box that cannot change. Verified:
+  height identical at 600/750/900, last character moves 0px.
+
+  Pinned at 800 rather than at either end of the range because it sits
+  between them — the error is ~±0.6px per character either way, invisible at
+  this size, where pinning at an extreme would put all of it on one side and
+  read as loose or cramped tracking. Re-pinned on resize (the size is a
+  clamp) and after `document.fonts.ready` (widths measured against the
+  fallback face would all be wrong).
+
+  **If any other element ever opts into `lift`, this does not follow it** —
+  the rule is scoped to `.hero-min-title .lift-char` on purpose.
+- **Hero: boxiness and scroll smoothness.** Three fixes, all of them
+  regressions introduced by the upgrade pass itself.
+
+  - **The grain drew a visible rectangle.** `inset: 0` bound it to
+    `.hero-min`, a 1400px centred measure, so the texture stopped 18px short
+    of each window edge — and on the dark theme, where it blends with
+    `screen` and therefore *lightens*, that showed as a lighter box on a
+    darker page. Now full-bleed via `left: calc(50% - 50vw); width: 100vw`,
+    with the top and bottom edges masked so it fades out rather than cutting.
+    ⚠️ `left: 50%` + `translateX(-50%)` was tried first and **did not work** —
+    the element resolved with an unexplained scale in its computed matrix and
+    landed 380px right of centre. The calc form needs no transform and cannot
+    be perturbed by one.
+  - **`pin()` was running on every scroll.** It was wired into a handler bound
+    to both `resize` and `scroll`, so each scroll forced a synchronous
+    relayout of the headline — clear the width off 33 characters, read 33
+    rects, write them back — and then woke the rAF loop with nothing to
+    animate. Scrolling moves the headline; it does not reflow it. Scroll now
+    gets `measure()` alone (centres only, no writes, no `wake()`); resize
+    keeps the full re-pin. **Do not merge these handlers again.**
+  - **The settle is gone.** It translated `.hero-min` a further -40px and
+    faded it to 0.55 across its exit, so the hero travelled at a different
+    rate from the rest of the column and read as detaching from the scroll
+    rather than leaving with it. Removed; the page scrolls as one surface.
+  - Also trimmed `will-change: font-variation-settings` from the 33 lift
+    characters. That property is not compositable, so naming it promoted 33
+    layers without accelerating anything.
+
+  Verified on a clean load: all 33 boxes pinned, title height identical at
+  rest / 600 / 900 (no rewrap), grain spans -2 → 1432 on a 1430 viewport, no
+  horizontal overflow, hero animation `none`.
+- **Sticky bars, alignment and the intro block.** Five fixes, one root cause
+  behind three of them.
+
+  **⚠️ THE PATTERN: a translucent sticky bar constrained to the 1400px
+  measure does not work.** Both sticky bars on this site had it. They were
+  ~92% opaque with a blur *and* capped at the measure, so on any window wider
+  than 1400 the content scrolling underneath was visible *beside* them, and
+  at every width it was faintly visible *through* them. A project title
+  reading through the words "Selected works" looks like a rendering fault.
+  Both are now **opaque and full-bleed**:
+  - `.works-head` draws its ground with a `::before` at
+    `left: calc(50% - 50vw); width: 100vw; z-index: -1`, so the header stays
+    on the measure while its background escapes to the window edges. It
+    overhangs the box top and bottom by `--space-3`, because at exactly the
+    box edge a passing row's ascenders clip against the boundary and tear.
+  - `.toc-wrap` on case studies now sticks at `top: 0`, spans the window and
+    is fully opaque, with the nav clearance moved into its own top padding —
+    it previously stuck 9px below the nav pill and a sliver of the bright
+    hero screenshot ran between them. Its progress line moved to the band's
+    *bottom* edge, since `#progress` already draws on the viewport's top.
+    **`--toc-h` is now the whole kicker offset, not an addition to it.**
+
+  **The nav was on a different measure from the content.** It was
+  `left/right: var(--space-6)` — viewport-relative — while every section is a
+  centred 1400px column. On a 1920px screen that put the nav at 26→1883 and
+  the hero at 255→1655: the wordmark sat 260px left of the headline beneath
+  it. At 1400px and under they coincided, which is why it went unseen. Now
+  `left/right: max(var(--space-6), calc(50% - 700px))` — exact above ~1452px,
+  and within ~26px below it, where the pill's own inset has to win because it
+  is a floating shape.
+
+  **The headline was not filling its column.** `max-width: 13ch` against a
+  `vw`-clamped font meant the cap and the column drifted apart: ~1035px of
+  type in a 1330px column, ~300px of dead air at every size, which read as
+  the hero hiding on the left. Now 17ch with the size ceiling raised from
+  116px to 148px — dead space at 1920 went 410px → 68px.
+
+  **The intro aside lost its card.** It was a rounded surface panel holding
+  17px type in 26px of padding — the last of the boxed styling, and next to a
+  hero of type on bare ground it read as a grey slab. Now an indented column
+  with a hairline on its leading edge. The `.hl` highlight went with it: it
+  was a 0.42em block *behind* the text, which on the dark theme is a pale
+  green slab under cream type. It is a 2px rule on the baseline now, with the
+  emphasis carried by weight and colour instead.
 
 ---
 

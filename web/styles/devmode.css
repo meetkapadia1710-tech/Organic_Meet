@@ -141,11 +141,6 @@ html.dev-mode #cursor-ring {
 
 /* ── nav ─────────────────────────────────────────────────────────────────── */
 
-html.dev-mode .site-brand {
-  font-family: ui-monospace, monospace !important;
-  font-size: 15px !important;
-}
-
 .dev-badge {
   display: inline-flex;
   align-items: center;

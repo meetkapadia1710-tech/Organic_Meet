@@ -42,7 +42,7 @@ export function About() {
 
   return (
     <>
-      <header id="main" style={{ padding: '22vh var(--space-8) 0', maxWidth: 1400, margin: '0 auto', position: 'relative' }}>
+      <header id="main" style={{ padding: '22vh var(--gutter) 0', maxWidth: 'var(--page-max)', margin: '0 auto', position: 'relative' }}>
         <div
           aria-hidden="true"
           data-parallax
@@ -58,7 +58,7 @@ export function About() {
         </div>
       </header>
 
-      <section style={{ maxWidth: 1400, margin: '0 auto', padding: '10vh var(--space-8) 0' }}>
+      <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '10vh var(--gutter) 0' }}>
         <div className="about-grid">
           <div>
             {BIO.map((para) => (
@@ -86,7 +86,7 @@ export function About() {
         </div>
       </section>
 
-      <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
+      <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
         <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>By the numbers</ScrambleText></h6>
         <div className="hero-facts">
           {/* "Written up" was here and had to go: `archive` is currently
@@ -116,7 +116,7 @@ export function About() {
       {/* The whole block is gone until at least one entry is real, rather than
           rendering two headings over nothing. */}
       {hasTimeline && (
-        <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
+        <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
           <div className="g-duo" style={{ display: 'grid', gap: 'var(--space-8)', alignItems: 'start' }}>
             <div>
               <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-6)' }}><ScrambleText>Education</ScrambleText></h6>

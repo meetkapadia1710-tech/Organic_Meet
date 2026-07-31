@@ -14,7 +14,7 @@ const SUGGESTIONS = caseStudies.slice(0, 3);
 export function NotFound() {
   useDocumentMeta('Page not found', 'That page does not exist.');
   return (
-    <section id="main" style={{ maxWidth: 1400, margin: '0 auto', padding: '22vh var(--space-8) 10vh' }}>
+    <section id="main" style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '22vh var(--gutter) 10vh' }}>
       <span className="tag tag-neutral" style={{ borderRadius: 999 }}>404</span>
       {/* The headline decodes itself in — the one place on the site where the
           scramble is the joke as well as the effect. */}

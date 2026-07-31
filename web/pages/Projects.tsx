@@ -30,7 +30,7 @@ export function Projects() {
 
   return (
     <>
-      <header id="main" style={{ padding: '22vh var(--space-8) 0', maxWidth: 1400, margin: '0 auto', position: 'relative' }}>
+      <header id="main" style={{ padding: '22vh var(--gutter) 0', maxWidth: 'var(--page-max)', margin: '0 auto', position: 'relative' }}>
         <div
           aria-hidden="true"
           data-parallax
@@ -50,7 +50,7 @@ export function Projects() {
         </div>
       </header>
 
-      <section style={{ maxWidth: 1400, margin: '0 auto', padding: '10vh var(--space-8) 0' }}>
+      <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '10vh var(--gutter) 0' }}>
         {CATEGORIES.map((category) => {
           const group = all.filter((p) => p.category === category);
           if (!group.length) return null;

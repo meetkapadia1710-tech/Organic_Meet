@@ -70,7 +70,7 @@ export function Contact() {
 
   return (
     <>
-      <header id="main" style={{ padding: '22vh var(--space-8) 0', maxWidth: 1400, margin: '0 auto', position: 'relative' }}>
+      <header id="main" style={{ padding: '22vh var(--gutter) 0', maxWidth: 'var(--page-max)', margin: '0 auto', position: 'relative' }}>
         <div
           aria-hidden="true"
           data-parallax
@@ -108,7 +108,7 @@ export function Contact() {
           of bottom padding that every other page gets from the shared
           <Contact /> band. Without it the cards run straight into the footer
           with no gap. */}
-      <section id="contact" style={{ maxWidth: 1400, margin: '0 auto', padding: '14vh var(--space-8) 10vh' }}>
+      <section id="contact" style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '14vh var(--gutter) 10vh' }}>
         <h6 className="kicker-rule" style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>Ways to reach me</ScrambleText></h6>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 'var(--space-4)' }}>
           {METHODS.map(({ icon: Icon, title, body, label, href, external }) => (

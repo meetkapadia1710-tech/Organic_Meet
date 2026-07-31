@@ -52,16 +52,25 @@
   isolation: isolate;
 }
 
+/* A rule that draws under the phrase, not a marker block behind it.
+
+   This was a 0.42em bar sitting behind the text at `z-index: -1`. On the
+   cream theme that reads as a highlighter; on the dark theme it is a pale
+   green slab under cream type, which reads as a rendering fault. A block
+   behind text also has to fight the text for contrast, which is why it was
+   set in a light ramp step and ended up looking washed either way.
+
+   Two pixels on the baseline does the same job — marks the phrase, draws in
+   on scroll — and cannot compete with the words it is marking. */
 .hl::before {
   content: '';
   position: absolute;
-  left: -0.12em;
-  right: -0.12em;
-  bottom: 0.02em;
-  height: 0.42em;
-  z-index: -1;
-  border-radius: 0.1em;
-  background: var(--color-accent-2-300);
+  left: 0;
+  right: 0;
+  bottom: -0.12em;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-accent-2);
   transform: scaleX(0);
   transform-origin: left center;
   transition: transform 0.72s cubic-bezier(0.16, 1, 0.3, 1);
@@ -71,10 +80,17 @@
   transform: scaleX(1);
 }
 
+/* The phrase itself carries the emphasis now that the fill behind it is
+   gone — colour and weight rather than a background. */
+.hl {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
 /* A second flavour for the warm accent, so two highlights near each other
    don't read as the same emphasis repeated. */
 .hl-accent::before {
-  background: var(--color-accent-300);
+  background: var(--color-accent);
 }
 
 /* ── scroll-velocity skew ───────────────────────────────────────────────
@@ -393,6 +409,34 @@ button:focus-visible .swap .swap-alt .swap-char,
   will-change: transform;
 }
 
+/* ── the weight axis ────────────────────────────────────────────────────
+   Figtree is loaded as a variable font, so `useCursorLift` writes a weight
+   per character alongside the lift and the line thickens in a wave under the
+   pointer.
+
+   The `800` fallback is the whole safety story. `--wght` only exists while
+   the hook is running, which is fine pointers with motion allowed; every
+   other visitor resolves this to 800 — exactly the static weight the hero is
+   designed at. The variation is additive to something already right, never a
+   replacement for it.
+
+   Scoped to the hero title rather than `.lift-char` generally: nothing else
+   currently opts into `lift`, and if something does later it should not
+   silently inherit a weight animation it never asked for. */
+.hero-min-title .lift-char {
+  /* `font-variation-settings` and `font-weight` both drive wght, and the
+     former wins. The 800 fallback keeps them agreed, so the varied path
+     starts where the static path already was rather than jumping on the
+     first pointer move. */
+  font-variation-settings: 'wght' var(--wght, 800);
+
+  /* `will-change` deliberately lists only `transform`, inherited from
+     `.lift-char`. Adding `font-variation-settings` to it was a mistake:
+     that property is not compositable, so naming it does not hand anything
+     to the GPU — it just promotes 33 separate layers, each costing memory,
+     to accelerate something that still repaints on the main thread. */
+}
+
 /* ── works index ─────────────────────────────────────────────────────────
    The Selected Works header pins while you scroll its rows, and carries a
    live counter that cross-fades 01 → 05.
@@ -425,10 +469,34 @@ button:focus-visible .swap .swap-alt .swap-char,
   flex-wrap: wrap;
   margin-bottom: var(--space-6);
   padding: var(--space-3) 0;
-  /* Rows scroll underneath, so it needs a ground of its own or the type
-     would overlap as they pass. */
-  background: color-mix(in srgb, var(--color-bg) 92%, transparent);
-  backdrop-filter: blur(8px);
+  /* The ground is drawn by ::before, full-bleed and opaque — see below. */
+}
+
+/* ⚠️ The band must be OPAQUE and FULL-BLEED, and it was neither.
+
+   It was `color-mix(… 92%, transparent)` with a blur, sitting inside a
+   1400px section — so the work rows scrolling underneath were visible
+   *through* it, and on any window wider than the measure they were visible
+   *beside* it too. Project titles reading through the words "Selected
+   works" looks like a rendering fault, not like layering.
+
+   Drawn as a pseudo-element rather than on the element itself because the
+   element has to stay on the 1400px measure with everything else while its
+   background escapes to the window edges. `.site-main` is `overflow-x:
+   clip`, so the 100vw costs no horizontal scroll.
+
+   It extends past the header's own box top and bottom: at exactly the box
+   edge a row's ascenders and descenders clip against the boundary as they
+   pass, which reads as tearing. */
+.works-head::before {
+  content: '';
+  position: absolute;
+  top: calc(var(--space-3) * -1);
+  bottom: calc(var(--space-3) * -1);
+  left: calc(50% - 50vw);
+  width: 100vw;
+  background: var(--color-bg);
+  z-index: -1;
 }
 
 .workdex {
@@ -491,7 +559,8 @@ button:focus-visible .swap .swap-alt .swap-char,
 /* Below the tablet breakpoint the header would eat too much of a short
    viewport, and the counter is the least essential part of it. */
 @media (max-width: 899px) {
-  .works-head { position: static; background: none; backdrop-filter: none; }
+  .works-head { position: static; }
+  .works-head::before { display: none; }
   .workdex { display: none; }
 }
 

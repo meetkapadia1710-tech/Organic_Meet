@@ -65,7 +65,7 @@ export function CasePage() {
 
   return (
     <>
-      <header id="main" style={{ padding: '22vh var(--space-8) 0', maxWidth: 1400, margin: '0 auto', position: 'relative' }}>
+      <header id="main" style={{ padding: '22vh var(--gutter) 0', maxWidth: 'var(--page-max)', margin: '0 auto', position: 'relative' }}>
         <div
           aria-hidden="true"
           data-parallax
@@ -108,11 +108,11 @@ export function CasePage() {
 
       <CaseToc sections={sections} readingMinutes={readingMinutes} />
 
-      <section style={{ maxWidth: 1400, margin: '0 auto', padding: 'var(--space-8) var(--space-8) 0' }}>
+      <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: 'var(--space-8) var(--gutter) 0' }}>
         <Figure caption={content.heroFigure} image={content.heroImage} ratio="16/8" priority />
       </section>
 
-      <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
+      <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
         <div className="g-split" style={{ display: 'grid', gap: 'var(--space-8)', alignItems: 'start' }}>
           <div>
             <h6 className="kicker-rule case-sticky-kicker" id={sections[0]?.id} style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>The problem</ScrambleText></h6>
@@ -141,7 +141,7 @@ export function CasePage() {
         </div>
       </section>
 
-      <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
+      <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
         <h6 className="kicker-rule case-sticky-kicker" id={sections[1]?.id} style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>How it works</ScrambleText></h6>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-4)' }}>
           {content.how.map((card, i) => (
@@ -154,7 +154,7 @@ export function CasePage() {
         </div>
       </section>
 
-      <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
+      <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
         <div className="g-duo" style={{ display: 'grid', gap: 'var(--space-4)' }}>
           {content.figures.map((caption, i) => (
             <Figure
@@ -192,7 +192,7 @@ export function CasePage() {
         )}
       </section>
 
-      <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
+      <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
         <div className="g-duo" style={{ display: 'grid', gap: 'var(--space-8)' }}>
           <div>
             <h6 className="kicker-rule case-sticky-kicker" id={sections[2]?.id} style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>The hard part</ScrambleText></h6>
@@ -210,18 +210,18 @@ export function CasePage() {
       </section>
 
       {project.demo === 'news2' && (
-        <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
+        <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
           <News2Demo />
         </section>
       )}
       {project.demo && typeof project.demo === 'object' && (
-        <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
+        <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
           <EmbedDemo src={project.demo.embed} label={project.demo.label} note={project.demo.note} />
         </section>
       )}
 
       {next && (
-        <section style={{ maxWidth: 1400, margin: '0 auto', padding: '12vh var(--space-8) 0' }}>
+        <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
           <TLink className="next g-next" data-cursor="Next project" to={`/${next.slug}`} style={{ display: 'grid', gap: 'var(--space-6)', alignItems: 'center', padding: 'var(--space-6)', borderRadius: 'var(--radius-lg)', textDecoration: 'none', color: 'var(--color-text)' }}>
             <span style={{ fontFamily: 'var(--font-heading)', fontSize: 15, color: 'var(--color-accent-600)' }}>Next<Arrow /></span>
             <h2 className="next-t" style={{ margin: 0, fontSize: 42 }}>{next.name}</h2>
