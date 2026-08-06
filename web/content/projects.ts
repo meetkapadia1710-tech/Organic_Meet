@@ -111,7 +111,7 @@ export const projects: Project[] = [
     summary:
       'A fine-tuned DeBERTa-v3 classifier that separates AI-written text from human writing at 99.77% accuracy — published to Hugging Face with a live demo and an honest limitations section.',
     demo: {
-      embed: 'https://meet-1710-ai-detector.static.hf.space',
+      embed: 'https://meet-1710-ai-detector.hf.space',
       label: 'Hugging Face Space',
       note: 'The published model, running live. Paste your own writing and see the probability — bearing in mind everything in the limitations below: under about fifty words the answer is close to a coin flip.',
     },

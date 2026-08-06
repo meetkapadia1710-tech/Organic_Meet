@@ -85,14 +85,13 @@ export function About() {
             </div>
           </div>
 
-          {/* Same placeholder treatment the homepage and the case studies use,
-              so an unfilled slot looks like a slot rather than a broken image.
-              ⚠️ Needs a real photograph. */}
-          <div data-reveal className="washed about-portrait">
-            <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, letterSpacing: '.1em', textTransform: 'uppercase', color: 'var(--color-neutral-700)' }}>
-              portrait
-            </span>
-          </div>
+          <img 
+            src="/portrait.jpeg"
+            alt="Meet Kapadia"
+            data-reveal
+            className="about-portrait"
+            style={{ objectFit: 'cover', width: '100%', height: '100%', display: 'block' }}
+          />
         </div>
       </section>
 
