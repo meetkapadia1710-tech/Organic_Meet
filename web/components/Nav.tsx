@@ -5,6 +5,7 @@ import { usePalette } from './CommandPalette';
 import { prefetchRoute } from '../router';
 import { SwapText } from './SwapText';
 import { setDevMode, useDevMode } from '../state/devmode';
+import { TLink } from './TLink';
 
 /* Padding and the wordmark size live in site.css rather than here, because
    the condensed state past the hero has to override them — and an inline
@@ -75,6 +76,15 @@ export function Nav() {
 
   // On the homepage "Index" is an in-page jump; anywhere else it's a route.
   const atHome = pathname === '/';
+
+  /* Pages that render <Contact /> at the bottom already have a #contact
+     anchor. Jumping there makes sense. Every other page (404, /stats, /uses,
+     and any future route without the block) has nothing to jump to, so we
+     navigate to /contact instead. If the user is *already* on /contact the
+     anchor is still preferable — the section is visible without a scroll. */
+  const hasContactSection = ['/', '/projects', '/approach', '/about', '/contact'].includes(pathname)
+    || /^\/[^/]+$/.test(pathname); // case study slugs all render <Contact />
+  const contactHref = hasContactSection ? '#contact' : '/contact';
 
   /* The sheet must not outlive the navigation that was made from it — leaving
      it open over the new page is the classic mobile-menu bug. Hash is in the
@@ -167,9 +177,25 @@ export function Nav() {
             <MoonIcon />
           </button>
 
-          <a data-magnetic className="btn btn-primary nav-cta" href="#contact" style={{ borderRadius: 999 }}>
-            Get in touch
-          </a>
+          {/* Desktop CTA — uses TLink so view transitions fire, same as every
+              other nav item. When there is no #contact anchor on this page it
+              routes to /contact instead of jumping to nothing. */}
+          {hasContactSection ? (
+            <a data-magnetic className="btn btn-primary nav-cta" href={contactHref} style={{ borderRadius: 999 }}>
+              Get in touch
+            </a>
+          ) : (
+            <TLink
+              data-magnetic
+              className="btn btn-primary nav-cta"
+              to="/contact"
+              style={{ borderRadius: 999 }}
+              onPointerEnter={() => prefetchRoute('/contact')}
+              onFocus={() => prefetchRoute('/contact')}
+            >
+              Get in touch
+            </TLink>
+          )}
 
           {/* The narrow-screen replacement for the link row. It used to simply
               hide Approach and Stats, which made two pages unreachable on a
@@ -195,9 +221,21 @@ export function Nav() {
         hidden={!menuOpen}
       >
         {links}
-        <a className="btn btn-primary" href="#contact" style={{ borderRadius: 999, marginTop: 'var(--space-2)' }}>
-          Get in touch
-        </a>
+        {hasContactSection ? (
+          <a className="btn btn-primary" href={contactHref} style={{ borderRadius: 999, marginTop: 'var(--space-2)' }}>
+            Get in touch
+          </a>
+        ) : (
+          <TLink
+            className="btn btn-primary"
+            to="/contact"
+            style={{ borderRadius: 999, marginTop: 'var(--space-2)' }}
+            onPointerEnter={() => prefetchRoute('/contact')}
+            onFocus={() => prefetchRoute('/contact')}
+          >
+            Get in touch
+          </TLink>
+        )}
       </div>
     </>
   );

@@ -11,18 +11,25 @@ import { useEffect } from 'react';
    the right values. */
 
 const AUTHOR = 'Meet Kapadia';
+/** The fallback og:image, set in index.html. Restored when a per-page
+ *  image is not provided so navigating back to a non-case page resets
+ *  the tag rather than keeping the last case study's screenshot. */
+const DEFAULT_OG_IMAGE = '/og.png';
 
 function setMeta(selector: string, attribute: string, value: string): void {
   const tag = document.head.querySelector(selector);
   if (tag) tag.setAttribute(attribute, value);
 }
 
-export function useDocumentMeta(title: string, description: string): void {
+export function useDocumentMeta(title: string, description: string, image?: string): void {
   useEffect(() => {
     const full = title === AUTHOR ? title : `${title} — ${AUTHOR}`;
     document.title = full;
     setMeta('meta[name="description"]', 'content', description);
     setMeta('meta[property="og:title"]', 'content', full);
     setMeta('meta[property="og:description"]', 'content', description);
-  }, [title, description]);
+    /* Use the per-page screenshot when available (case studies); fall back
+       to the global og.png for every other route. */
+    setMeta('meta[property="og:image"]', 'content', image ?? DEFAULT_OG_IMAGE);
+  }, [title, description, image]);
 }

@@ -295,8 +295,16 @@ kbd {
 .quote-role { color: var(--color-neutral-700); }
 .quote-link { margin-top: 6px; color: var(--color-accent-700); text-decoration: none; font-weight: 600; justify-self: start; }
 
-@media (max-width: 899px) {
+@media (max-width: 1024px) {
+  /* At this width the prose column plus the portrait no longer have enough
+     room to sit comfortably side-by-side. Collapsing now aligns the about
+     section with every other two-column grid breakpoint on the site (see
+     .g-split, .g-intro in site.css). */
   .about-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 899px) {
+  /* Portrait is taller than it is wide in a single column — shift to a
+     landscape ratio so it reads as a header rather than a tower. */
   .about-portrait { aspect-ratio: 4 / 3; }
 }
 

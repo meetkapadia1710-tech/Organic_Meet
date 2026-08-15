@@ -18,6 +18,9 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Eagerly warm the font connection so the 800-weight used by the hero
+     headline (the largest LCP element) arrives before first paint. -->
+<link rel="dns-prefetch" href="https://fonts.gstatic.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caprasimo&family=Figtree:wght@300..900&display=swap">
 
 <!-- Applied before first paint so a dark-theme visitor never sees a light

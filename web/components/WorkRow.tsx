@@ -39,7 +39,12 @@ export function WorkRow({ project, label }: { project: Project; label: string })
         {label}
       </span>
       <div>
-        <h2
+        {/* `div` not `h2`: <a> (interactive content) may not contain heading
+            elements per the HTML spec. role + aria-level preserve the semantic
+            heading for assistive technology and the document outline. */}
+        <div
+          role="heading"
+          aria-level={2}
           className="work-t"
           style={{ viewTransitionName: `case-${project.slug}`, margin: '0 0 var(--space-2)', fontSize: 42 }}
         >
@@ -49,7 +54,7 @@ export function WorkRow({ project, label }: { project: Project; label: string })
               {project.status}
             </span>
           )}
-        </h2>
+        </div>
         <div style={{ display: 'flex', gap: 'var(--space-1)', flexWrap: 'wrap' }}>
           <Tags tags={project.tags} />
         </div>

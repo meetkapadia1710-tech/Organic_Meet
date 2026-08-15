@@ -23,7 +23,8 @@ export function CasePage() {
 
   // Called before the early return below, so the hook order stays stable
   // whether or not the slug resolves.
-  useDocumentMeta(project?.title ?? 'Page not found', project?.desc ?? 'That page does not exist.');
+  const ogImage = project?.preview ?? content?.heroImage?.src;
+  useDocumentMeta(project?.title ?? 'Page not found', project?.desc ?? 'That page does not exist.', ogImage);
 
   const index = project ? caseStudies.indexOf(project) : -1;
   const next = index >= 0 ? caseStudies[(index + 1) % caseStudies.length] : undefined;

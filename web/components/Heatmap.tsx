@@ -71,8 +71,10 @@ export function useGitHubCalendar(user: string | undefined): Load<{ grid: Day[][
   useEffect(() => {
     if (!user) return;
     let live = true;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
 
-    fetch(`https://github-contributions-api.jogruber.de/v4/${encodeURIComponent(user)}?y=last`)
+    fetch(`https://github-contributions-api.jogruber.de/v4/${encodeURIComponent(user)}?y=last`, { signal: controller.signal })
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((json: { total?: Record<string, number>; contributions?: Array<{ date: string; count: number; level: number }> }) => {
         if (!live) return;
@@ -84,10 +86,21 @@ export function useGitHubCalendar(user: string | undefined): Load<{ grid: Day[][
         );
         setResult({ state: 'ready', data: { grid, total: json.total?.['lastYear'] ?? 0 } });
       })
-      .catch(() => live && setResult({ state: 'error' }));
+      .catch((err: unknown) => {
+        if (!live) return;
+        /* AbortError means we timed out — treat it the same as a network
+           failure so the panel shows its error state instead of spinning. */
+        if (err instanceof Error && err.name === 'AbortError') {
+          setResult({ state: 'error' });
+          return;
+        }
+        setResult({ state: 'error' });
+      });
 
     return () => {
       live = false;
+      clearTimeout(timeout);
+      controller.abort();
     };
   }, [user]);
 
@@ -114,17 +127,22 @@ function leetLevel(count: number): number {
 
    4xx other than 429 is a real answer — a wrong username will not improve by
    being asked again — so only 429 and 5xx are retried. */
-async function fetchRetrying(url: string, attempts = 3): Promise<Response> {
+async function fetchRetrying(url: string, attempts = 3, signal?: AbortSignal): Promise<Response> {
   let lastError: unknown;
 
   for (let attempt = 0; attempt < attempts; attempt += 1) {
+    /* Bail immediately if the caller has already aborted — no point retrying. */
+    if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
     if (attempt > 0) await new Promise((r) => setTimeout(r, 700 * 2 ** (attempt - 1)));
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, { signal });
       if (response.ok) return response;
       if (response.status !== 429 && response.status < 500) throw new Error(String(response.status));
       lastError = new Error(String(response.status));
     } catch (error) {
+      /* Re-throw AbortError straight out — the retry loop is pointless once
+         the signal fires and the catch in the caller handles it. */
+      if (error instanceof Error && error.name === 'AbortError') throw error;
       lastError = error;
     }
   }
@@ -166,6 +184,8 @@ export function useLeetCode(user: string | undefined): Load<LeetCodeData> {
     if (!user) return;
     let live = true;
     const handle = encodeURIComponent(user);
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
 
     /* userProfile carries the submission calendar *and* the solved counts, so
        the grid and the numbers cost one request rather than two. The streak
@@ -173,9 +193,11 @@ export function useLeetCode(user: string | undefined): Load<LeetCodeData> {
        separately and its failure is swallowed, because losing a streak count
        is not a reason to show an error where a heatmap could be. */
     (async () => {
-      const profile = await fetchRetrying(`https://alfa-leetcode-api.onrender.com/userProfile/${handle}`).then((r) =>
-        r.json()
-      );
+      const profile = await fetchRetrying(
+        `https://alfa-leetcode-api.onrender.com/userProfile/${handle}`,
+        3,
+        controller.signal,
+      ).then((r) => r.json());
       if (!live) return;
 
       const raw = parseCalendar(profile.submissionCalendar);
@@ -210,9 +232,11 @@ export function useLeetCode(user: string | undefined): Load<LeetCodeData> {
       setResult({ state: 'ready', data });
 
       try {
-        const calendar = await fetchRetrying(`https://alfa-leetcode-api.onrender.com/${handle}/calendar`, 2).then((r) =>
-          r.json()
-        );
+        const calendar = await fetchRetrying(
+          `https://alfa-leetcode-api.onrender.com/${handle}/calendar`,
+          2,
+          controller.signal,
+        ).then((r) => r.json());
         if (!live) return;
         setResult({
           state: 'ready',
@@ -221,10 +245,19 @@ export function useLeetCode(user: string | undefined): Load<LeetCodeData> {
       } catch {
         // Keep the panel exactly as it is; the streak line simply stays out.
       }
-    })().catch(() => live && setResult({ state: 'error' }));
+    })().catch((err: unknown) => {
+      if (!live) return;
+      if (err instanceof Error && err.name === 'AbortError') {
+        setResult({ state: 'error' });
+        return;
+      }
+      setResult({ state: 'error' });
+    });
 
     return () => {
       live = false;
+      clearTimeout(timeout);
+      controller.abort();
     };
   }, [user]);
 

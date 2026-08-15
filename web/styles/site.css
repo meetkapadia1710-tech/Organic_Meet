@@ -765,10 +765,15 @@ html[data-theme='dark'] .hero-vines { opacity: 0.72; }
   border: 1px solid color-mix(in srgb, var(--color-accent) 22%, transparent);
 }
 
-/* No fade mask at the ends, deliberately. A mask applied here would dissolve
-   the pill's own background and border along with the text, and a pill with
-   soft ends stops reading as a pill. The terms clip against the curve
-   instead, which is what the shape is for. */
+@media (prefers-reduced-motion: reduce) {
+  /* The pill's nowrap track would overflow when animations are paused.
+     Stop the animation, let it wrap, and remove the mask so the full
+     list is legible instead of clipped at the rounded ends. */
+  .hero-band .mq-track { animation: none; white-space: normal; flex-wrap: wrap; justify-content: center; }
+  .hero-band { overflow: visible; border-radius: var(--radius-lg); }
+}
+
+
 
 .hero-avail {
   display: inline-flex;
