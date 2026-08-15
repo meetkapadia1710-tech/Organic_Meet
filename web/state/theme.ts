@@ -41,8 +41,13 @@ function apply(next: Theme): void {
 export function toggleTheme(origin?: { x: number; y: number }): void {
   const next: Theme = getTheme() === 'dark' ? 'light' : 'dark';
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* Touch devices have a tighter animation budget and the circular wipe
+     can feel sluggish on mid-range phones. Skip the transition there — the
+     instant apply is actually snappier than a 520ms composited wipe on a
+     device that's already GPU-bound rendering the page. */
+  const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
 
-  if (reduced || !document.startViewTransition || !origin) {
+  if (reduced || coarsePointer || !document.startViewTransition || !origin) {
     apply(next);
     return;
   }
@@ -57,7 +62,7 @@ export function toggleTheme(origin?: { x: number; y: number }): void {
     .then(() =>
       root.animate(
         { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${reach}px at ${x}px ${y}px)`] },
-        { duration: 520, easing: 'cubic-bezier(.16,1,.3,1)', pseudoElement: '::view-transition-new(root)' }
+        { duration: 420, easing: 'cubic-bezier(.16,1,.3,1)', pseudoElement: '::view-transition-new(root)' }
       ).finished
     )
     .catch(() => { /* the swap happened; only the wipe failed */ })

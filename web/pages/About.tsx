@@ -85,13 +85,16 @@ export function About() {
             </div>
           </div>
 
-          <img 
-            src="/portrait.jpeg"
-            alt="Meet Kapadia"
+          <div
             data-reveal
             className="about-portrait"
-            style={{ objectFit: 'cover', width: '100%', height: '100%', display: 'block' }}
-          />
+          >
+            <img
+              src="/portrait.jpeg"
+              alt="Meet Kapadia"
+              style={{ objectFit: 'cover', objectPosition: 'center top', width: '100%', height: '100%', display: 'block' }}
+            />
+          </div>
         </div>
       </section>
 
