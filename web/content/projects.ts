@@ -164,20 +164,7 @@ export const projects: Project[] = [
   },
 
   /* ── Products ─────────────────────────────────────────────────────────── */
-  {
-    slug: 'locateme',
-    featured: true,
-    name: 'LocateMe',
-    year: '2026',
-    tier: 'case',
-    category: 'Products',
-    tags: ['React Native', 'Privacy', 'Realtime'],
-    summary:
-      'Family location sharing built the opposite way round — the child grants consent on their own device, always sees when sharing is on, and can pause or unlink it themselves.',
-    title: 'LocateMe',
-    desc: 'A consent-first family location app in React Native and Expo: server-side geofencing, battery-aware background tracking, and a child-side status screen that makes sharing impossible to hide.',
-    links: {},
-  },
+
   {
     slug: 'paymatrix',
     name: 'PayMatrix',

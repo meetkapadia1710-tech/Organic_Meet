@@ -108,8 +108,8 @@ export function useCursor(): void {
     };
 
     loop.add(() => {
-      rx = lerp(rx, tx, 0.16);
-      ry = lerp(ry, ty, 0.16);
+      rx = lerp(rx, tx, 0.42);
+      ry = lerp(ry, ty, 0.42);
       dot.style.transform = `translate3d(${tx}px,${ty}px,0) translate(-50%,-50%)`;
       if (ring) ring.style.transform = `translate3d(${rx}px,${ry}px,0) translate(-50%,-50%)`;
       if (label) label.style.transform = `translate3d(${rx}px,${ry}px,0) translate(-50%,-50%)`;
