@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 import { TLink } from '../components/TLink';
 import { caseStudies } from '../content/projects';
@@ -12,6 +12,8 @@ import { NotFound } from './NotFound';
 import { ScrambleText } from '../components/ScrambleText';
 import { Arrow } from '../components/Arrow';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
+import { ImageViewer } from '../components/ImageViewer';
+import { CaseNavigation } from '../components/CaseNavigation';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 const slugify = (s: string) => `sec-${s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}`;
@@ -20,6 +22,18 @@ export function CasePage() {
   const { slug = '' } = useParams();
   const project = caseStudies.find((p) => p.slug === slug);
   const content = cases[slug];
+  const [viewer, setViewer] = useState<number | null>(null);
+  useEffect(() => setViewer(null), [slug]);
+  const images = useMemo(() => {
+    if (!content) return [];
+    const all = [
+      ...(content.heroImage ? [{ ...content.heroImage, caption: content.heroFigure }] : []),
+      ...(content.figureImages ?? []).flatMap((image, i) => image ? [{ ...image, caption: content.figures[i] }] : []),
+      ...(content.gallery ?? []).map((image) => ({ ...image, caption: image.alt })),
+    ];
+    return all.filter((image, index) => all.findIndex((item) => item.src === image.src) === index);
+  }, [content]);
+  const inspect = (src: string) => setViewer(images.findIndex((image) => image.src === src));
 
   // Called before the early return below, so the hook order stays stable
   // whether or not the slug resolves.
@@ -95,8 +109,11 @@ export function CasePage() {
       </header>
 
       {content.heroImage && <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: 'var(--space-8) var(--gutter) 0' }}>
-        <Figure caption={content.heroFigure} image={content.heroImage} ratio="16/8" priority />
+        <Figure caption={content.heroFigure} image={content.heroImage} ratio="16/8" priority transitionName={`project-art-${slug}`} onInspect={() => inspect(content.heroImage!.src)} />
       </section>}
+
+      <CaseNavigation sections={sections} />
+      {viewer !== null && <ImageViewer key={slug} images={images} initialIndex={viewer} onClose={() => setViewer(null)} />}
 
       <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
         <div className="g-split" style={{ display: 'grid', gap: 'var(--space-8)', alignItems: 'start' }}>
@@ -110,7 +127,7 @@ export function CasePage() {
                  study is here to be read; running the mask over every
                  paragraph of a long article makes the reader wait on the
                  animation instead of the argument. */
-              <p key={i} data-reveal style={{ fontSize: 17, lineHeight: 1.8, color: 'var(--color-neutral-800)', maxWidth: '62ch' }}>{para}</p>
+              <p key={i} style={{ fontSize: 17, lineHeight: 1.8, color: 'var(--color-neutral-800)', maxWidth: '62ch' }}>{para}</p>
             ))}
           </div>
           <div style={{ background: 'var(--color-surface)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-6)', display: 'grid', gap: 'var(--space-4)' }}>
@@ -151,6 +168,7 @@ export function CasePage() {
               key={i}
               caption={caption}
               image={content.figureImages?.[i]}
+              onInspect={() => inspect(content.figureImages![i]!.src)}
               ratio="4/3"
               sizes="(max-width: 719px) 92vw, (max-width: 1099px) 90vw, 660px"
             /> : null
@@ -174,6 +192,7 @@ export function CasePage() {
                 key={image.src}
                 caption={image.alt}
                 image={image}
+                onInspect={() => inspect(image.src)}
                 ratio="4/3"
                 sizes="(max-width: 719px) 92vw, (max-width: 1099px) 45vw, 440px"
               />
@@ -187,13 +206,13 @@ export function CasePage() {
           <div>
             <h6 className="kicker-rule case-sticky-kicker" id={sections[2]?.id} style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}><ScrambleText>The hard part</ScrambleText></h6>
             {content.hard.map((para, i) => (
-              <p key={i} data-reveal style={{ fontSize: 17, lineHeight: 1.8, color: 'var(--color-neutral-800)' }}>{para}</p>
+              <p key={i} style={{ fontSize: 17, lineHeight: 1.8, color: 'var(--color-neutral-800)' }}>{para}</p>
             ))}
           </div>
           <div>
             <h6 className="kicker-rule case-sticky-kicker" id={sections[3]?.id} style={{ color: 'var(--color-accent-700)', marginBottom: 'var(--space-4)' }}>{content.nextKicker}</h6>
             {content.next.map((para, i) => (
-              <p key={i} data-reveal style={{ fontSize: 17, lineHeight: 1.8, color: 'var(--color-neutral-800)' }}>{para}</p>
+              <p key={i} style={{ fontSize: 17, lineHeight: 1.8, color: 'var(--color-neutral-800)' }}>{para}</p>
             ))}
           </div>
         </div>

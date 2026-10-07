@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { NavLink, useLocation } from 'react-router';
+import { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router';
 import { toggleTheme, useTheme } from '../state/theme';
 import { usePalette } from './CommandPalette';
 import { prefetchRoute } from '../router';
@@ -7,6 +7,7 @@ import { SwapText } from './SwapText';
 import { setDevMode, useDevMode } from '../state/devmode';
 import { TLink } from './TLink';
 import { caseStudies } from '../content/projects';
+import { setMotionSetting, useMotionSetting } from '../state/motion';
 
 /* Padding and the wordmark size live in site.css rather than here, because
    the condensed state past the hero has to override them — and an inline
@@ -74,6 +75,9 @@ export function Nav() {
   const { pathname, hash } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const devMode = useDevMode();
+  const motionSetting = useMotionSetting();
+  const sheet = useRef<HTMLDivElement>(null);
+  const burger = useRef<HTMLButtonElement>(null);
 
   // On the homepage "Index" is an in-page jump; anywhere else it's a route.
   const atHome = pathname === '/';
@@ -98,14 +102,31 @@ export function Nav() {
      window down and back up can strand an invisible open sheet holding focus. */
   useEffect(() => {
     if (!menuOpen) return;
+    const openedPath = window.location.pathname;
+    const overflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const modal = sheet.current;
+    const background = Array.from(modal?.parentElement?.children ?? []).filter((el): el is HTMLElement => el instanceof HTMLElement && el !== modal && !el.classList.contains('nav-backdrop'));
+    const previous = background.map((el) => el.inert);
+    background.forEach((el) => { el.inert = true; });
+    modal?.querySelector<HTMLButtonElement>('button')?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setMenuOpen(false);
+      if (e.key === 'Tab' && modal) {
+        const controls = Array.from(modal.querySelectorAll<HTMLElement>('a[href], button:not(:disabled)'));
+        const first = controls[0]; const last = controls.at(-1);
+        if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+      }
     };
-    const wide = window.matchMedia('(min-width: 641px)');
+    const wide = window.matchMedia('(min-width: 961px)');
     const onWide = () => wide.matches && setMenuOpen(false);
     document.addEventListener('keydown', onKey);
     wide.addEventListener('change', onWide);
     return () => {
+      document.body.style.overflow = overflow;
+      background.forEach((el, index) => { el.inert = previous[index] ?? false; });
+      if (window.location.pathname === openedPath) burger.current?.focus({ preventScroll: true });
       document.removeEventListener('keydown', onKey);
       wide.removeEventListener('change', onWide);
     };
@@ -116,16 +137,16 @@ export function Nav() {
       {atHome ? (
         <a className="nlink" href="#main" style={LINK_STYLE}><SwapText>Index</SwapText></a>
       ) : (
-        <NavLink className="nlink" to="/" viewTransition style={LINK_STYLE}><SwapText>Index</SwapText></NavLink>
+        <TLink className="nlink" to="/" aria-current={pathname === "/" ? "page" : undefined} style={LINK_STYLE}><SwapText>Index</SwapText></TLink>
       )}
       {/* These four are lazy-loaded routes (see router.tsx); warming the
           chunk on hover/focus is what makes the click land instantly instead
           of pausing on a Suspense fallback. */}
-      <NavLink className="nlink nlink-projects" to="/projects" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/projects')} onFocus={() => prefetchRoute('/projects')}><SwapText>Projects</SwapText></NavLink>
-      <NavLink className="nlink" to="/about" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/about')} onFocus={() => prefetchRoute('/about')}><SwapText>About</SwapText></NavLink>
-      <NavLink className="nlink" to="/approach" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/approach')} onFocus={() => prefetchRoute('/approach')}><SwapText>Approach</SwapText></NavLink>
-      <NavLink className="nlink" to="/stats" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/stats')} onFocus={() => prefetchRoute('/stats')}><SwapText>Stats</SwapText></NavLink>
-      <NavLink className="nlink" to="/contact" viewTransition style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/contact')} onFocus={() => prefetchRoute('/contact')}><SwapText>Contact</SwapText></NavLink>
+      <TLink className="nlink nlink-projects" to="/projects" aria-current={pathname === "/projects" ? "page" : undefined} style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/projects')} onFocus={() => prefetchRoute('/projects')}><SwapText>Projects</SwapText></TLink>
+      <TLink className="nlink" to="/about" aria-current={pathname === "/about" ? "page" : undefined} style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/about')} onFocus={() => prefetchRoute('/about')}><SwapText>About</SwapText></TLink>
+      <TLink className="nlink" to="/approach" aria-current={pathname === "/approach" ? "page" : undefined} style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/approach')} onFocus={() => prefetchRoute('/approach')}><SwapText>Approach</SwapText></TLink>
+      <TLink className="nlink" to="/stats" aria-current={pathname === "/stats" ? "page" : undefined} style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/stats')} onFocus={() => prefetchRoute('/stats')}><SwapText>Stats</SwapText></TLink>
+      <TLink className="nlink" to="/contact" aria-current={pathname === "/contact" ? "page" : undefined} style={LINK_STYLE} onPointerEnter={() => prefetchRoute('/contact')} onFocus={() => prefetchRoute('/contact')}><SwapText>Contact</SwapText></TLink>
     </>
   );
 
@@ -178,6 +199,12 @@ export function Nav() {
             <MoonIcon />
           </button>
 
+          <button type="button" className="theme-toggle motion-toggle" aria-label={motionSetting === 'reduced' ? 'Use system motion preference' : 'Reduce animations'}
+            aria-pressed={motionSetting === 'reduced'} title={motionSetting === 'reduced' ? 'Motion reduced — use system setting' : 'Reduce animations'}
+            onClick={() => setMotionSetting(motionSetting === 'reduced' ? 'system' : 'reduced')}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M4 8h16M4 16h16" /><circle cx="9" cy="8" r="3" fill="var(--color-surface)" /><circle cx="15" cy="16" r="3" fill="var(--color-surface)" /></svg>
+          </button>
+
           {/* Desktop CTA — uses TLink so view transitions fire, same as every
               other nav item. When there is no #contact anchor on this page it
               routes to /contact instead of jumping to nothing. */}
@@ -189,7 +216,7 @@ export function Nav() {
             <TLink
               data-magnetic
               className="btn btn-primary nav-cta"
-              to="/contact"
+              to="/contact" aria-current={pathname === "/contact" ? "page" : undefined}
               style={{ borderRadius: 999 }}
               onPointerEnter={() => prefetchRoute('/contact')}
               onFocus={() => prefetchRoute('/contact')}
@@ -204,6 +231,7 @@ export function Nav() {
           <button
             type="button"
             className="theme-toggle nav-burger"
+            ref={burger}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
             aria-controls="nav-sheet"
@@ -216,11 +244,17 @@ export function Nav() {
         </div>
       </nav>
 
+      {menuOpen && <button type="button" className="nav-backdrop" aria-label="Dismiss navigation menu" tabIndex={-1} onClick={() => setMenuOpen(false)} />}
       <div
         id="nav-sheet"
+        ref={sheet}
+        role={menuOpen ? 'dialog' : undefined}
+        aria-modal={menuOpen ? true : undefined}
+        aria-label="Navigation menu"
         className={`nav-sheet${menuOpen ? ' is-open' : ''}`}
         hidden={!menuOpen}
       >
+        <div className="nav-sheet-header"><span>Explore</span><button type="button" onClick={() => setMenuOpen(false)} aria-label="Close navigation menu">Close ×</button></div>
         {links}
         {hasContactSection ? (
           <a className="btn btn-primary" href={contactHref} style={{ borderRadius: 999, marginTop: 'var(--space-2)' }}>
@@ -229,7 +263,7 @@ export function Nav() {
         ) : (
           <TLink
             className="btn btn-primary"
-            to="/contact"
+            to="/contact" aria-current={pathname === "/contact" ? "page" : undefined}
             style={{ borderRadius: 999, marginTop: 'var(--space-2)' }}
             onPointerEnter={() => prefetchRoute('/contact')}
             onFocus={() => prefetchRoute('/contact')}

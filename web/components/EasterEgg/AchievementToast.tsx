@@ -36,7 +36,7 @@ export function AchievementToast() {
         type="button"
         className="devtoast-dismiss"
         aria-label="Dismiss"
-        onClick={() => setLeaving(true)}
+        onClick={() => setGone(true)}
       >
         ✕
       </button>

@@ -7,6 +7,8 @@
    this just lets React subscribe to it. */
 
 import { useSyncExternalStore } from 'react';
+import { motionReduced } from './motion';
+import { transitionBusy } from '../lib/transitions';
 
 export type Theme = 'light' | 'dark';
 
@@ -37,36 +39,32 @@ function apply(next: Theme): void {
   notify();
 }
 
-/** Swap the theme, wiping from `origin` if the browser can. */
+let pendingTheme: Theme | null = null;
+let wipe: ViewTransition | undefined;
+let generation = 0;
+
+/** Rapid toggles still apply every requested state; only the optional wipe is skipped. */
 export function toggleTheme(origin?: { x: number; y: number }): void {
-  const next: Theme = getTheme() === 'dark' ? 'light' : 'dark';
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  /* Touch devices have a tighter animation budget and the circular wipe
-     can feel sluggish on mid-range phones. Skip the transition there — the
-     instant apply is actually snappier than a 520ms composited wipe on a
-     device that's already GPU-bound rendering the page. */
-  const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
-
-  if (reduced || coarsePointer || !document.startViewTransition || !origin) {
-    apply(next);
-    return;
-  }
-
+  const next: Theme = (pendingTheme ?? getTheme()) === 'dark' ? 'light' : 'dark';
+  const token = ++generation;
+  pendingTheme = next;
+  wipe?.skipTransition();
   const root = document.documentElement;
+  if (motionReduced() || window.matchMedia('(pointer: coarse)').matches || !document.startViewTransition || !origin || transitionBusy()) {
+    apply(next); pendingTheme = null; root.classList.remove('theme-switching'); return;
+  }
   const { x, y } = origin;
   const reach = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-
   root.classList.add('theme-switching');
-  const transition = document.startViewTransition(() => apply(next));
-  transition.ready
-    .then(() =>
-      root.animate(
-        { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${reach}px at ${x}px ${y}px)`] },
-        { duration: 420, easing: 'cubic-bezier(.16,1,.3,1)', pseudoElement: '::view-transition-new(root)' }
-      ).finished
-    )
-    .catch(() => { /* the swap happened; only the wipe failed */ })
-    .then(() => root.classList.remove('theme-switching'));
+  const transition = document.startViewTransition(() => { if (token === generation) { apply(next); pendingTheme = null; } });
+  wipe = transition;
+  transition.ready.then(async () => {
+    if (token !== generation || motionReduced()) { transition.skipTransition(); return; }
+    await root.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${reach}px at ${x}px ${y}px)`] },
+      { duration: 360, easing: 'cubic-bezier(.16,1,.3,1)', pseudoElement: '::view-transition-new(root)' }).finished;
+  }).catch(() => {}).finally(() => {
+    if (token === generation) { root.classList.remove('theme-switching'); pendingTheme = null; wipe = undefined; }
+  });
 }
 
 export function useTheme(): Theme {

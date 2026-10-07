@@ -73,6 +73,8 @@ export function Figure({
   ratio = '16/8',
   priority = false,
   sizes = '(max-width: 719px) 92vw, (max-width: 1099px) 90vw, 1340px',
+  onInspect,
+  transitionName,
 }: {
   caption: string;
   image?: FigureImage | undefined;
@@ -81,9 +83,12 @@ export function Figure({
    *  visitor is already looking at. */
   priority?: boolean;
   sizes?: string;
+  onInspect?: () => void;
+  transitionName?: string;
 }) {
   return (
-    <figure data-reveal data-figure className="washed" style={{ ...SHELL, ...placeholder(image ? assetUrl(image.src) : undefined), aspectRatio: ratio, margin: 0 }}>
+    <figure data-reveal className="screenshot-figure" style={{ margin: 0 }}>
+      <div data-figure className="washed figure-media" style={{ ...SHELL, ...placeholder(image ? assetUrl(image.src) : undefined), aspectRatio: ratio }}>
       {image ? (
         <img
           src={assetUrl(image.src)}
@@ -95,11 +100,15 @@ export function Figure({
           loading={priority ? 'eager' : 'lazy'}
           fetchPriority={priority ? 'high' : 'auto'}
           decoding="async"
-          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          style={{ width: '100%', height: '100%', objectFit: 'cover', viewTransitionName: transitionName }}
         />
       ) : (
         <span style={CAPTION}>{caption}</span>
       )}
+      </div>
+      {image && <figcaption className="figure-caption"><span>{caption || image.alt}</span>
+        {onInspect && <button type="button" className="figure-inspect" onClick={onInspect} aria-label={`Inspect screenshot: ${image.alt}`}>Inspect <span aria-hidden="true">↗</span></button>}
+      </figcaption>}
     </figure>
   );
 }

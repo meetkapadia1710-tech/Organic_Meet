@@ -1,3 +1,4 @@
+import { useMotionPreference } from '../state/motion';
 /* ─────────────────────────────────────────────────────────────────────────
    ScrambleText — the label decodes itself when it scrolls into view.
 
@@ -29,10 +30,11 @@ const GLYPHS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 /** How long each character waits before it locks, and how often the
  *  unresolved ones re-roll. Slow enough to read as a decode, short enough
  *  that a section heading is never illegible for long. */
-const PER_CHAR_MS = 55;
+const PER_CHAR_MS = 24;
 const ROLL_MS = 45;
 
 export function ScrambleText({ children, className }: { children: string; className?: string }) {
+  const motionIsReduced = useMotionPreference();
   const host = useRef<HTMLSpanElement>(null);
   const [display, setDisplay] = useState(children);
 
@@ -41,7 +43,7 @@ export function ScrambleText({ children, className }: { children: string; classN
     if (!node) return;
 
     if (
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+      motionIsReduced ||
       typeof IntersectionObserver !== 'function'
     ) {
       setDisplay(children);
@@ -104,7 +106,7 @@ export function ScrambleText({ children, className }: { children: string; classN
       cancelAnimationFrame(raf);
       window.clearTimeout(net);
     };
-  }, [children]);
+  }, [children, motionIsReduced]);
 
   return (
     <span ref={host} className={['scramble', className].filter(Boolean).join(' ')}>

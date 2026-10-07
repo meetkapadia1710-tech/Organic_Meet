@@ -1,3 +1,4 @@
+import { useMotionPreference } from '../state/motion';
 /* ─────────────────────────────────────────────────────────────────────────
    useCursorLift — letters rise as the pointer passes over them.
 
@@ -135,12 +136,13 @@ const RELEASE = 0.005;
 const EASE = 0.1;
 
 export function useCursorLift(): void {
+  const motionIsReduced = useMotionPreference();
   const { pathname } = useLocation();
 
   useEffect(() => {
     if (
       typeof window === 'undefined' ||
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+      motionIsReduced ||
       !window.matchMedia('(hover: hover) and (pointer: fine)').matches
     ) {
       return;
@@ -424,5 +426,5 @@ export function useCursorLift(): void {
         el.style.removeProperty('--stretch');
       });
     };
-  }, [pathname]);
+  }, [pathname, motionIsReduced]);
 }

@@ -5,6 +5,8 @@ import { WorkRow, PlainRow } from '../components/WorkRow';
 import { Contact } from '../components/Contact';
 import { useDocumentMeta } from '../hooks/useDocumentMeta';
 import type { Project } from '../content/types';
+import { useSearchParams } from 'react-router';
+import { WorkPreview } from '../components/WorkPreview';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -13,6 +15,8 @@ const pad = (n: number) => String(n).padStart(2, '0');
    in the row itself rather than in a separate section with its own visual
    language further down the page. */
 export function Projects() {
+  const [params, setParams] = useSearchParams();
+  const selected = CATEGORIES.includes(params.get('category') ?? '') ? params.get('category')! : 'All';
   useDocumentMeta(
     'Projects',
     'Every project: AI tooling, hackathon builds, products, client work and earlier experiments.'
@@ -27,6 +31,7 @@ export function Projects() {
   };
   const all: Project[] = [...caseStudies, ...archive].sort((a, b) => rank(a) - rank(b));
   const total = all.length;
+  const visible = selected === 'All' ? all : all.filter((project) => project.category === selected);
   const numberOf = (project: Project) => pad(all.indexOf(project) + 1);
 
   return (
@@ -56,8 +61,16 @@ export function Projects() {
       </header>
 
       <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '10vh var(--gutter) 0' }}>
+        <div className="project-filters" role="group" aria-label="Filter projects by category">
+          {['All', ...CATEGORIES].map((category) => <button key={category} type="button" aria-pressed={selected === category}
+            onClick={() => { const next = new URLSearchParams(params); if (category === 'All') next.delete('category'); else next.set('category', category); setParams(next, { preventScrollReset: true }); }}>
+            {category}<span>{category === 'All' ? total : all.filter((p) => p.category === category).length}</span>
+          </button>)}
+        </div>
+        <p className="filter-count" role="status" aria-live="polite">{visible.length} {visible.length === 1 ? 'project' : 'projects'}{selected === 'All' ? ' across all categories' : ` in ${selected}`}</p>
+        <div className="work-list filtered-work" key={selected}>
         {CATEGORIES.map((category) => {
-          const group = all.filter((p) => p.category === category);
+          const group = visible.filter((p) => p.category === category);
           if (!group.length) return null;
           return (
             <div key={category}>
@@ -76,6 +89,8 @@ export function Projects() {
             </div>
           );
         })}
+        </div>
+        <WorkPreview projects={visible} />
       </section>
 
       <Contact />

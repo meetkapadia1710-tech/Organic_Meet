@@ -352,10 +352,9 @@ button:focus-visible .swap .swap-alt .swap-char,
   grid-area: scramble;
 }
 
-/* Present for layout and for assistive tech, never painted. `visibility`
-   rather than `opacity`, so it is not a paint layer at all. */
+/* Keep the real string in the accessibility tree while the overlay animates. */
 .scramble-size {
-  visibility: hidden;
+  opacity: 0;
 }
 
 /* ── cascade ─────────────────────────────────────────────────────────────
@@ -870,3 +869,37 @@ button:focus-visible .arrow-track,
     opacity: 1;
   }
 }
+
+
+/* Shared timing and live motion preference, including hidden-tab suspension. */
+:root { --motion-fast: 160ms; --motion-ui: 240ms; --motion-scene: 460ms; --dur-2: .26s; --dur-3: .46s; --dur-4: .62s; }
+.wprev { width: min(320px, calc(100vw - 32px)); height: 212px; display: block; z-index: 460; transition: opacity var(--motion-fast), scale var(--motion-ui) var(--ease-out-expo); }
+.wprev img, .wprev-name { height: 176px; animation: preview-in var(--motion-fast) both; }
+.wprev-caption { display: flex; justify-content: space-between; align-items: center; gap: 8px; height: 35px; padding: 0 12px; font-size: 11px; color: var(--color-neutral-700); }
+.wprev-caption > span { font-size: 10px; color: var(--color-accent-700); white-space: nowrap; }
+@keyframes preview-in { from { opacity: .4; } }
+.js .hero-min-meta, .js .hero-min-name, .js .hero-min-actions, .js .hero-min-facts { animation-duration: .48s; animation-delay: calc(var(--beat, 0) * 60ms); }
+.is-split .wi { transition-duration: .5s; transition-delay: calc(min(var(--i, 0) * 18ms, 160ms)); }
+.js [data-reveal] { transform: translateY(18px); transition-duration: .55s; }
+.js [data-reveal].is-in { transform: none; }
+.deck-art { display: block; height: 96px; flex-shrink: 0; border-radius: var(--radius-md); overflow: hidden; background: var(--color-accent-100); }
+.deck-art img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+.deck-card { height: 440px; margin-top: -220px; gap: 10px; transition-duration: .46s; will-change: auto; }
+.deck-controls button:disabled { opacity: .35; cursor: default; }
+.work-presentation { view-transition-name: work-presentation; }
+html.view-switching::view-transition-group(work-presentation) { animation-duration: var(--motion-ui); }
+html.view-switching::view-transition-old(root), html.view-switching::view-transition-new(root) { animation: none; }
+html.route-transitioning::view-transition-group(*) { animation-duration: var(--motion-scene); }
+html.motion-paused *, .hero-vines.is-paused * { animation-play-state: paused !important; }
+html[data-motion='reduced'] { scroll-behavior: auto !important; }
+html[data-motion='reduced'] *, html[data-motion='reduced'] *::before, html[data-motion='reduced'] *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; transition-delay: 0ms !important; animation-delay: 0ms !important; }
+html[data-motion='reduced'] [data-reveal], html[data-motion='reduced'] .wi, html[data-motion='reduced'] .split > span { opacity: 1 !important; transform: none !important; }
+html[data-motion='reduced'] .scramble-live { display: none; }
+html[data-motion='reduced'] .scramble-size { opacity: 1 !important; }
+html[data-motion='reduced'] .vine-stem { stroke-dashoffset: 0; }
+html[data-motion='reduced'] .vine-leaf { opacity: 1; }
+html[data-motion='reduced'] .vine { rotate: none; }
+html[data-motion='reduced'] .wprev, html[data-motion='reduced'] #cursor, html[data-motion='reduced'] #cursor-ring, html[data-motion='reduced'] #cursor-label { display: none !important; }
+html[data-motion='reduced'] .work:hover, html[data-motion='reduced'] .work:focus-visible { transform: none; }
+@media (hover: none), (pointer: coarse) { .wprev { display: none; } .work:hover { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .filtered-work, .viewer-surface { animation: none; } }

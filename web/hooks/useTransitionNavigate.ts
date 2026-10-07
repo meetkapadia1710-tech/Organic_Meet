@@ -1,5 +1,7 @@
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router';
+import { motionReduced } from '../state/motion';
+import { markRouteTransition, transitionBusy } from '../lib/transitions';
 
 /* Navigation that produces a correct shared-element morph.
 
@@ -27,9 +29,9 @@ export function useTransitionNavigate() {
 
   return useCallback(
     (to: string) => {
-      const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const reduced = motionReduced();
 
-      if (reduced || !document.startViewTransition) {
+      if (reduced || !document.startViewTransition || transitionBusy()) {
         navigate(to);
         window.scrollTo({ top: 0, behavior: 'instant' });
         return;
@@ -38,7 +40,10 @@ export function useTransitionNavigate() {
       // Explicitly instant: the stylesheet sets scroll-behavior: smooth, which
       // would animate this reset over several hundred milliseconds — long after
       // the browser has measured both view-transition snapshots.
-      window.scrollTo({ top: 0, behavior: 'instant' });
+      // Artwork keeps its source position for the old snapshot. Layout's
+      // layout effect resets the incoming page before its snapshot is painted.
+      if (!document.querySelector('[data-art-source]')) window.scrollTo({ top: 0, behavior: 'instant' });
+      markRouteTransition();
       navigate(to, { viewTransition: true });
     },
     [navigate]

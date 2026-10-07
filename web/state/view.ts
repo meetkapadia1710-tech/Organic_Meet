@@ -4,11 +4,18 @@
    too, and the switch is remembered between visits. */
 
 import { useSyncExternalStore } from 'react';
+import { flushSync } from 'react-dom';
+import { motionReduced } from './motion';
+import { transitionBusy } from '../lib/transitions';
 
 export type WorkView = 'list' | 'deck';
 
 const listeners = new Set<() => void>();
 let current: WorkView = read();
+let selected: string | undefined;
+
+export function getSelectedProject(): string | undefined { return selected; }
+export function setSelectedProject(slug: string): void { selected = slug; }
 
 function read(): WorkView {
   try {
@@ -31,6 +38,7 @@ export function getView(): WorkView {
 
 export function setView(next: WorkView): void {
   if (next === current) return;
+  const apply = () => {
   current = next;
   try {
     localStorage.setItem('mk-view', next);
@@ -38,6 +46,12 @@ export function setView(next: WorkView): void {
     /* storage disabled */
   }
   listeners.forEach((fn) => fn());
+  };
+  if (typeof document === 'undefined' || motionReduced() || !document.startViewTransition || transitionBusy()) { apply(); return; }
+  const root = document.documentElement;
+  root.classList.add('view-switching');
+  const transition = document.startViewTransition(() => flushSync(apply));
+  transition.finished.catch(() => {}).finally(() => root.classList.remove('view-switching'));
 }
 
 export function useWorkView(): WorkView {

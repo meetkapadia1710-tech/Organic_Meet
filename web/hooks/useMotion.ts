@@ -18,18 +18,20 @@
    ───────────────────────────────────────────────────────────────────────── */
 
 import { useEffect } from 'react';
+import { useMotionPreference } from '../state/motion';
 import { useLocation } from 'react-router';
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
 
-const prefersReduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const finePointer = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
 /** One rAF loop shared by the cursor and the parallax, parked when idle. */
 function createLoop() {
   const tasks: Array<() => boolean> = [];
   let running = false;
+  let frame = 0;
+  let stopped = false;
 
   function tick() {
     running = false;
@@ -38,9 +40,9 @@ function createLoop() {
     if (again) schedule();
   }
   function schedule() {
-    if (running) return;
+    if (running || stopped) return;
     running = true;
-    requestAnimationFrame(tick);
+    frame = requestAnimationFrame(tick);
   }
   return {
     add(task: () => boolean) {
@@ -48,14 +50,16 @@ function createLoop() {
       schedule();
     },
     schedule,
+    cancel() { stopped = true; cancelAnimationFrame(frame); tasks.length = 0; },
   };
 }
 
 /* ── cursor ────────────────────────────────────────────────────────────── */
 
 export function useCursor(): void {
+  const motionIsReduced = useMotionPreference();
   useEffect(() => {
-    if (!finePointer() || prefersReduced()) return;
+    if (!finePointer() || motionIsReduced) return;
 
     const dot = document.getElementById('cursor');
     const ring = document.getElementById('cursor-ring');
@@ -125,15 +129,17 @@ export function useCursor(): void {
       window.removeEventListener('mouseover', onOver);
       window.removeEventListener('mouseout', onOut);
       root.classList.remove('has-cursor');
+      loop.cancel();
     };
-  }, []);
+  }, [motionIsReduced]);
 }
 
 /* ── magnetic and tilt, delegated ──────────────────────────────────────── */
 
 export function usePointerEffects(): void {
+  const motionIsReduced = useMotionPreference();
   useEffect(() => {
-    if (!finePointer() || prefersReduced()) return;
+    if (!finePointer() || motionIsReduced) return;
 
     // Cached per hovered element so a pointermove never reads layout.
     let current: HTMLElement | null = null;
@@ -163,16 +169,16 @@ export function usePointerEffects(): void {
     const onMove = (e: MouseEvent) => {
       if (!current || !box) return;
       if (kind === 'magnetic') {
-        const strength = Number(current.getAttribute('data-magnetic')) || 0.32;
+        const strength = Number(current.getAttribute('data-magnetic')) || 0.16;
         const dx = (e.clientX - (box.left + box.width / 2)) * strength;
         const dy = (e.clientY - (box.top + box.height / 2)) * strength;
-        current.style.setProperty('--mx', clamp(dx, -18, 18).toFixed(2));
-        current.style.setProperty('--my', clamp(dy, -14, 14).toFixed(2));
+        current.style.setProperty('--mx', clamp(dx, -6, 6).toFixed(2));
+        current.style.setProperty('--my', clamp(dy, -4, 4).toFixed(2));
       } else if (kind === 'tilt') {
         const px = (e.clientX - box.left) / box.width - 0.5;
         const py = (e.clientY - box.top) / box.height - 0.5;
-        current.style.setProperty('--ry', (px * 7).toFixed(2));
-        current.style.setProperty('--rx', (-py * 7).toFixed(2));
+        current.style.setProperty('--ry', (px * 4).toFixed(2));
+        current.style.setProperty('--rx', (-py * 4).toFixed(2));
       }
     };
 
@@ -181,17 +187,19 @@ export function usePointerEffects(): void {
     return () => {
       document.removeEventListener('mouseover', onOver);
       document.removeEventListener('mousemove', onMove);
+      if (current) reset(current);
     };
-  }, []);
+  }, [motionIsReduced]);
 }
 
 /* ── parallax: pointer on desktop, gyroscope on a phone ─────────────────── */
 
 export function useParallax(): void {
+  const motionIsReduced = useMotionPreference();
   const { pathname } = useLocation();
 
   useEffect(() => {
-    if (prefersReduced()) return;
+    if (motionIsReduced) return;
     const shapes = Array.from(document.querySelectorAll<HTMLElement>('[data-parallax]'));
     if (!shapes.length) return;
 
@@ -256,18 +264,20 @@ export function useParallax(): void {
 
     return () => {
       cleanup();
+      loop.cancel();
       shapes.forEach((el) => { el.style.translate = ''; });
     };
-  }, [pathname]);
+  }, [pathname, motionIsReduced]);
 }
 
 /* ── scroll: progress, velocity, nav tuck ───────────────────────────────── */
 
 export function useScrollEffects(): void {
+  const motionIsReduced = useMotionPreference();
   useEffect(() => {
     const root = document.documentElement;
     const bar = document.getElementById('progress');
-    const reduced = prefersReduced();
+    const reduced = motionIsReduced;
     // Under reduced motion the CSS hands the bar back to JS; otherwise the
     // scroll timeline already drives it on the compositor.
     const nativeProgress = !reduced && CSS.supports?.('animation-timeline: scroll()');
@@ -314,7 +324,7 @@ export function useScrollEffects(): void {
     window.addEventListener('scroll', onScroll, { passive: true });
     frame();
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [motionIsReduced]);
 }
 
 /* ── reveals ────────────────────────────────────────────────────────────
@@ -324,10 +334,11 @@ export function useScrollEffects(): void {
    fire. */
 
 export function useReveals(): void {
+  const motionIsReduced = useMotionPreference();
   useEffect(() => {
     const reveal = (el: Element) => el.classList.add('is-in');
 
-    if (prefersReduced() || typeof IntersectionObserver !== 'function') {
+    if (motionIsReduced || typeof IntersectionObserver !== 'function') {
       const showEverything = () => document.querySelectorAll('[data-reveal]').forEach(reveal);
       showEverything();
       const mo = new MutationObserver(showEverything);
@@ -388,7 +399,7 @@ export function useReveals(): void {
       io.disconnect();
       timers.forEach((t) => window.clearTimeout(t));
     };
-  }, []);
+  }, [motionIsReduced]);
 }
 
 /** Everything the layout needs, in one call. */

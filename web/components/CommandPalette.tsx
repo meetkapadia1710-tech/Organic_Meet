@@ -345,7 +345,7 @@ function Palette({ onClose }: { onClose: () => void }) {
         </div>
 
         <ul className="cmdk-list" id="cmdk-list" role="listbox" ref={listRef}>
-          {!results.length && <li className="cmdk-empty">Nothing matches “{query}”</li>}
+          {!results.length && <li className="cmdk-empty">Nothing matches “{query}”<span className="cmdk-empty-hint">Try a project name, a technology, or “contact”. Press Escape to return.</span></li>}
           {results.map((result, i) => {
             const header = result.entry.group !== lastGroup ? result.entry.group : null;
             lastGroup = result.entry.group;

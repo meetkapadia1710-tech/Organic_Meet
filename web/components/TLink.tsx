@@ -2,6 +2,7 @@ import type { ReactNode, Ref } from 'react';
 import { Link } from 'react-router';
 import { useTransitionNavigate } from '../hooks/useTransitionNavigate';
 import { prefetchRoute } from '../router';
+import { prepareProjectArtwork } from '../lib/transitions';
 
 /* A <Link> that routes through useTransitionNavigate, so the view transition
    and the scroll reset happen in the same frame.
@@ -54,6 +55,7 @@ export function TLink({
         // plain left-click.
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
         e.preventDefault();
+        prepareProjectArtwork(e.currentTarget);
         go(to);
       }}
     >

@@ -2,6 +2,8 @@ import { TLink } from './TLink';
 import type { Project } from '../content/types';
 import { SwapText } from './SwapText';
 import { CascadeText } from './CascadeText';
+import { assetUrl } from '../lib/assets';
+import { getSelectedProject, setSelectedProject } from '../state/view';
 
 const ROW: React.CSSProperties = {
   display: 'grid',
@@ -34,11 +36,14 @@ export function Tags({ tags, firstAccent = true }: { tags: string[]; firstAccent
    into the other across the navigation. */
 export function WorkRow({ project, label }: { project: Project; label: string }) {
   return (
-    <TLink className="work g-work" data-cursor="View case" data-reveal to={`/${project.slug}`} style={ROW}>
+    <TLink className="work g-work" data-project={project.slug} data-cursor="View case" data-reveal to={`/${project.slug}`} style={ROW}
+      onFocus={() => setSelectedProject(project.slug)} onPointerEnter={() => setSelectedProject(project.slug)}>
       <span style={{ fontFamily: 'var(--font-heading)', fontSize: 15, color: 'var(--color-accent-600)' }}>
         {label}
       </span>
-      <div>
+      <div className="work-heading">
+        {project.preview && <span className="work-art"><img data-project-art data-art-source={getSelectedProject() === project.slug ? "" : undefined} style={{ viewTransitionName: getSelectedProject() === project.slug ? `project-art-${project.slug}` : undefined }} src={assetUrl(project.preview)} alt="" width={320} height={180} loading="lazy" decoding="async" /></span>}
+        <div className="work-copy">
         {/* `div` not `h2`: <a> (interactive content) may not contain heading
             elements per the HTML spec. role + aria-level preserve the semantic
             heading for assistive technology and the document outline. */}
@@ -57,6 +62,7 @@ export function WorkRow({ project, label }: { project: Project; label: string })
         </div>
         <div style={{ display: 'flex', gap: 'var(--space-1)', flexWrap: 'wrap' }}>
           <Tags tags={project.tags} />
+        </div>
         </div>
       </div>
       <p style={{ margin: 0, fontSize: 15, lineHeight: 1.65, color: 'var(--color-neutral-800)' }}>

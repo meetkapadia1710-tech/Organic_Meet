@@ -9,6 +9,7 @@ import { useLocation } from 'react-router';
 import { useTransitionNavigate } from './useTransitionNavigate';
 import { usePalette } from '../components/CommandPalette';
 import { setSheetOpen, toggleSheet } from '../state/sheet';
+import { motionReduced } from '../state/motion';
 
 function isTyping(target: EventTarget | null): boolean {
   const el = target as HTMLElement | null;
@@ -27,7 +28,6 @@ export function useKeyboard(): void {
   useEffect(() => {
     let chord = '';
     let chordTimer: number | null = null;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     const select = (next: number) => {
       const rows = Array.from(document.querySelectorAll<HTMLElement>('.work, .arch'));
@@ -37,10 +37,12 @@ export function useKeyboard(): void {
       const row = rows[cursor.current];
       if (!row) return;
       row.classList.add('is-cursor');
-      row.scrollIntoView({ block: 'center', behavior: reduced ? 'auto' : 'smooth' });
+      row.scrollIntoView({ block: 'center', behavior: motionReduced() ? 'instant' : 'smooth' });
+      row.focus({ preventScroll: true });
     };
 
     const onKey = (e: KeyboardEvent) => {
+      if (document.querySelector('dialog[open], .nav-sheet.is-open')) return;
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         palette.open();
@@ -63,6 +65,8 @@ export function useKeyboard(): void {
         case 'j': e.preventDefault(); select(cursor.current + 1); break;
         case 'k': e.preventDefault(); select(cursor.current <= 0 ? 0 : cursor.current - 1); break;
         case 'Enter': {
+          // Native controls keep their own activation, including filter chips.
+          if ((e.target as HTMLElement | null)?.closest('button, a, select, summary')) break;
           const rows = Array.from(document.querySelectorAll<HTMLElement>('.work, .arch'));
           const row = rows[cursor.current];
           if (row?.tagName === 'A') { e.preventDefault(); row.click(); }

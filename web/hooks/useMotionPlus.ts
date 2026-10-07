@@ -14,9 +14,9 @@
    ───────────────────────────────────────────────────────────────────────── */
 
 import { useEffect } from 'react';
+import { useMotionPreference } from '../state/motion';
 import { useLocation } from 'react-router';
 
-const prefersReduced = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const finePointer = () => window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v));
@@ -42,10 +42,11 @@ const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v
 const NESTED = '.cmdk, .cmdk-list, .hm-scroll, .deck-viewport, [data-native-scroll]';
 
 export function useSmoothScroll(): void {
+  const motionIsReduced = useMotionPreference();
   useEffect(() => {
     // Native browser scrolling used for zero-latency 60/120/144Hz scroll response.
     return;
-  }, []);
+  }, [motionIsReduced]);
 }
 
 /* ── word-by-word text reveal ───────────────────────────────────────────
@@ -95,8 +96,9 @@ function splitWords(el: HTMLElement) {
 }
 
 export function useTextReveal(): void {
+  const motionIsReduced = useMotionPreference();
   useEffect(() => {
-    if (prefersReduced() || typeof IntersectionObserver !== 'function') return;
+    if (motionIsReduced || typeof IntersectionObserver !== 'function') return;
 
     const io = new IntersectionObserver(
       (entries) => {
@@ -173,7 +175,7 @@ export function useTextReveal(): void {
       io.disconnect();
       timers.forEach((t) => window.clearTimeout(t));
     };
-  }, []);
+  }, [motionIsReduced]);
 }
 
 /* ── highlight sweep ────────────────────────────────────────────────────
@@ -183,8 +185,9 @@ export function useTextReveal(): void {
    worse sentence, not a better one. */
 
 export function useHighlights(): void {
+  const motionIsReduced = useMotionPreference();
   useEffect(() => {
-    if (prefersReduced() || typeof IntersectionObserver !== 'function') return;
+    if (motionIsReduced || typeof IntersectionObserver !== 'function') return;
 
     const io = new IntersectionObserver(
       (entries) => {
@@ -223,7 +226,7 @@ export function useHighlights(): void {
       mo.disconnect();
       io.disconnect();
     };
-  }, []);
+  }, [motionIsReduced]);
 }
 
 /* ── count-up ───────────────────────────────────────────────────────────
@@ -232,41 +235,40 @@ export function useHighlights(): void {
    script never runs the correct value is what was there all along. */
 
 export function useCountUp(): void {
+  const motionIsReduced = useMotionPreference();
   const { pathname } = useLocation();
-
   useEffect(() => {
-    if (prefersReduced() || typeof IntersectionObserver !== 'function') return;
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          const el = entry.target as HTMLElement;
-          io.unobserve(el);
-
-          const final = Number((el.textContent ?? '').replace(/[^\d.-]/g, ''));
-          if (!Number.isFinite(final) || final === 0) return;
-
-          const suffix = (el.textContent ?? '').replace(/[\d,.\s-]/g, '');
-          const started = performance.now();
-          const duration = 1100;
-
-          const step = (now: number) => {
-            const t = Math.min(1, (now - started) / duration);
-            // easeOutExpo: fast commitment, slow settle.
-            const eased = t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
-            el.textContent = `${Math.round(final * eased).toLocaleString()}${suffix}`;
-            if (t < 1) requestAnimationFrame(step);
-          };
-          requestAnimationFrame(step);
-        });
-      },
-      { threshold: 0.6 }
-    );
-
+    if (motionIsReduced || typeof IntersectionObserver !== 'function') return;
+    const running = new Map<HTMLElement, { frame: number; timer: number; final: string }>();
+    const io = new IntersectionObserver((entries) => entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target as HTMLElement;
+      io.unobserve(el);
+      if (el.dataset.counted) return;
+      const final = el.textContent ?? '';
+      const value = Number(final.replace(/[^\d.-]/g, ''));
+      if (!Number.isFinite(value) || value === 0) return;
+      el.dataset.counted = 'true';
+      const state = { frame: 0, timer: 0, final };
+      running.set(el, state);
+      const started = performance.now();
+      const step = (now: number) => {
+        const progress = Math.min(1, (now - started) / 850);
+        el.textContent = progress === 1 ? final : Math.round(value * (1 - Math.pow(2, -10 * progress))).toLocaleString();
+        if (progress < 1) state.frame = requestAnimationFrame(step);
+        else { clearTimeout(state.timer); running.delete(el); }
+      };
+      state.timer = window.setTimeout(() => {
+        cancelAnimationFrame(state.frame); el.textContent = final; running.delete(el);
+      }, 1000);
+      state.frame = requestAnimationFrame(step);
+    }), { threshold: .6 });
     document.querySelectorAll('[data-countup]').forEach((el) => io.observe(el));
-    return () => io.disconnect();
-  }, [pathname]);
+    return () => {
+      io.disconnect();
+      running.forEach((state, el) => { cancelAnimationFrame(state.frame); clearTimeout(state.timer); el.textContent = state.final; });
+    };
+  }, [pathname, motionIsReduced]);
 }
 
 /* ── scroll-velocity skew ───────────────────────────────────────────────
@@ -277,10 +279,11 @@ export function useCountUp(): void {
    rendering bug. */
 
 export function useVelocitySkew(): void {
+  const motionIsReduced = useMotionPreference();
   const { pathname } = useLocation();
 
   useEffect(() => {
-    if (prefersReduced()) return;
+    if (motionIsReduced) return;
     const targets = Array.from(document.querySelectorAll<HTMLElement>('[data-velocity]'));
     if (!targets.length) return;
 
@@ -331,7 +334,7 @@ export function useVelocitySkew(): void {
         el.style.removeProperty('--mq-shift');
       });
     };
-  }, [pathname]);
+  }, [pathname, motionIsReduced]);
 }
 
 /** The second layer, in one call. Additive to useSiteMotion. */

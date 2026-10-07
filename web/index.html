@@ -29,6 +29,9 @@
 (function () {
   var r = document.documentElement;
   r.classList.add('js');
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  try { reduced = reduced || localStorage.getItem('mk-motion') === 'reduced'; } catch (e) {}
+  r.setAttribute('data-motion', reduced ? 'reduced' : 'full');
   try {
     if (sessionStorage.getItem('mk-visited')) r.classList.add('seen');
     else sessionStorage.setItem('mk-visited', '1');

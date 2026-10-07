@@ -11,9 +11,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { TLink } from './TLink';
 import type { Project } from '../content/types';
 import { Tags } from './WorkRow';
+import { assetUrl } from '../lib/assets';
+import { getSelectedProject, setSelectedProject } from '../state/view';
+import { useMotionPreference } from '../state/motion';
 
 export function Deck({ projects }: { projects: Project[] }) {
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(() => Math.max(0, projects.findIndex((p) => p.slug === getSelectedProject())));
+  const reduced = useMotionPreference();
+  useEffect(() => { if (projects[active]) setSelectedProject(projects[active]!.slug); }, [active, projects]);
   const viewportRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<Array<HTMLAnchorElement | null>>([]);
@@ -113,16 +118,17 @@ export function Deck({ projects }: { projects: Project[] }) {
       return;
     }
 
+    if (reduced || e.pointerType !== 'mouse') return;
     const box = viewport.getBoundingClientRect();
     const nx = (e.clientX - box.left) / box.width - 0.5;
     const ny = (e.clientY - box.top) / box.height - 0.5;
     viewport.classList.add('is-tracking');
-    stage.style.setProperty('--yaw', (nx * 16).toFixed(2));
-    stage.style.setProperty('--pitch', (-ny * 10).toFixed(2));
+    stage.style.setProperty('--yaw', (nx * 4).toFixed(2));
+    stage.style.setProperty('--pitch', (-ny * 4).toFixed(2));
   };
 
   return (
-    <div className="deck is-on" aria-roledescription="carousel" aria-label="Selected work, 3D view">
+    <div className="deck is-on work-presentation" data-presentation="deck" aria-roledescription="carousel" aria-label="Selected work, 3D view">
       {/* The viewport and the cards each claim the cursor, and the cards are
           inside the viewport — `closest('[data-cursor]')` walks up from the
           hovered node and stops at the first match, so a card reads "View
@@ -168,6 +174,7 @@ export function Deck({ projects }: { projects: Project[] }) {
             <TLink
               key={project.slug}
               className="deck-card"
+              data-project={project.slug}
               data-cursor="View case"
               to={`/${project.slug}`}
               ref={(node) => { cardsRef.current[i] = node; }}
@@ -181,6 +188,7 @@ export function Deck({ projects }: { projects: Project[] }) {
               onFocus={() => { if (i !== active) setActive(i); }}
             >
               <span className="deck-num">{String(i + 1).padStart(2, '0')}</span>
+              {project.preview && <span className="deck-art"><img data-project-art src={assetUrl(project.preview)} alt="" width={320} height={180} loading="lazy" decoding="async" /></span>}
               <h3 className="deck-title">{project.name}</h3>
               <p className="deck-summary">
                 {project.summary.length > 112 ? `${project.summary.slice(0, 109).trimEnd()}…` : project.summary}
@@ -193,13 +201,13 @@ export function Deck({ projects }: { projects: Project[] }) {
       </div>
 
       <div className="deck-controls">
-        <button type="button" data-deck="prev" aria-label="Previous project" onClick={() => go(active - 1)}>
+        <button type="button" data-deck="prev" aria-label="Previous project" disabled={active === 0} onClick={() => go(active - 1)}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>
         </button>
         <span className="deck-count" aria-live="polite">
           {String(active + 1).padStart(2, '0')} / {String(projects.length).padStart(2, '0')}
         </span>
-        <button type="button" data-deck="next" aria-label="Next project" onClick={() => go(active + 1)}>
+        <button type="button" data-deck="next" aria-label="Next project" disabled={active === projects.length - 1} onClick={() => go(active + 1)}>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="m10 6 6 6-6 6" /></svg>
         </button>
       </div>

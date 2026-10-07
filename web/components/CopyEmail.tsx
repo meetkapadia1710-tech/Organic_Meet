@@ -19,6 +19,7 @@ const REVERT_MS = 2000;
 
 export function CopyEmail({ address }: { address: string }) {
   const [copied, setCopied] = useState(false);
+  const [failed, setFailed] = useState(false);
   const timer = useRef(0);
 
   // A click at 1.9s would otherwise be reverted by the *previous* click's
@@ -32,15 +33,18 @@ export function CopyEmail({ address }: { address: string }) {
       /* Clipboard denied (insecure origin, or the permission was refused).
          Saying "Copied" when nothing was copied is worse than staying quiet,
          so the label does not move. */
+      setFailed(true);
+      setCopied(false);
       return;
     }
     setCopied(true);
+    setFailed(false);
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setCopied(false), REVERT_MS);
   };
 
   return (
-    <button
+    <div className="copy-control"><button
       type="button"
       data-magnetic
       className={`btn btn-secondary copy-email${copied ? ' is-copied' : ''}`}
@@ -48,10 +52,15 @@ export function CopyEmail({ address }: { address: string }) {
       onClick={copy}
       aria-label={`Copy ${address} to the clipboard`}
     >
-      <span className="copy-stack" aria-live="polite">
+      <span className="copy-stack" aria-hidden="true">
         <span className="copy-face copy-idle">Copy address</span>
         <span className="copy-face copy-done">Copied ✓</span>
       </span>
     </button>
+      <span className="sr-only" role="status">{copied ? 'Email address copied.' : ''}</span>
+      {failed && <div className="copy-failure" role="status">Copy unavailable. Select the address below:
+        <input aria-label="Email address to copy manually" value={address} readOnly onFocus={(event) => event.currentTarget.select()} />
+      </div>}
+    </div>
   );
 }

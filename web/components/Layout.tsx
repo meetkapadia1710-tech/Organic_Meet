@@ -39,15 +39,18 @@ function Shell() {
      growing into the case-study headline — to a plain crossfade. */
   const navigationType = useNavigationType();
   const positions = useRef(new Map<string, number>());
+  const scrollPath = useRef(pathname);
 
   useLayoutEffect(() => {
     const saved = positions.current;
     const key = `${pathname}${search}`;
+    const changedPage = scrollPath.current !== pathname;
+    scrollPath.current = pathname;
 
     if (navigationType === 'POP') {
       const previous = saved.get(key);
       if (previous != null) window.scrollTo({ top: previous, behavior: 'instant' });
-    } else if (!window.location.hash) {
+    } else if (changedPage && !window.location.hash) {
       window.scrollTo({ top: 0, behavior: 'instant' });
     }
 

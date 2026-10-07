@@ -9,3 +9,4 @@ cms/.sanity/
 .env.*.local
 cms/.env
 __pycache__/
+artifacts/frontend-upgrade/

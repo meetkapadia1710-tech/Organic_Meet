@@ -1,3 +1,6 @@
+import { useEffect, useRef, useState } from 'react';
+import type { Ref } from 'react';
+import { useMotionPreference } from '../state/motion';
 /* ─────────────────────────────────────────────────────────────────────────
    HeroVines — climbers hanging into the empty right-hand third of the hero.
 
@@ -159,9 +162,9 @@ const HERO_STRANDS = strandsOf(VINES);
 
 /* The drawing. Kept separate from HeroVines below purely so the geometry and
    the placement stay readable apart from each other. */
-function Vines({ strands, className }: { strands: ReturnType<typeof strandsOf>; className: string }) {
+function Vines({ strands, className, host }: { strands: ReturnType<typeof strandsOf>; className: string; host?: Ref<HTMLDivElement> }) {
   return (
-    <div className={className} aria-hidden="true">
+    <div className={className} ref={host} aria-hidden="true">
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMaxYMin meet" fill="none">
         {strands.map(({ v, d, leaves: ls }, i) => (
           <g
@@ -212,5 +215,14 @@ function Vines({ strands, className }: { strands: ReturnType<typeof strandsOf>; 
 
 /** The hero's own corner: four hand-placed strands that grow on load. */
 export function HeroVines() {
-  return <Vines strands={HERO_STRANDS} className="hero-vines" />;
+  const host = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(true);
+  const reduced = useMotionPreference();
+  useEffect(() => {
+    if (!host.current || typeof IntersectionObserver !== 'function') return;
+    const observer = new IntersectionObserver(([entry]) => setVisible(entry?.isIntersecting ?? false));
+    observer.observe(host.current);
+    return () => observer.disconnect();
+  }, []);
+  return <Vines host={host} strands={HERO_STRANDS} className={`hero-vines${!visible || reduced ? ' is-paused' : ''}`} />;
 }

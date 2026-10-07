@@ -1,3 +1,4 @@
+import { useMotionPreference } from '../state/motion';
 import { TLink } from '../components/TLink';
 import { archive, caseStudies, featured } from '../content/projects';
 import { SplitText } from '../components/SplitText';
@@ -80,7 +81,7 @@ export function Home() {
   /* Seven taps on the name opens developer mode — the wordmark's old job,
      moved with it out of the nav. */
   const logoTap = useLogoTap(() => setDevMode(true));
-  const reduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const reduced = useMotionPreference();
   /* The same flag the work rows badge with, so "Building" and the "In
      progress" tags can never disagree. */
   const inProgress = caseStudies.filter((p) => p.status === 'In progress');
@@ -297,7 +298,7 @@ export function Home() {
 
         {view === 'list' || reduced ? (
           <>
-            <div className="work-list">
+            <div className="work-list work-presentation" data-presentation="list">
               {featured.map((project, i) => (
                 <WorkRow key={project.slug} project={project} label={String(i + 1).padStart(2, '0')} />
               ))}

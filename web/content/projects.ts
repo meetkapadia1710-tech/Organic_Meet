@@ -147,6 +147,7 @@ export const projects: Project[] = [
 
   {
     slug: 'ambulance',
+    preview: '/Ambulance/AnotherScreen2-800.webp',
     name: 'Connected Ambulance',
     year: '2026',
     tier: 'case',
@@ -185,6 +186,7 @@ export const projects: Project[] = [
   },
   {
     slug: 'playhub',
+    preview: '/playhub/MainScreen-800.webp',
     name: 'PlayHub',
     year: '2025',
     tier: 'case',
@@ -202,6 +204,7 @@ export const projects: Project[] = [
   },
   {
     slug: 'learnflex',
+    preview: '/learnFlex/PracticeModeScreen-800.webp',
     name: 'LearnFlex',
     year: '2026',
     tier: 'case',
@@ -217,6 +220,7 @@ export const projects: Project[] = [
   /* ── Client work ──────────────────────────────────────────────────────── */
   {
     slug: 'bhumi-developers',
+    preview: '/Bhumi-Developers/MainScreen-800.webp',
     name: 'Bhumi Developers',
     // TODO: confirm the delivery year.
     year: '2025',
@@ -231,6 +235,7 @@ export const projects: Project[] = [
   },
   {
     slug: 'bd-buildcon',
+    preview: '/bd-buildcon/MainScreen-800.webp',
     name: 'BD Buildcon',
     // TODO: confirm the delivery year.
     year: '2025',
@@ -274,6 +279,7 @@ export const projects: Project[] = [
   },
   {
     slug: 'meetos',
+    preview: '/meetOS/MainScreen-800.webp',
     name: 'MeetOS',
     year: '2025',
     tier: 'case',
@@ -286,6 +292,7 @@ export const projects: Project[] = [
   },
   {
     slug: 'mini-resume',
+    preview: '/miniResume/MainScreen-800.webp',
     name: 'Mini Resume',
     year: '2025',
     tier: 'case',
