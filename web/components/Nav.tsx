@@ -7,7 +7,6 @@ import { SwapText } from './SwapText';
 import { setDevMode, useDevMode } from '../state/devmode';
 import { TLink } from './TLink';
 import { caseStudies } from '../content/projects';
-import { setMotionSetting, useMotionSetting } from '../state/motion';
 
 /* Padding and the wordmark size live in site.css rather than here, because
    the condensed state past the hero has to override them — and an inline
@@ -75,7 +74,6 @@ export function Nav() {
   const { pathname, hash } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const devMode = useDevMode();
-  const motionSetting = useMotionSetting();
   const sheet = useRef<HTMLDivElement>(null);
   const burger = useRef<HTMLButtonElement>(null);
 
@@ -197,12 +195,6 @@ export function Nav() {
           >
             <SunIcon />
             <MoonIcon />
-          </button>
-
-          <button type="button" className="theme-toggle motion-toggle" aria-label={motionSetting === 'reduced' ? 'Use system motion preference' : 'Reduce animations'}
-            aria-pressed={motionSetting === 'reduced'} title={motionSetting === 'reduced' ? 'Motion reduced — use system setting' : 'Reduce animations'}
-            onClick={() => setMotionSetting(motionSetting === 'reduced' ? 'system' : 'reduced')}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M4 8h16M4 16h16" /><circle cx="9" cy="8" r="3" fill="var(--color-surface)" /><circle cx="15" cy="16" r="3" fill="var(--color-surface)" /></svg>
           </button>
 
           {/* Desktop CTA — uses TLink so view transitions fire, same as every

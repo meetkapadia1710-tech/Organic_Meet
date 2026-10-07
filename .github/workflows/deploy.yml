@@ -12,7 +12,9 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  # Finish active deployments and retain queued runs when pushes overlap.
+  cancel-in-progress: false
+  queue: max
 
 jobs:
   build:

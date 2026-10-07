@@ -4,7 +4,7 @@ import { assetUrl } from '../lib/assets';
 
    With no image it renders the striped placeholder the site has always used,
    labelled with what belongs there. Give it a `src` and it renders the real
-   thing instead — same wrapper, same `.washed` treatment, same reveal, so
+   thing instead — same wrapper and reveal, with original screenshot colours, so
    adding a screenshot never changes the layout around it.
 
    width/height are required alongside a src so the browser reserves the space
@@ -88,7 +88,7 @@ export function Figure({
 }) {
   return (
     <figure data-reveal className="screenshot-figure" style={{ margin: 0 }}>
-      <div data-figure className="washed figure-media" style={{ ...SHELL, ...placeholder(image ? assetUrl(image.src) : undefined), aspectRatio: ratio }}>
+      <div data-figure className={`${image ? '' : 'washed '}figure-media`} style={{ ...SHELL, ...placeholder(image ? assetUrl(image.src) : undefined), aspectRatio: image ? `${image.width}/${image.height}` : ratio }}>
       {image ? (
         <img
           src={assetUrl(image.src)}
@@ -100,7 +100,7 @@ export function Figure({
           loading={priority ? 'eager' : 'lazy'}
           fetchPriority={priority ? 'high' : 'auto'}
           decoding="async"
-          style={{ width: '100%', height: '100%', objectFit: 'cover', viewTransitionName: transitionName }}
+          style={{ display: 'block', width: '100%', height: '100%', objectFit: 'contain', viewTransitionName: transitionName }}
         />
       ) : (
         <span style={CAPTION}>{caption}</span>

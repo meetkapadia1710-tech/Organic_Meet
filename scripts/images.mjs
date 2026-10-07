@@ -8,11 +8,11 @@
    shipping a 2 MB hero would be the page contradicting itself.
 
    Originals are kept. This writes a .webp beside each source file and leaves
-   the source alone, because there is no git repository here and a conversion
-   script that deletes its own inputs is unrecoverable if the settings turn
-   out to be wrong.
+   the source alone so screenshots can be regenerated without recompressing
+   an already lossy image. Root-level portrait/social assets are excluded.
 
      node scripts/images.mjs
+     node scripts/images.mjs --force  # regenerate after changing encoder settings
 
    Re-running is safe: a .webp newer than its source is skipped.
    ───────────────────────────────────────────────────────────────────────── */
@@ -33,7 +33,9 @@ const ROOT = path.join(import.meta.dirname, '..', 'web', 'public');
    covers it at 1x and 1200 at closer to 2x). */
 const WIDTHS = [800, 1200, 1600];
 const BASE_WIDTH = 1600;
-const QUALITY = 78;
+// Interface text needs more detail than a photographic thumbnail.
+const QUALITY = 90;
+const FORCE = process.argv.includes('--force');
 
 function walk(dir) {
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -50,6 +52,7 @@ const SOURCE_EXT = /\.(png|jpe?g)$/i;
 
 for (const file of walk(ROOT)) {
   if (!SOURCE_EXT.test(file)) continue;
+  if (path.dirname(file) === ROOT) continue; // portrait/social assets have their own pipeline
   if (path.basename(file) === 'og.png') continue; // social card must stay PNG
 
   const srcStat = fs.statSync(file);
@@ -65,7 +68,7 @@ for (const file of walk(ROOT)) {
         ? file.replace(SOURCE_EXT, '.webp')
         : file.replace(SOURCE_EXT, `-${width}.webp`);
 
-    if (!fs.existsSync(out) || fs.statSync(out).mtimeMs < srcStat.mtimeMs) {
+    if (FORCE || !fs.existsSync(out) || fs.statSync(out).mtimeMs < srcStat.mtimeMs) {
       await sharp(file)
         .resize({ width, withoutEnlargement: true })
         .webp({ quality: QUALITY })
@@ -93,10 +96,9 @@ console.log(
    Figure resolves it by the same filename convention it already uses for
    the -800/-1200 widths, so nothing has to be registered anywhere.
 
-   Derived from the .webp base, not from the original PNG/JPEG, because the
-   originals are no longer in the tree — the conversion above kept them at
-   the time, but they have since been cleared out, and a placeholder pass
-   that only worked on a fresh checkout would be a pass that never runs.
+   Derived from the .webp base, not from the original PNG/JPEG, because only
+   some screenshots still have original sources in the tree. This pass also
+   works for the screenshots whose originals are unavailable.
 
    As a file rather than an inlined data URI on purpose: a manifest of ~27
    base64 strings is 10-15 kB that every visitor downloads with the first
@@ -113,6 +115,7 @@ let lqipBytes = 0;
 
 for (const file of walk(ROOT)) {
   if (!file.endsWith('.webp') || VARIANT.test(file)) continue;
+  if (path.dirname(file) === ROOT) continue;
 
   const out = file.replace(/\.webp$/, LQIP_SUFFIX);
   const srcStat = fs.statSync(file);

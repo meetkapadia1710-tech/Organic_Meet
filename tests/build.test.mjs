@@ -12,6 +12,16 @@ test('every published project has exactly one case and a safe route', () => {
   for (const p of content.caseStudies) assert.ok(content.cases[p.slug], p.slug);
   for (const slug of Object.keys(content.cases)) assert.ok(content.projects.some((p) => p.slug === slug), slug);
 });
+test('project slideshow screenshots have responsive preview files', () => {
+  for (const project of content.caseStudies) {
+    const entry = content.cases[project.slug];
+    const images = [entry.heroImage, ...(entry.figureImages ?? []), ...(entry.gallery ?? [])].filter(Boolean);
+    for (const image of images) {
+      if (!image.src.endsWith('.webp')) continue;
+      assert.ok(fs.existsSync(`web/public${image.src.replace(/\.webp$/, '-800.webp')}`), `${project.slug}: missing preview for ${image.src}`);
+    }
+  }
+});
 test('all published pages contain content, canonical metadata, and working local assets', () => {
   const pages = ['/', ...Object.keys(content.ROUTE_META).filter((p) => p !== '/'), ...content.caseStudies.map((p) => `/${p.slug}`)];
   const sitemap = fs.readFileSync('site-react/sitemap.xml', 'utf8');

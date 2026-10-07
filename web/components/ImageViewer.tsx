@@ -11,6 +11,7 @@ export function ImageViewer({ images, initialIndex, onClose }: {
   const closeButton = useRef<HTMLButtonElement>(null);
   const [index, setIndex] = useState(initialIndex);
   const [failed, setFailed] = useState(false);
+  const [zoomed, setZoomed] = useState(false);
   const image = images[index];
 
   useEffect(() => {
@@ -31,6 +32,7 @@ export function ImageViewer({ images, initialIndex, onClose }: {
 
   const move = (direction: number) => {
     setFailed(false);
+    setZoomed(false);
     setIndex((current) => (current + direction + images.length) % images.length);
   };
 
@@ -41,8 +43,9 @@ export function ImageViewer({ images, initialIndex, onClose }: {
       onClick={(event) => { if (event.target === event.currentTarget) onClose(); }}
       onKeyDown={(event) => {
         if (event.key === 'Escape') { event.preventDefault(); onClose(); }
-        if (event.key === 'ArrowRight') { event.preventDefault(); move(1); }
-        if (event.key === 'ArrowLeft') { event.preventDefault(); move(-1); }
+        const exploring = zoomed && (event.target as HTMLElement).classList.contains('viewer-image');
+        if (event.key === 'ArrowRight' && !exploring) { event.preventDefault(); move(1); }
+        if (event.key === 'ArrowLeft' && !exploring) { event.preventDefault(); move(-1); }
         if (event.key === 'Tab') {
           const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'));
           const first = buttons[0]; const last = buttons.at(-1);
@@ -54,11 +57,12 @@ export function ImageViewer({ images, initialIndex, onClose }: {
         <header className="viewer-toolbar">
           <span className="kicker">A closer look</span>
           <span>{index + 1} / {images.length}</span>
+          <button type="button" className="viewer-zoom" disabled={failed} aria-pressed={zoomed} onClick={() => setZoomed((current) => !current)}>{zoomed ? 'Fit image' : 'Zoom to 100%'}</button>
           <button ref={closeButton} type="button" className="viewer-close" onClick={onClose} aria-label="Close screenshot viewer">Close ×</button>
         </header>
-        <div className="viewer-image">
+        <div className={`viewer-image${zoomed ? ' is-zoomed' : ''}`} tabIndex={0} aria-label={zoomed ? 'Full resolution screenshot. Scroll to explore.' : 'Screenshot'}>
           {failed ? <p role="status">This image could not load. Try another screenshot or close this view.</p>
-            : <img key={image.src} src={assetUrl(image.src)} alt={image.alt} width={image.width} height={image.height} decoding="async" onError={() => setFailed(true)} />}
+            : <img key={image.src} src={assetUrl(image.src)} alt={image.alt} width={image.width} height={image.height} style={zoomed ? { width: image.width } : undefined} decoding="async" onError={() => setFailed(true)} />}
         </div>
         <footer className="viewer-footer">
           <p aria-live="polite">{image.caption || image.alt}</p>
