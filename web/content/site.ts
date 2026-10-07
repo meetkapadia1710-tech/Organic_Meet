@@ -6,21 +6,10 @@
    is why nothing on the site emitted a canonical link or an absolute OG URL.
    ───────────────────────────────────────────────────────────────────────── */
 
-/**
- * The production origin, no trailing slash.
- *
- * ⚠️ **Not set yet.** Set `VITE_SITE_URL` in the Vercel project's environment
- * variables (and in a local `.env` if you want it during `npm run dev`) to the
- * real domain — `https://meetkapadia.com`, or whatever the Vercel URL ends up
- * being.
- *
- * Two things stay switched off until it is: `scripts/sitemap.mjs` refuses to
- * write a sitemap rather than publishing placeholder URLs, and the canonical
- * link tag is omitted rather than pointing somewhere wrong. Both fail closed
- * on purpose — a sitemap or a canonical carrying the wrong origin actively
- * misdirects crawlers, which is worse than not having one.
+/** Production URL comes from .env.production or the deployment environment.
+ * It may include a hosting subpath. Build scripts validate it before use.
  */
-export const SITE_URL: string = (import.meta.env.VITE_SITE_URL ?? '').replace(/\/+$/, '');
+export const SITE_URL: string = (import.meta.env.VITE_SITE_URL ?? '').trim().replace(/\/+$/, '');
 
 export const EMAIL = 'kapadiameet07@gmail.com';
 
@@ -33,7 +22,7 @@ export const SOCIAL = {
  * Where the CV lives, relative to the site root.
  *
  * ⚠️ **The file does not exist yet.** Drop the PDF at `web/public/resume.pdf`
- * and every download button on the site turns itself on — see `RESUME_READY`
+ * and enable `RESUME_READY` below — see `RESUME_READY`
  * below for why they are hidden rather than rendering a link to a 404.
  */
 export const RESUME_PATH = '/resume.pdf';

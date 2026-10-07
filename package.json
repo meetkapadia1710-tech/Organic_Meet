@@ -2,18 +2,22 @@
   "name": "meet-kapadia-portfolio",
   "version": "1.0.0",
   "private": true,
-  "description": "Portfolio site for Meet Kapadia — React 19 + TypeScript, built with Vite",
+  "description": "Portfolio site for Meet Kapadia - React 19 + TypeScript, built with Vite",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -p tsconfig.web.json --noEmit && node scripts/sitemap.mjs && vite build",
+    "build": "node scripts/cms-import.mjs --if-configured && tsc -p tsconfig.web.json --noEmit && node scripts/cms-export.mjs --check && node scripts/og.mjs && vite build && node scripts/prerender.mjs && node scripts/sitemap.mjs",
     "preview": "vite preview --port 4174",
     "typecheck": "tsc -p tsconfig.web.json --noEmit",
-    "og": "python tools/make-og.py",
-    "sitemap": "node scripts/sitemap.mjs"
+    "og": "node scripts/og.mjs",
+    "sitemap": "node scripts/sitemap.mjs",
+    "check:content": "node scripts/cms-export.mjs --check",
+    "cms:export": "node scripts/cms-export.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "cms:pull": "node scripts/cms-import.mjs"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22.22.0"
   },
   "devDependencies": {
     "@types/node": "^22.20.1",
@@ -21,6 +25,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/three": "^0.185.1",
     "@vitejs/plugin-react": "^5.2.0",
+    "esbuild": "^0.28.2",
     "sharp": "^0.35.3",
     "typescript": "^5.7.2",
     "vite": "^7.3.6"

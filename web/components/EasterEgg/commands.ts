@@ -104,7 +104,7 @@ const COMMANDS: Command[] = [
   },
   {
     name: 'projects',
-    summary: `${caseStudies.length + archive.length} shipped`,
+    summary: `${caseStudies.length + archive.length} projects`,
     run: () => {
       const featured = caseStudies.filter((p) => p.featured);
       const total = caseStudies.length + archive.length;
@@ -114,7 +114,7 @@ const COMMANDS: Command[] = [
       const written =
         caseStudies.length === total ? 'every one written up' : `${caseStudies.length} written up`;
       return lines([
-        { text: `Projects · ${total} shipped, ${written}`, tone: 'heading' },
+        { text: `Projects · ${total} projects, ${written}`, tone: 'heading' },
         { text: '' },
         ...featured.map<Line>((p) => ({ text: `  ${p.year}  ${p.name}` })),
         { text: '' },

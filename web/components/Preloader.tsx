@@ -43,7 +43,7 @@ export function Preloader() {
     };
   }, []);
 
-  if (gone) return null;
+  if (gone || typeof window === 'undefined') return null;
 
   return (
     <div id="preloader" aria-hidden="true" className={done ? 'is-done' : undefined}>

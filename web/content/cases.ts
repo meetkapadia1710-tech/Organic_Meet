@@ -424,38 +424,6 @@ export const cases: Record<string, CaseContent> = {
       'The nearer work is the weakest tier: Urgent sits in a two-point band between two large classes and its precision is about 0.65. Most of its errors are one step, and only ten of 1,287 Critical patients fell as far as Stable — but a narrow middle band is where a triage tool is least useful, and that is the number worth moving next.',
     ],
   },
-  'locateme': {
-    heroFigure: 'locateme — parent map dashboard',
-    problem: {
-      heading: 'Most family trackers are surveillance tools that happen to have a nice map.',
-      paras: [
-        'The category is full of apps built entirely for the parent, where the child is cargo — installed quietly, hidden from the app drawer, designed so the person being tracked never thinks about it. They work right up until they are discovered, and then they detonate whatever trust the family had.',
-        'So I took the opposite constraint as the starting point: nothing about this app is allowed to be hidden from the person being located. The child grants the permission on their own device, a status screen always says whether sharing is on, and they can pause or unlink without asking anyone. Every feature had to survive that rule, and a few obvious ones did not.',
-      ],
-    },
-    facts: {
-      role: 'Solo — design & development',
-      year: '2026',
-      stack: 'React Native · Expo SDK 50 · TypeScript · Zustand · Firebase · React Native Maps',
-      surfaces: 'iOS · Android',
-    },
-    how: [
-      { title: 'Consent, on the child\'s device', body: 'The child joins with a single-use invite code, grants the permission themselves, and gets a screen that states plainly whether location is being shared right now. Pausing and unlinking are theirs to do.' },
-      { title: 'Track without killing the battery', body: 'Background updates every five minutes or hundred metres through Expo Task Manager, with Android’s persistent foreground notification left deliberately visible rather than suppressed.' },
-      { title: 'Geofence on the server', body: 'Parents define Places with a radius; Cloud Functions decide enter and exit and send the alert. The phone reports where it is and nothing more, so the rules live somewhere they can be audited.' },
-      { title: 'Keep it at sixty frames', body: 'Reanimated worklets run on the UI thread so entrances and the live-tracking pulse survive heavy map rendering — and the pulse respects reduce-motion, because a permanently throbbing ring is a genuine accessibility problem.' },
-    ],
-    figures: ['child status screen — sharing on or paused', 'places and geofence alerts'],
-    hard: [
-      'Background location is where apps in this category die. iOS wants Always permission and treats it as a privilege it can revoke; Android needs a foreground service with a notification the user can see; and both will happily starve your updates to save battery. None of it can be tested in Expo Go, so verification meant real development builds, a locked phone, and walking around the neighbourhood watching Firestore for writes that were not arriving.',
-      'The design tension was harder than the plumbing. Every request that would have made the app more useful to a parent — silent install, hidden mode, location history going back months — was a request to break the one rule the app is built on. Saying no to those is the product.',
-    ],
-    nextKicker: 'What I\'d do next',
-    next: [
-      'This is not store-ready and I would not pretend otherwise. An app that handles children’s location needs COPPA age verification, GDPR-K consent checks, a published privacy policy and working account and data deletion flows before it goes anywhere near a real family. That list is written into the repo as unfinished, because for this app in particular it is not a detail to tidy up later.',
-      'After that, the feature I actually want: letting the child see what the parent sees. Symmetry would make the consent real rather than merely disclosed.',
-    ],
-  },
   'playhub': {
     heroImage: { src: '/playhub/MainScreen.webp', alt: 'PlayHub nearby venues: category filters for Pickleball and Box Cricket, and venue cards with photographs, addresses and hourly rates', width: 1600, height: 762 },
     figureImages: [

@@ -94,9 +94,9 @@ export function CasePage() {
         </div>
       </header>
 
-      <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: 'var(--space-8) var(--gutter) 0' }}>
+      {content.heroImage && <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: 'var(--space-8) var(--gutter) 0' }}>
         <Figure caption={content.heroFigure} image={content.heroImage} ratio="16/8" priority />
-      </section>
+      </section>}
 
       <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
         <div className="g-split" style={{ display: 'grid', gap: 'var(--space-8)', alignItems: 'start' }}>
@@ -144,16 +144,16 @@ export function CasePage() {
         </div>
       </section>
 
-      <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
+      {(content.figureImages?.some(Boolean) || content.gallery?.length) ? <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
         <div className="g-duo" style={{ display: 'grid', gap: 'var(--space-4)' }}>
           {content.figures.map((caption, i) => (
-            <Figure
+            content.figureImages?.[i] ? <Figure
               key={i}
               caption={caption}
               image={content.figureImages?.[i]}
               ratio="4/3"
               sizes="(max-width: 719px) 92vw, (max-width: 1099px) 90vw, 660px"
-            />
+            /> : null
           ))}
         </div>
 
@@ -180,7 +180,7 @@ export function CasePage() {
             ))}
           </div>
         )}
-      </section>
+      </section> : null}
 
       <section style={{ maxWidth: 'var(--page-max)', margin: '0 auto', padding: '12vh var(--gutter) 0' }}>
         <div className="g-duo" style={{ display: 'grid', gap: 'var(--space-8)' }}>

@@ -1,11 +1,14 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { siteConfig } from './scripts/site-config.mjs';
 
 /* The React app lives in web/ and builds to site-react/, so it can be brought
    to parity with the existing static build in site/ before anything is
    switched over. */
 export default defineConfig({
   root: 'web',
+  base: siteConfig().base,
+  define: { 'import.meta.env.VITE_SITE_URL': JSON.stringify(siteConfig().siteUrl) },
   plugins: [react()],
   build: {
     outDir: '../site-react',

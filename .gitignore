@@ -1,3 +1,11 @@
 node_modules/
 site-react/
 _archive/
+cms/node_modules/
+cms/dist/
+cms/.sanity/
+.prerender.mjs
+.env.local
+.env.*.local
+cms/.env
+__pycache__/

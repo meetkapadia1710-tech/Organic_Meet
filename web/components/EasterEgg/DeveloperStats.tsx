@@ -40,7 +40,7 @@ interface Stat {
 }
 
 const STATS: Stat[] = [
-  { label: 'Projects shipped', value: shipped },
+  { label: 'Projects', value: shipped },
   /* Was "Written up", which is currently identical to "Projects shipped"
      because every project has a case study — two tiles showing 18 read as a
      bug. Client work is distinct, derived, and the more interesting number. */

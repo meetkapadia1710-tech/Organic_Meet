@@ -195,7 +195,7 @@ export function Home() {
             and two figures showing an identical value makes the reader
             distrust both. */}
         <div className="hero-min-facts" style={{ '--beat': 4 } as React.CSSProperties}>
-          <span><b data-countup>{caseStudies.length + archive.length}</b> projects shipped</span>
+          <span><b data-countup>{caseStudies.length + archive.length}</b> projects</span>
           <span><b data-countup>{live}</b> live to click</span>
           <span><b data-countup>{inProgress.length}</b> in progress</span>
         </div>

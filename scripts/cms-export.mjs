@@ -87,6 +87,7 @@ function projectDoc(p) {
     ...(p.featured ? { featured: true } : {}),
     ...(p.pending ? { pending: true } : {}),
     ...(p.status ? { status: p.status } : {}),
+    ...(p.preview ? { preview: p.preview } : {}),
     tags: p.tags ?? [],
     summary: p.summary,
     ...(p.title ? { seoTitle: p.title } : {}),
@@ -315,7 +316,11 @@ if (problems.length) {
   for (const p of problems) console.error(`  - ${p}`);
   process.exitCode = 1;
 } else {
-  console.log('\n✓ Every field round-tripped. No content lost.');
+  console.log('\n✓ Content relationships and checked field counts are consistent.');
+}
+
+if (problems.length) {
+  process.exit(1);
 }
 
 if (CHECK_ONLY) {

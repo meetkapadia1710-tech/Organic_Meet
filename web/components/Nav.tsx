@@ -6,6 +6,7 @@ import { prefetchRoute } from '../router';
 import { SwapText } from './SwapText';
 import { setDevMode, useDevMode } from '../state/devmode';
 import { TLink } from './TLink';
+import { caseStudies } from '../content/projects';
 
 /* Padding and the wordmark size live in site.css rather than here, because
    the condensed state past the hero has to override them — and an inline
@@ -82,8 +83,8 @@ export function Nav() {
      and any future route without the block) has nothing to jump to, so we
      navigate to /contact instead. If the user is *already* on /contact the
      anchor is still preferable — the section is visible without a scroll. */
-  const hasContactSection = ['/', '/projects', '/approach', '/about', '/contact'].includes(pathname)
-    || /^\/[^/]+$/.test(pathname); // case study slugs all render <Contact />
+  const hasContactSection = ['/', '/projects', '/approach', '/about', '/contact', '/stats', '/uses'].includes(pathname)
+    || caseStudies.some((project) => pathname === `/${project.slug}`);
   const contactHref = hasContactSection ? '#contact' : '/contact';
 
   /* The sheet must not outlive the navigation that was made from it — leaving

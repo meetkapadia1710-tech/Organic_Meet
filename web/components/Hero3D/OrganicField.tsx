@@ -19,7 +19,7 @@
    and materials differ.
    ───────────────────────────────────────────────────────────────────────── */
 
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { IcosahedronGeometry, type Group, type Mesh } from 'three';
 import type { ScenePalette } from './palette';
@@ -119,7 +119,7 @@ export function OrganicField({ palette, profile }: { palette: ScenePalette; prof
   const geometry = useMemo(() => new IcosahedronGeometry(1, profile.tier === 'high' ? 4 : 3), [profile.tier]);
 
   // R3F does not dispose geometry it did not create.
-  useMemo(() => () => geometry.dispose(), [geometry]);
+  useEffect(() => () => geometry.dispose(), [geometry]);
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;

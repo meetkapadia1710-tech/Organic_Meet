@@ -2,6 +2,7 @@ import { lazy } from 'react';
 import { createBrowserRouter } from 'react-router';
 import { Layout } from './components/Layout';
 import { Home } from './pages/Home';
+import { RouteError } from './components/RouteError';
 
 /* Clean URLs, no extensions anywhere: /, /projects, /approach, /engram.
    The fixed routes (including /contact) come before the case-study route, so
@@ -77,10 +78,11 @@ export function prefetchRoute(to: string): void {
   loader?.().catch(() => {});
 }
 
-export const router = createBrowserRouter([
+export function createAppRouter() { return createBrowserRouter([
   {
     path: '/',
     element: <Layout />,
+    errorElement: <RouteError />,
     children: [
       { index: true, element: <Home /> },
       { path: 'projects', element: <Projects /> },
@@ -93,4 +95,4 @@ export const router = createBrowserRouter([
       { path: '*', element: <NotFound /> },
     ],
   },
-]);
+], { basename: import.meta.env.BASE_URL }); }

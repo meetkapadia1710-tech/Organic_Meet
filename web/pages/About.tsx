@@ -1,3 +1,5 @@
+import { assetUrl } from '../lib/assets';
+
 import { SplitText } from '../components/SplitText';
 import { Contact } from '../components/Contact';
 import { ScrambleText } from '../components/ScrambleText';
@@ -90,7 +92,13 @@ export function About() {
             className="about-portrait"
           >
             <img
-              src="/portrait.jpeg"
+              src={assetUrl('/portrait.webp')}
+              srcSet={`${assetUrl('/portrait-800.webp')} 800w, ${assetUrl('/portrait.webp')} 896w`}
+              sizes="(max-width: 899px) 90vw, 40vw"
+              width={896}
+              height={1195}
+              loading="lazy"
+              decoding="async"
               alt="Meet Kapadia"
               style={{ objectFit: 'cover', objectPosition: 'center top', width: '100%', height: '100%', display: 'block' }}
             />
@@ -107,7 +115,7 @@ export function About() {
               correct. "Live" is derived the same way Stats derives it and is
               genuinely a different figure. */}
           {([
-            ['Shipped', String(shipped), shipped === 1 ? 'project' : 'projects'],
+            ['Projects', String(shipped), shipped === 1 ? 'project' : 'projects'],
             ['Live to click', String(live), 'deployed and public'],
             ['Based in', 'Bharuch', 'Gujarat, India'],
             ['Studying', 'B.Tech CSE', 'IIIT Vadodara'],

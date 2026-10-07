@@ -1,3 +1,5 @@
+import { assetUrl } from '../lib/assets';
+
 /* A figure in a case study.
 
    With no image it renders the striped placeholder the site has always used,
@@ -81,11 +83,11 @@ export function Figure({
   sizes?: string;
 }) {
   return (
-    <figure data-reveal data-figure className="washed" style={{ ...SHELL, ...placeholder(image?.src), aspectRatio: ratio, margin: 0 }}>
+    <figure data-reveal data-figure className="washed" style={{ ...SHELL, ...placeholder(image ? assetUrl(image.src) : undefined), aspectRatio: ratio, margin: 0 }}>
       {image ? (
         <img
-          src={image.src}
-          srcSet={sourceSet(image.src)}
+          src={assetUrl(image.src)}
+          srcSet={sourceSet(assetUrl(image.src))}
           sizes={sizes}
           alt={image.alt}
           width={image.width}

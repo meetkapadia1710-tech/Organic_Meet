@@ -11,6 +11,7 @@
    error rather than `any`. */
 
 interface ImportMetaEnv {
+  readonly BASE_URL: string;
   /**
    * The production origin, no trailing slash — see web/content/site.ts.
    * Optional because it is genuinely unset in development, and the code that

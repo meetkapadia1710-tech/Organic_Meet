@@ -1,81 +1,61 @@
-# Meet Kapadia — Portfolio
+# Meet Kapadia portfolio
 
-A modern, interactive portfolio website for Meet Kapadia. Built with React 19, TypeScript, and Vite, featuring a robust custom design system ("Organic"), smooth page transitions, and an integrated command palette.
+React 19, TypeScript, Vite and React Router portfolio with project case studies, search, themes, motion, a project deck and developer mode. Production URL: https://meetkapadiaweb.vercel.app.
 
-![React](https://img.shields.io/badge/React-19-blue?style=flat-square&logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=flat-square&logo=typescript)
-![Vite](https://img.shields.io/badge/Vite-7.3-purple?style=flat-square&logo=vite)
+## Run and verify
 
-## ✨ Features
+Use Node 22.22+ (Node 24 recommended).
 
-- **Organic Design System:** A cohesive visual language utilizing a cream ground, terracotta, and sage color palette, powered by Caprasimo and Figtree typography.
-- **View Transitions:** Seamless, native page morphing and transitions utilizing the View Transitions API.
-- **Command Palette (⌘K):** Context-aware omnibar for quick navigation, theme toggling, and quick actions like copying contact info or printing case studies.
-- **Progressive Enhancement & Motion:** Graceful degradation for motion. Includes scroll-driven timelines, magnetic buttons, text reveals, and parallax effects—all respecting `prefers-reduced-motion`.
-- **Dynamic Content Architecture:** A cleanly separated content layer for case studies and an archive of smaller projects.
-
-## 🚀 Quick Start
-
-1. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-2. **Start the development server:**
-   ```bash
-   npm run dev       # Available at http://localhost:5173
-   ```
-
-3. **Build and preview for production:**
-   ```bash
-   npm run build     # Typechecks and builds to ./site-react
-   npm run preview   # Serves the production build on port 4174
-   ```
-
-## 📂 Project Structure
-
-| Path | Description |
-| --- | --- |
-| `web/content/projects.ts` | **The project list.** Controls what appears, in what order, and handles routing data. |
-| `web/content/cases.ts` | The prose content of every case study, mapped by slug. |
-| `web/pages/` | Main application routes: Home, Projects, Approach, CasePage, NotFound. |
-| `web/components/` | Reusable UI components including Layout, Nav, CommandPalette, and more. |
-| `web/hooks/` | Custom React hooks for motion, keyboard events, document meta, and transition navigation. |
-| `web/state/` | Shared global state stores for theme, work view, and shortcuts sheet. |
-| `web/styles/` | The core design system css including site, motion, ui, and deck layers. |
-
-## 📝 Content Management
-
-### Adding a New Project
-Projects are managed across two files. To add a new archive entry, insert an object into the array in `web/content/projects.ts`:
-
-```ts
-{ 
-  slug: 'thing', 
-  name: 'Thing', 
-  year: '2026', 
-  tier: 'archive',
-  tags: ['React'], 
-  summary: 'One sentence.',
-  links: { live: 'https://…', repo: 'https://…' } 
-}
+```sh
+npm ci
+npm run dev
+npm run build
+npm test
+npm run preview
 ```
 
-To create a full **Case Study**, set `tier: 'case'`, provide a `category`, `title`, and `desc` (for SEO/head meta). Then, add a matching entry in `web/content/cases.ts` using the same slug for the full prose content.
+The build validates content, creates the social preview image, builds assets, renders 24 public routes plus a 404 page, and generates the sitemap and robots file in `site-react/`. Tests run against that completed build. `npm run typecheck` and `npm run check:content` are useful while editing.
 
-*Note: Use `pending: true` to keep a project entry in the data file but exclude it from the active build.*
+## Code map
 
-## 🎬 Motion & Transitions
+- `web/content/`: projects, case-study prose, technologies, biography and site settings. Source content is the default when no CMS is configured.
+- `web/pages/`, `web/router.tsx`: seven fixed pages, project case studies and a 404 fallback. Browser routes are lazy loaded except Home.
+- `web/components/`: navigation, command palette, work list/deck, figures, demos and developer mode.
+- `web/hooks/`, `web/state/`, `web/styles/`: interaction, motion, shared preferences and the design system.
+- `scripts/`: CMS conversion, image generation, prerendering and sitemap generation.
+- `cms/`: optional Sanity Studio, schemas and a seed export.
+- `_AI_Detector_Space/`: separately versioned Python/Gradio model demo; it is not part of the portfolio build.
+- `_archive/`: historical assets and experiments, excluded from the active site.
 
-All animations are handled via `web/styles/motion.css` and `web/hooks/useMotion.ts`. 
-- **View Transitions:** Project titles on the index morph seamlessly into case-study headlines via shared `view-transition-name` properties.
-- **Accessibility:** Content visibility never relies solely on animations. A 4-second safety net ensures text reveals and headlines appear even if javascript fails, and all animations yield to OS-level reduced motion settings.
+## Content and assets
 
-## 📋 Pre-Launch Checklist
+Add projects in `web/content/projects.ts`; case-tier projects also need a matching entry in `web/content/cases.ts`. `pending: true` excludes a project from public routes, counters and sitemap. Keep local images in `web/public/` and use root-relative paths in content; asset helpers apply the hosting base path.
 
-- [ ] **Prerender the routes:** Implement static rendering (`react-dom/server`) to ensure link previews and crawlers index content properly (currently an SPA).
-- [ ] **Add an error boundary:** Prevent blank pages from uncaught exceptions.
-- [ ] **SPA rewrite rules:** Ensure your hosting provider rewrites `/*` to `/index.html` to prevent 404s on refresh.
-- [ ] **Asset Replacement:** Replace all striped placeholder figures with production images.
-- [ ] **Links:** Complete the `links` object for all projects.
-- [ ] **Final Copy Review:** Verify team credits for the ambulance case study and confirm PayMatrix's status.
+The current source has 19 projects, 17 public case studies and two hidden entries. Missing screenshots are omitted. The CV button stays hidden until a real `web/public/resume.pdf` exists and `RESUME_READY` in `web/content/site.ts` is enabled. Dates, quotes and team attribution require confirmation; do not fabricate them.
+
+## Deployment
+
+Vercel builds with `npm run build` and serves `site-react/` with clean URLs and the generated 404 fallback. The public production origin is committed in `.env.production`. Override `VITE_SITE_URL` and, for subdirectory hosting, `VITE_BASE_PATH` as necessary. URLs must use HTTP(S), with no query or fragment. Never use a placeholder domain.
+
+The GitHub Pages workflow uses Node 24 and sets both values for its repository path. A root `owner.github.io` repository uses `/`. Hosting elsewhere requires directory index support and a custom 404 page. Do not rewrite every route to the homepage: that discards route-specific prerendered metadata.
+
+## Optional CMS
+
+The portfolio works without a Sanity account. To enable editing:
+
+1. Install the separate Studio dependencies: `npm --prefix cms ci`.
+2. Copy `cms/.env.example` to `cms/.env.local` and supply your project ID and dataset. Run `npm --prefix cms run dev`.
+3. Generate a seed with `npm run cms:export`; import `cms/seed.ndjson` into your own dataset with the Sanity CLI after checking the target project.
+4. Set `SANITY_PROJECT_ID`, `SANITY_DATASET` and, for private data, `SANITY_API_TOKEN` in the portfolio build environment. A configured build pulls published content; an unconfigured build uses local files.
+
+`npm run cms:pull -- --file cms/seed.ndjson --check` verifies conversion without changing source files. Without `--check`, pulling writes the project, case and stack content files. Back up local edits first. Case paragraphs support plain text only; unsupported formatting fails rather than silently disappearing. Preview images and positional figure slots survive a round trip.
+
+## Python demo
+
+Install `_AI_Detector_Space/requirements.txt` into a Python environment and run its `app.py`. Model inference downloads the published Hugging Face model. Input validation and score mapping can be tested without that download:
+
+```sh
+python -m unittest discover -s _AI_Detector_Space
+```
+
+The demo limits text length, processes at most 512 tokens and rejects unknown classifier labels. Its reported benchmark is not a guarantee for arbitrary input. Full model inference requires the model and ML dependencies; it is separate from the website checks.

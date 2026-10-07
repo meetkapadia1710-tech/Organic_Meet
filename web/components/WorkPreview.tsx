@@ -1,3 +1,5 @@
+import { assetUrl } from '../lib/assets';
+
 /* ─────────────────────────────────────────────────────────────────────────
    WorkPreview — a thumbnail that follows the pointer across the work list.
 
@@ -87,7 +89,7 @@ export function WorkPreview({ projects }: { projects: Project[] }) {
     const onOver = (e: PointerEvent) => {
       const row = (e.target as Element | null)?.closest?.('.work');
       if (!row) return;
-      const slug = row.getAttribute('href')?.replace(/^\//, '') ?? '';
+      const slug = row.getAttribute('href')?.slice(import.meta.env.BASE_URL.length) ?? '';
       const project = bySlug.get(slug);
       if (!project) return;
       setShown((prev) => (prev?.slug === project.slug ? prev : { slug: project.slug, name: project.name, src: project.preview }));
@@ -113,7 +115,7 @@ export function WorkPreview({ projects }: { projects: Project[] }) {
   return (
     <div ref={panel} className={`wprev${shown ? ' is-on' : ''}`} aria-hidden="true">
       {shown?.src ? (
-        <img src={shown.src} alt="" width={320} height={170} loading="lazy" decoding="async" />
+        <img src={assetUrl(shown.src)} alt="" width={320} height={170} loading="lazy" decoding="async" />
       ) : (
         <span className="wprev-name">{shown?.name ?? ''}</span>
       )}

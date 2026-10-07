@@ -17,7 +17,7 @@ export function Deck({ projects }: { projects: Project[] }) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<Array<HTMLAnchorElement | null>>([]);
-  const drag = useRef({ on: false, captured: false, startX: 0, moved: 0 });
+  const drag = useRef({ on: false, captured: false, startX: 0, moved: 0, dragged: false });
 
   const go = useCallback(
     (next: number) => setActive((a) => Math.max(0, Math.min(projects.length - 1, next === -1 ? a : next))),
@@ -100,6 +100,7 @@ export function Deck({ projects }: { projects: Project[] }) {
          stops being clickable at all. */
       if (!drag.current.captured && Math.abs(drag.current.moved) > 6) {
         drag.current.captured = true;
+        drag.current.dragged = true;
         viewport.classList.add('is-dragging');
         try { viewport.setPointerCapture(e.pointerId); } catch { /* pointer already gone */ }
       }
@@ -141,7 +142,7 @@ export function Deck({ projects }: { projects: Project[] }) {
         }}
         onPointerDown={(e) => {
           // No capture yet — see the pointermove handler.
-          drag.current = { on: true, captured: false, startX: e.clientX, moved: 0 };
+          drag.current = { on: true, captured: false, startX: e.clientX, moved: 0, dragged: false };
         }}
         onPointerUp={(e) => {
           drag.current.on = false;
@@ -149,6 +150,10 @@ export function Deck({ projects }: { projects: Project[] }) {
           if (drag.current.captured) {
             try { viewportRef.current?.releasePointerCapture(e.pointerId); } catch { /* already released */ }
           }
+        }}
+        onPointerCancel={() => {
+          drag.current.on = false;
+          viewportRef.current?.classList.remove('is-dragging');
         }}
         onKeyDown={(e) => {
           if (e.key === 'ArrowRight') { e.preventDefault(); go(active + 1); }
@@ -171,7 +176,7 @@ export function Deck({ projects }: { projects: Project[] }) {
                 // card opens its case study — centring a side card first and
                 // making you click again was the wrong call: a card that looks
                 // like a link should behave like one.
-                if (Math.abs(drag.current.moved) > 8) { e.preventDefault(); return; }
+                if (drag.current.dragged && e.detail !== 0) { e.preventDefault(); return; }
               }}
               onFocus={() => { if (i !== active) setActive(i); }}
             >

@@ -1,4 +1,4 @@
-"""Generate assets/og.png — the 1200x630 social card.
+"""Generate web/public/og.png — the 1200x630 social card.
 
 Run once (or after changing the copy); the PNG is committed and build.mjs
 just copies it, so deploying never needs Python.
@@ -14,7 +14,7 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = Path(__file__).resolve().parent.parent
-OUT = ROOT / "assets" / "og.png"
+OUT = ROOT / "web" / "public" / "og.png"
 
 W, H = 1200, 630
 BG = "#f5ead8"

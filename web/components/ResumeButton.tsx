@@ -1,3 +1,5 @@
+import { assetUrl } from '../lib/assets';
+
 /* The CV download.
 
    Renders nothing until `RESUME_READY` is flipped in content/site.ts. A
@@ -19,7 +21,7 @@ export function ResumeButton({ variant = 'secondary' }: { variant?: 'primary' | 
       className={`btn btn-${variant}`}
       data-magnetic
       data-cursor="Download"
-      href={RESUME_PATH}
+      href={assetUrl(RESUME_PATH)}
       download
       type="application/pdf"
       style={{ borderRadius: 999 }}
